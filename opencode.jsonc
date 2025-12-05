@@ -1,0 +1,42 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "tui": {
+    "scroll_speed": 1.5,
+  },
+  "formatter": {
+    "biome": {
+      "command": ["pnpm", "exec", "biome", "check", "--write", "$FILE"],
+      "disabled": false,
+      "extensions": [".js", ".ts", ".jsx", ".tsx"],
+    },
+    "prettier": {
+      "disabled": true,
+    },
+  },
+  "model": "anthropic/claude-opus-4-5",
+  "permission": {
+    "bash": {
+      "*": "deny",
+      "cat *": "allow",
+      "find *": "allow",
+      "npx *": "ask",
+      "pnpm test *": "allow",
+      "pnpm typecheck": "allow",
+      "rg *": "allow",
+      "timeout *": "allow",
+      "cd *": "allow",
+      "git status *": "allow",
+      "git diff *": "allow",
+      "git log *": "allow",
+      "head *": "allow",
+      "mkdir *": "ask",
+      "ls *": "allow",
+      "grep *": "allow",
+      "pnpm test:e2e*": "allow",
+      "echo *": "allow",
+      "cp *": "ask",
+    },
+    "edit": "ask",
+    "webfetch": "allow",
+  },
+}
