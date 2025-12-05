@@ -65,9 +65,9 @@ export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormPro
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-background py-12 px-4">
-        <div className="max-w-2xl mx-auto bg-card rounded-lg shadow-md p-8 text-center">
-          <h1 className="text-3xl font-bold text-card-foreground mb-4">Profile Saved!</h1>
+      <div className="flex-1 bg-background p-4 sm:p-6 lg:p-8">
+        <div className="max-w-2xl mx-auto bg-card rounded-lg shadow-sm sm:shadow-md p-6 sm:p-8 text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold text-card-foreground mb-4">Profile Saved!</h1>
           <p className="text-muted-foreground">Your profile has been updated successfully.</p>
         </div>
       </div>
@@ -75,23 +75,22 @@ export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormPro
   }
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
-      <div className="max-w-2xl mx-auto bg-card rounded-lg shadow-md p-8">
-        <h1 className="text-3xl font-bold text-card-foreground mb-2">
+    <div className="flex-1 bg-background p-4 sm:p-6 lg:p-8">
+      <div className="max-w-2xl mx-auto bg-card rounded-lg shadow-sm sm:shadow-md p-4 sm:p-6 lg:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-card-foreground mb-2">
           Complete Your Profile
         </h1>
-        <p className="text-muted-foreground mb-8">
-          Help us personalize your experience by telling us a bit about
-          yourself.
+        <p className="text-muted-foreground mb-6 sm:mb-8">
+          Help us personalize your experience by telling us a bit about yourself.
         </p>
 
         {error && (
-          <div className="bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 rounded mb-6">
+          <div className="bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 rounded-md mb-6 text-sm">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
           {/* Things I Can Offer - Required */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
@@ -107,7 +106,7 @@ export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormPro
                     type="checkbox"
                     checked={formData.thingsICanOffer.includes(option.value)}
                     onChange={() => handleOfferChange(option.value)}
-                    className="rounded border-border text-primary focus:ring-ring"
+                    className="h-4 w-4 rounded border-border text-primary focus:ring-ring focus:ring-offset-0"
                   />
                   <span className="text-lg">{option.emoji}</span>
                   <span className="text-foreground">{option.value}</span>
@@ -118,7 +117,7 @@ export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormPro
 
           {/* Headline */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1.5">
               Most Recent Position
             </label>
             <input
@@ -128,13 +127,13 @@ export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormPro
                 setFormData((prev) => ({ ...prev, headline: e.target.value }))
               }
               placeholder="e.g., Store clerk - 3+ years or Student"
-              className="bg-input text-foreground w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+              className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
             />
           </div>
 
           {/* Bio */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1.5">
               Professional Summary
             </label>
             <textarea
@@ -144,16 +143,16 @@ export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormPro
               }
               placeholder="Tell us about your background and expertise..."
               rows={4}
-              className="bg-input text-foreground w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+              className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none"
             />
           </div>
 
           {/* Actions */}
-          <div className="flex gap-4 pt-4">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
             <button
               type="submit"
               disabled={isPending}
-              className="bg-primary text-primary-foreground px-6 py-2 rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors"
+              className="w-full sm:w-auto bg-primary text-primary-foreground px-6 py-2.5 rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors"
             >
               {isPending ? 'Saving...' : 'Save & Continue'}
             </button>
@@ -161,7 +160,7 @@ export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormPro
               <button
                 type="button"
                 onClick={handleSkip}
-                className="text-muted-foreground px-6 py-2 hover:underline"
+                className="w-full sm:w-auto text-muted-foreground px-6 py-2.5 hover:text-foreground transition-colors"
               >
                 Skip for now
               </button>
