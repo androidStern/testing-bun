@@ -12,6 +12,7 @@ dotenv.config({ quiet: true });
 export default defineConfig({
   server: {
     port: 3000,
+    allowedHosts: true, // Allow tunnel hosts for local testing
   },
   resolve: {
     // Ensure the ESM-friendly build of cookie is used instead of the nested CJS copy under iron-session

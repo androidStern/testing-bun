@@ -4,8 +4,8 @@ import { useAuth } from '@workos/authkit-tanstack-react-start/client';
 import { getAuth, getSignInUrl, getSignUpUrl } from '@workos/authkit-tanstack-react-start';
 import { convexQuery } from '@convex-dev/react-query';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { api } from '../../convex/_generated/api';
 import { useEffect } from 'react';
+import { api } from '../../convex/_generated/api';
 import type { User } from '@workos/authkit-tanstack-react-start';
 
 export const Route = createFileRoute('/')({

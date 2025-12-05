@@ -12,6 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as CallbackRouteImport } from './routes/callback'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OauthUserinfoRouteImport } from './routes/oauth/userinfo'
+import { Route as OauthTokenRouteImport } from './routes/oauth/token'
+import { Route as OauthProfileRouteImport } from './routes/oauth/profile'
+import { Route as OauthCompleteRouteImport } from './routes/oauth/complete'
+import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
+import { Route as OauthAuthorizeRouteImport } from './routes/oauth/authorize'
 import { Route as AuthenticatedAuthenticatedRouteImport } from './routes/_authenticated/authenticated'
 
 const CallbackRoute = CallbackRouteImport.update({
@@ -28,6 +34,36 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OauthUserinfoRoute = OauthUserinfoRouteImport.update({
+  id: '/oauth/userinfo',
+  path: '/oauth/userinfo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthTokenRoute = OauthTokenRouteImport.update({
+  id: '/oauth/token',
+  path: '/oauth/token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthProfileRoute = OauthProfileRouteImport.update({
+  id: '/oauth/profile',
+  path: '/oauth/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthCompleteRoute = OauthCompleteRouteImport.update({
+  id: '/oauth/complete',
+  path: '/oauth/complete',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthCallbackRoute = OauthCallbackRouteImport.update({
+  id: '/oauth/callback',
+  path: '/oauth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthAuthorizeRoute = OauthAuthorizeRouteImport.update({
+  id: '/oauth/authorize',
+  path: '/oauth/authorize',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAuthenticatedRoute =
   AuthenticatedAuthenticatedRouteImport.update({
     id: '/authenticated',
@@ -39,11 +75,23 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/callback': typeof CallbackRoute
   '/authenticated': typeof AuthenticatedAuthenticatedRoute
+  '/oauth/authorize': typeof OauthAuthorizeRoute
+  '/oauth/callback': typeof OauthCallbackRoute
+  '/oauth/complete': typeof OauthCompleteRoute
+  '/oauth/profile': typeof OauthProfileRoute
+  '/oauth/token': typeof OauthTokenRoute
+  '/oauth/userinfo': typeof OauthUserinfoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/callback': typeof CallbackRoute
   '/authenticated': typeof AuthenticatedAuthenticatedRoute
+  '/oauth/authorize': typeof OauthAuthorizeRoute
+  '/oauth/callback': typeof OauthCallbackRoute
+  '/oauth/complete': typeof OauthCompleteRoute
+  '/oauth/profile': typeof OauthProfileRoute
+  '/oauth/token': typeof OauthTokenRoute
+  '/oauth/userinfo': typeof OauthUserinfoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -51,24 +99,60 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/callback': typeof CallbackRoute
   '/_authenticated/authenticated': typeof AuthenticatedAuthenticatedRoute
+  '/oauth/authorize': typeof OauthAuthorizeRoute
+  '/oauth/callback': typeof OauthCallbackRoute
+  '/oauth/complete': typeof OauthCompleteRoute
+  '/oauth/profile': typeof OauthProfileRoute
+  '/oauth/token': typeof OauthTokenRoute
+  '/oauth/userinfo': typeof OauthUserinfoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/callback' | '/authenticated'
+  fullPaths:
+    | '/'
+    | '/callback'
+    | '/authenticated'
+    | '/oauth/authorize'
+    | '/oauth/callback'
+    | '/oauth/complete'
+    | '/oauth/profile'
+    | '/oauth/token'
+    | '/oauth/userinfo'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/callback' | '/authenticated'
+  to:
+    | '/'
+    | '/callback'
+    | '/authenticated'
+    | '/oauth/authorize'
+    | '/oauth/callback'
+    | '/oauth/complete'
+    | '/oauth/profile'
+    | '/oauth/token'
+    | '/oauth/userinfo'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/callback'
     | '/_authenticated/authenticated'
+    | '/oauth/authorize'
+    | '/oauth/callback'
+    | '/oauth/complete'
+    | '/oauth/profile'
+    | '/oauth/token'
+    | '/oauth/userinfo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   CallbackRoute: typeof CallbackRoute
+  OauthAuthorizeRoute: typeof OauthAuthorizeRoute
+  OauthCallbackRoute: typeof OauthCallbackRoute
+  OauthCompleteRoute: typeof OauthCompleteRoute
+  OauthProfileRoute: typeof OauthProfileRoute
+  OauthTokenRoute: typeof OauthTokenRoute
+  OauthUserinfoRoute: typeof OauthUserinfoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,6 +176,48 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/userinfo': {
+      id: '/oauth/userinfo'
+      path: '/oauth/userinfo'
+      fullPath: '/oauth/userinfo'
+      preLoaderRoute: typeof OauthUserinfoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/token': {
+      id: '/oauth/token'
+      path: '/oauth/token'
+      fullPath: '/oauth/token'
+      preLoaderRoute: typeof OauthTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/profile': {
+      id: '/oauth/profile'
+      path: '/oauth/profile'
+      fullPath: '/oauth/profile'
+      preLoaderRoute: typeof OauthProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/complete': {
+      id: '/oauth/complete'
+      path: '/oauth/complete'
+      fullPath: '/oauth/complete'
+      preLoaderRoute: typeof OauthCompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/callback': {
+      id: '/oauth/callback'
+      path: '/oauth/callback'
+      fullPath: '/oauth/callback'
+      preLoaderRoute: typeof OauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/authorize': {
+      id: '/oauth/authorize'
+      path: '/oauth/authorize'
+      fullPath: '/oauth/authorize'
+      preLoaderRoute: typeof OauthAuthorizeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/authenticated': {
@@ -120,6 +246,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   CallbackRoute: CallbackRoute,
+  OauthAuthorizeRoute: OauthAuthorizeRoute,
+  OauthCallbackRoute: OauthCallbackRoute,
+  OauthCompleteRoute: OauthCompleteRoute,
+  OauthProfileRoute: OauthProfileRoute,
+  OauthTokenRoute: OauthTokenRoute,
+  OauthUserinfoRoute: OauthUserinfoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
