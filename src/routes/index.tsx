@@ -5,6 +5,7 @@ import { getAuth, getSignInUrl, getSignUpUrl } from '@workos/authkit-tanstack-re
 import { convexQuery } from '@convex-dev/react-query';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { api } from '../../convex/_generated/api';
+import { useEffect } from 'react';
 import type { User } from '@workos/authkit-tanstack-react-start';
 
 export const Route = createFileRoute('/')({
@@ -30,6 +31,7 @@ function HomeContent({ user, signInUrl, signUpUrl }: { user: User | null; signIn
         Convex + TanStack Start + WorkOS
         {user && <UserMenu user={user} />}
       </header>
+      <AuthDebug />
       <main className="p-8 flex flex-col gap-8">
         <h1 className="text-4xl font-bold text-center">Convex + TanStack Start + WorkOS</h1>
         <Authenticated>
@@ -163,4 +165,14 @@ function UserMenu({ user }: { user: User }) {
       </button>
     </div>
   );
+}
+
+function AuthDebug() {
+  const auth = useAuth();
+
+  useEffect(() => {
+    console.log('Auth state', { loading: auth.loading, user: auth.user });
+  }, [auth.loading, auth.user]);
+
+  return null;
 }

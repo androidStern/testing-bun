@@ -13,6 +13,16 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  resolve: {
+    // Ensure the ESM-friendly build of cookie is used instead of the nested CJS copy under iron-session
+    alias: {
+      'iron-session/node_modules/cookie': 'cookie',
+    },
+  },
+  optimizeDeps: {
+    // Prebundle cookie so named exports (parse/serialize) are available in the browser
+    include: ['cookie'],
+  },
   plugins: [
     tsConfigPaths({
       projects: ['./tsconfig.json'],
