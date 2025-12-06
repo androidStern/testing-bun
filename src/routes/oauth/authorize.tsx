@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { getSignInUrl } from '@workos/authkit-tanstack-react-start';
+import { getSignUpUrl } from '@workos/authkit-tanstack-react-start';
 import {
   
   encryptSession,
@@ -53,12 +53,12 @@ export const Route = createFileRoute('/oauth/authorize')({
 
         // Redirect to WorkOS AuthKit for authentication
         // Use a special return path that will handle the profile check
-        const signInUrl = await getSignInUrl({
+        const signUpUrl = await getSignUpUrl({
           data: { returnPathname: '/oauth/callback' },
         });
 
         const headers = new Headers();
-        headers.set('Location', signInUrl);
+        headers.set('Location', signUpUrl);
         setOAuthSessionCookie(headers, encryptedSession);
 
         return new Response(null, {
