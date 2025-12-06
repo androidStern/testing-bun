@@ -1,6 +1,7 @@
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
 import { useForm } from '@tanstack/react-form';
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { z } from 'zod';
 
 import { api } from '../../convex/_generated/api';
@@ -41,14 +42,19 @@ function getErrorMessage(error: unknown): string {
 }
 
 export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormProps) {
+  const [errorDismissed, setErrorDismissed] = useState(false);
+
   const { data: existingProfile } = useSuspenseQuery(
     convexQuery(api.profiles.getByWorkosUserId, { workosUserId: user.id }),
   );
 
-  const { mutate: createProfile, isPending, isSuccess } = useMutation({
+  const { mutate: createProfile, isPending, isSuccess, error, isError } = useMutation({
     mutationFn: useConvexMutation(api.profiles.create),
     onSuccess: () => {
       onSuccess?.();
+    },
+    onError: () => {
+      setErrorDismissed(false);
     },
   });
 
@@ -69,6 +75,7 @@ export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormPro
       onSubmit: profileFormSchema,
     },
     onSubmit: ({ value }) => {
+      setErrorDismissed(false);
       createProfile({
         workosUserId: user.id,
         email: user.email,
@@ -107,6 +114,27 @@ export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormPro
         <p className="text-muted-foreground mb-6 sm:mb-8">
           Help us personalize your experience by telling us a bit about yourself.
         </p>
+
+        {isError && !errorDismissed && (
+          <div className="mb-6 bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 rounded-md flex items-start justify-between gap-3">
+            <div className="flex-1">
+              <p className="font-medium">Failed to save profile</p>
+              <p className="text-sm mt-1 opacity-90">
+                {error?.message || 'An unexpected error occurred. Please try again.'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setErrorDismissed(true)}
+              className="shrink-0 p-1 hover:bg-destructive/20 rounded transition-colors"
+              aria-label="Dismiss error"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
 
         <form
           onSubmit={(e) => {
