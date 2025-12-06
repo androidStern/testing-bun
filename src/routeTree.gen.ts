@@ -18,6 +18,7 @@ import { Route as OauthProfileRouteImport } from './routes/oauth/profile'
 import { Route as OauthCompleteRouteImport } from './routes/oauth/complete'
 import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
 import { Route as OauthAuthorizeRouteImport } from './routes/oauth/authorize'
+import { Route as AuthenticatedResumesRouteImport } from './routes/_authenticated/resumes'
 import { Route as AuthenticatedAuthenticatedRouteImport } from './routes/_authenticated/authenticated'
 
 const CallbackRoute = CallbackRouteImport.update({
@@ -64,6 +65,11 @@ const OauthAuthorizeRoute = OauthAuthorizeRouteImport.update({
   path: '/oauth/authorize',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedResumesRoute = AuthenticatedResumesRouteImport.update({
+  id: '/resumes',
+  path: '/resumes',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAuthenticatedRoute =
   AuthenticatedAuthenticatedRouteImport.update({
     id: '/authenticated',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/callback': typeof CallbackRoute
   '/authenticated': typeof AuthenticatedAuthenticatedRoute
+  '/resumes': typeof AuthenticatedResumesRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/complete': typeof OauthCompleteRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/callback': typeof CallbackRoute
   '/authenticated': typeof AuthenticatedAuthenticatedRoute
+  '/resumes': typeof AuthenticatedResumesRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/complete': typeof OauthCompleteRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/callback': typeof CallbackRoute
   '/_authenticated/authenticated': typeof AuthenticatedAuthenticatedRoute
+  '/_authenticated/resumes': typeof AuthenticatedResumesRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/complete': typeof OauthCompleteRoute
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
     | '/'
     | '/callback'
     | '/authenticated'
+    | '/resumes'
     | '/oauth/authorize'
     | '/oauth/callback'
     | '/oauth/complete'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
     | '/'
     | '/callback'
     | '/authenticated'
+    | '/resumes'
     | '/oauth/authorize'
     | '/oauth/callback'
     | '/oauth/complete'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/callback'
     | '/_authenticated/authenticated'
+    | '/_authenticated/resumes'
     | '/oauth/authorize'
     | '/oauth/callback'
     | '/oauth/complete'
@@ -220,6 +232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OauthAuthorizeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/resumes': {
+      id: '/_authenticated/resumes'
+      path: '/resumes'
+      fullPath: '/resumes'
+      preLoaderRoute: typeof AuthenticatedResumesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/authenticated': {
       id: '/_authenticated/authenticated'
       path: '/authenticated'
@@ -232,10 +251,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAuthenticatedRoute: typeof AuthenticatedAuthenticatedRoute
+  AuthenticatedResumesRoute: typeof AuthenticatedResumesRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAuthenticatedRoute: AuthenticatedAuthenticatedRoute,
+  AuthenticatedResumesRoute: AuthenticatedResumesRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

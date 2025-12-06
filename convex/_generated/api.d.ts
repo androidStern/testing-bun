@@ -12,6 +12,7 @@ import type * as inngest from "../inngest.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as oauth from "../oauth.js";
 import type * as profiles from "../profiles.js";
+import type * as resumes from "../resumes.js";
 
 import type {
   ApiFromModules,
@@ -24,6 +25,7 @@ declare const fullApi: ApiFromModules<{
   myFunctions: typeof myFunctions;
   oauth: typeof oauth;
   profiles: typeof profiles;
+  resumes: typeof resumes;
 }>;
 
 /**

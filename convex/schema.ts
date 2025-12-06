@@ -68,4 +68,41 @@ export default defineSchema({
     redirectUris: v.array(v.string()),
     createdAt: v.number(),
   }).index('by_client_id', ['clientId']),
+
+  // User resumes - one per user
+  resumes: defineTable({
+    workosUserId: v.string(),
+    personalInfo: v.object({
+      name: v.string(),
+      email: v.string(),
+      phone: v.optional(v.string()),
+      location: v.optional(v.string()),
+      linkedin: v.optional(v.string()),
+    }),
+    summary: v.optional(v.string()),
+    workExperience: v.array(
+      v.object({
+        id: v.string(),
+        company: v.optional(v.string()),
+        position: v.optional(v.string()),
+        startDate: v.optional(v.string()),
+        endDate: v.optional(v.string()),
+        description: v.optional(v.string()),
+        achievements: v.optional(v.string()),
+      })
+    ),
+    education: v.array(
+      v.object({
+        id: v.string(),
+        institution: v.optional(v.string()),
+        degree: v.optional(v.string()),
+        field: v.optional(v.string()),
+        graduationDate: v.optional(v.string()),
+        description: v.optional(v.string()),
+      })
+    ),
+    skills: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index('by_workos_user_id', ['workosUserId']),
 });
