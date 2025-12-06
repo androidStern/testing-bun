@@ -1,5 +1,15 @@
+import { NoOp } from 'convex-helpers/server/customFunctions';
+import { zCustomMutation } from 'convex-helpers/server/zod4';
 import { v } from 'convex/values';
+
+import {
+  profileFormSchema,
+  profileMutationSchema,
+} from '../src/lib/schemas/profile';
+
 import { mutation, query } from './_generated/server';
+
+const zodMutation = zCustomMutation(mutation, NoOp);
 
 export const getByWorkosUserId = query({
   args: { workosUserId: v.string() },
@@ -23,20 +33,10 @@ export const getByEmail = query({
   },
 });
 
-export const create = mutation({
-  args: {
-    workosUserId: v.string(),
-    email: v.string(),
-    thingsICanOffer: v.array(v.string()),
-    headline: v.optional(v.string()),
-    bio: v.optional(v.string()),
-    resumeLink: v.optional(v.string()),
-    location: v.optional(v.string()),
-    website: v.optional(v.string()),
-    instagramUrl: v.optional(v.string()),
-    linkedinUrl: v.optional(v.string()),
-  },
+export const create = zodMutation({
+  args: profileMutationSchema,
   handler: async (ctx, args) => {
+    // Schema transforms handle empty string -> undefined conversion
     const existing = await ctx.db
       .query('profiles')
       .withIndex('by_workos_user_id', (q) =>
@@ -62,19 +62,15 @@ export const create = mutation({
   },
 });
 
-export const update = mutation({
-  args: {
-    workosUserId: v.string(),
-    thingsICanOffer: v.optional(v.array(v.string())),
-    headline: v.optional(v.string()),
-    bio: v.optional(v.string()),
-    resumeLink: v.optional(v.string()),
-    location: v.optional(v.string()),
-    website: v.optional(v.string()),
-    instagramUrl: v.optional(v.string()),
-    linkedinUrl: v.optional(v.string()),
-  },
+export const update = zodMutation({
+  args: profileFormSchema
+    .partial()
+    .required({ thingsICanOffer: true })
+    .extend({
+      workosUserId: profileMutationSchema.shape.workosUserId,
+    }),
   handler: async (ctx, args) => {
+    // Schema transforms handle empty string -> undefined conversion
     const { workosUserId, ...updates } = args;
 
     const profile = await ctx.db
