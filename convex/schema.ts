@@ -10,6 +10,8 @@ export default defineSchema({
   profiles: defineTable({
     workosUserId: v.string(),
     email: v.string(),
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
     thingsICanOffer: v.array(v.string()),
     headline: v.optional(v.string()),
     bio: v.optional(v.string()),

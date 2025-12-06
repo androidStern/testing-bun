@@ -30,6 +30,8 @@ export const profileFormSchema = z.object({
 export const profileMutationSchema = profileFormSchema.extend({
   workosUserId: z.string().min(1),
   email: z.string().email(),
+  firstName: optionalString,
+  lastName: optionalString,
 });
 
 // Type exports for use throughout the app

@@ -7,6 +7,7 @@ import {
   profileMutationSchema,
 } from '../src/lib/schemas/profile';
 
+import { internal } from './_generated/api';
 import { mutation, query } from './_generated/server';
 
 const zodMutation = zCustomMutation(mutation, NoOp);
@@ -46,19 +47,39 @@ export const create = zodMutation({
 
     const now = Date.now();
 
+    let profileId: string;
+
     if (existing) {
       await ctx.db.patch(existing._id, {
         ...args,
         updatedAt: now,
       });
-      return existing._id;
+      profileId = existing._id;
+    } else {
+      profileId = await ctx.db.insert('profiles', {
+        ...args,
+        createdAt: now,
+        updatedAt: now,
+      });
     }
 
-    return await ctx.db.insert('profiles', {
-      ...args,
-      createdAt: now,
-      updatedAt: now,
+    // Send profile data to Inngest webhook
+    await ctx.scheduler.runAfter(0, internal.inngest.sendProfileWebhook, {
+      workosUserId: args.workosUserId,
+      email: args.email,
+      firstName: args.firstName,
+      lastName: args.lastName,
+      thingsICanOffer: args.thingsICanOffer,
+      headline: args.headline,
+      bio: args.bio,
+      location: args.location,
+      website: args.website,
+      resumeLink: args.resumeLink,
+      linkedinUrl: args.linkedinUrl,
+      instagramUrl: args.instagramUrl,
     });
+
+    return profileId;
   },
 });
 
@@ -85,6 +106,24 @@ export const update = zodMutation({
     await ctx.db.patch(profile._id, {
       ...updates,
       updatedAt: Date.now(),
+    });
+
+    // Send updated profile data to Inngest webhook
+    // Merge existing profile with updates
+    const mergedProfile = { ...profile, ...updates };
+    await ctx.scheduler.runAfter(0, internal.inngest.sendProfileWebhook, {
+      workosUserId: profile.workosUserId,
+      email: profile.email,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      thingsICanOffer: mergedProfile.thingsICanOffer,
+      headline: mergedProfile.headline,
+      bio: mergedProfile.bio,
+      location: mergedProfile.location,
+      website: mergedProfile.website,
+      resumeLink: mergedProfile.resumeLink,
+      linkedinUrl: mergedProfile.linkedinUrl,
+      instagramUrl: mergedProfile.instagramUrl,
     });
 
     return profile._id;

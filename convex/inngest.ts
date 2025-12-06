@@ -1,0 +1,81 @@
+import { v } from 'convex/values';
+import { internalAction } from './_generated/server';
+
+// Map our thingsICanOffer values to the format Inngest expects
+const PLATFORM_GOALS_MAP: Record<string, string> = {
+  'To find a job': '🔍 To find a job',
+  'To lend a hand': '🤝 To give back to the community',
+  'To post a job': '💼 To post a job',
+  Entrepreneurship: '🚀 Entrepreneurship',
+};
+
+export const sendProfileWebhook = internalAction({
+  args: {
+    workosUserId: v.string(),
+    email: v.string(),
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
+    thingsICanOffer: v.array(v.string()),
+    headline: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    location: v.optional(v.string()),
+    website: v.optional(v.string()),
+    resumeLink: v.optional(v.string()),
+    linkedinUrl: v.optional(v.string()),
+    instagramUrl: v.optional(v.string()),
+  },
+  handler: async (_ctx, args) => {
+    const webhookUrl = process.env.INNGEST_WEBHOOK_URL;
+
+    if (!webhookUrl) {
+      console.warn('INNGEST_WEBHOOK_URL not configured, skipping webhook');
+      return { success: false, reason: 'no_webhook_url' };
+    }
+
+    // Map platform goals to expected format
+    const platformGoals = args.thingsICanOffer
+      .map((goal) => PLATFORM_GOALS_MAP[goal] || goal)
+      .filter(Boolean);
+
+    // Build the payload in the format Inngest transform expects
+    const payload = {
+      data: {
+        fields: {
+          first_name: args.firstName || undefined,
+          last_name: args.lastName || undefined,
+          most_recent_title: args.headline || undefined,
+          platform_goals: platformGoals,
+          skills: undefined, // Not collected in current form
+          // Map additional fields as needed
+        },
+        user: {
+          email: args.email,
+          email_verified: true,
+          user_id: args.workosUserId,
+        },
+      },
+    };
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('Inngest webhook failed:', response.status, text);
+        return { success: false, reason: 'webhook_failed', status: response.status };
+      }
+
+      console.log('Inngest webhook sent successfully');
+      return { success: true };
+    } catch (error) {
+      console.error('Inngest webhook error:', error);
+      return { success: false, reason: 'fetch_error' };
+    }
+  },
+});

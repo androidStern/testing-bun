@@ -78,13 +78,19 @@ export const Route = createFileRoute('/oauth/userinfo')({
 
         // Build userinfo response
         // Standard OIDC claims + custom claims for Circle
+        const firstName = profile?.firstName || '';
+        const lastName = profile?.lastName || '';
+        const fullName = [firstName, lastName].filter(Boolean).join(' ');
+
         const userinfo = {
           sub: accessToken.workosUserId,
           email: profile?.email || '',
           email_verified: true,
 
           // Profile data that Circle can use
-          name: profile?.headline || '',
+          name: fullName,
+          first_name: firstName,
+          last_name: lastName,
           bio: profile?.bio || '',
           location: profile?.location || '',
           website: profile?.website || '',

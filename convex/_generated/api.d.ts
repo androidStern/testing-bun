@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as inngest from "../inngest.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as oauth from "../oauth.js";
 import type * as profiles from "../profiles.js";
@@ -19,6 +20,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  inngest: typeof inngest;
   myFunctions: typeof myFunctions;
   oauth: typeof oauth;
   profiles: typeof profiles;
