@@ -45,8 +45,11 @@ export const sendProfileWebhook = internalAction({
           last_name: args.lastName || undefined,
           most_recent_title: args.headline || undefined,
           platform_goals: platformGoals,
-          skills: undefined, // Not collected in current form
-          // Map additional fields as needed
+          // TODO: The job-ingress webhook schema doesn't have a `bio` field.
+          // It only accepts `entrepreneurship_vision` which maps to Circle's bio.
+          // We should update job-ingress to accept `bio` directly and fall back
+          // to entrepreneurship_vision for backwards compatibility.
+          entrepreneurship_vision: args.bio || undefined,
         },
         user: {
           email: args.email,

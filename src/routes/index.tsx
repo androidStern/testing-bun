@@ -5,13 +5,22 @@ import { getAuth, getSignInUrl, getSignUpUrl } from '@workos/authkit-tanstack-re
 import { useEffect } from 'react';
 import type { User } from '@workos/authkit-tanstack-react-start';
 import { ProfileForm } from '../components/ProfileForm';
+import { api } from '../../convex/_generated/api';
+
+import { convexQuery, } from '@convex-dev/react-query';
 
 export const Route = createFileRoute('/')({
   component: Home,
-  loader: async () => {
+  loader: async ({ context }) => {
     const { user } = await getAuth();
     const signInUrl = await getSignInUrl();
     const signUpUrl = await getSignUpUrl();
+
+    if (user){
+        await context.queryClient.ensureQueryData(
+            convexQuery(api.profiles.getByWorkosUserId, { workosUserId: user.id }),
+            );
+    }
 
     return { user, signInUrl, signUpUrl };
   },
