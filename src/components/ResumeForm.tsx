@@ -991,12 +991,12 @@ export function ResumeForm({ user }: ResumeFormProps) {
       <form.Subscribe selector={state => [state.isDirty, state.isSubmitting, state.canSubmit]}>
         {([isDirty, isSubmitting, canSubmit]) =>
           justSaved ? (
-            <div className='fixed bottom-4 left-4 right-4 z-50 bg-card border border-border shadow-lg rounded-lg p-3 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2'>
+            <div className='fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-4rem)] max-w-[calc(56rem-2rem)] z-50 bg-card border border-border shadow-lg rounded-lg p-3 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2'>
               <CheckCircle className='h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-500' />
               <span className='text-sm font-medium text-green-600 dark:text-green-500'>Saved</span>
             </div>
           ) : isDirty ? (
-            <div className='fixed bottom-4 left-4 right-4 z-50 bg-card border border-border shadow-lg rounded-lg p-3 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2'>
+            <div className='fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-4rem)] max-w-[calc(56rem-2rem)] z-50 bg-card border border-border shadow-lg rounded-lg p-3 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2'>
               <div className='flex items-center gap-2 text-amber-600 dark:text-amber-500'>
                 <AlertCircle className='h-4 w-4 flex-shrink-0' />
                 <span className='text-sm font-medium'>Unsaved changes</span>
@@ -1382,7 +1382,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
                                   modalTitle='Key Achievements'
                                   onBlur={field.handleBlur}
                                   onChange={field.handleChange}
-                                  placeholder='• Increased sales by 20%&#10;• Led a team of 5 developers'
+                                  placeholder='• Improved customer satisfaction scores by 15%&#10;• Trained 3 new team members'
                                   rows={3}
                                   value={field.state.value}
                                 />
@@ -1451,7 +1451,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
                                   className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
                                   onBlur={field.handleBlur}
                                   onChange={e => field.handleChange(e.target.value)}
-                                  placeholder='University Name'
+                                  placeholder='School or Institution Name'
                                   type='text'
                                   value={field.state.value}
                                 />
@@ -1469,7 +1469,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
                                   className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
                                   onBlur={field.handleBlur}
                                   onChange={e => field.handleChange(e.target.value)}
-                                  placeholder='Bachelor of Science'
+                                  placeholder='High School Diploma, GED, Associate Degree, etc.'
                                   type='text'
                                   value={field.state.value}
                                 />
@@ -1487,7 +1487,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
                                   className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
                                   onBlur={field.handleBlur}
                                   onChange={e => field.handleChange(e.target.value)}
-                                  placeholder='Computer Science'
+                                  placeholder='General Studies, Business, Healthcare, etc.'
                                   type='text'
                                   value={field.state.value}
                                 />
@@ -1581,7 +1581,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
                   modalTitle='Skills'
                   onBlur={field.handleBlur}
                   onChange={field.handleChange}
-                  placeholder='JavaScript, React, Node.js, Project Management, Team Leadership'
+                  placeholder='Customer Service, Microsoft Office, Communication, Problem Solving, Time Management'
                   rows={3}
                   value={field.state.value || ''}
                 />
