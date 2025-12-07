@@ -22,6 +22,7 @@ import { nanoid } from 'nanoid'
 import { useEffect, useRef, useState } from 'react'
 
 import { ResumePreview } from '@/components/ResumePreview'
+import { ExpandableTextarea } from '@/components/ui/expandable-textarea'
 import { HeroVideoDialog } from '@/components/ui/hero-video-dialog'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -534,16 +535,14 @@ export function ResumeForm({ user }: ResumeFormProps) {
             </div>
             <form.Field name='summary'>
               {field => (
-                <div>
-                  <textarea
-                    className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none'
-                    onBlur={field.handleBlur}
-                    onChange={e => field.handleChange(e.target.value)}
-                    placeholder='Write a concise summary of your professional background...'
-                    rows={4}
-                    value={field.state.value || ''}
-                  />
-                </div>
+                <ExpandableTextarea
+                  modalTitle='Professional Summary'
+                  onBlur={field.handleBlur}
+                  onChange={field.handleChange}
+                  placeholder='Write a concise summary of your professional background...'
+                  rows={4}
+                  value={field.state.value || ''}
+                />
               )}
             </form.Field>
             <SectionGuide
@@ -682,10 +681,10 @@ export function ResumeForm({ user }: ResumeFormProps) {
                             </div>
                             <form.Field name={`workExperience[${index}].description`}>
                               {field => (
-                                <textarea
-                                  className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none'
+                                <ExpandableTextarea
+                                  modalTitle='Job Description'
                                   onBlur={field.handleBlur}
-                                  onChange={e => field.handleChange(e.target.value)}
+                                  onChange={field.handleChange}
                                   placeholder='Describe your role and responsibilities...'
                                   rows={3}
                                   value={field.state.value}
@@ -700,10 +699,10 @@ export function ResumeForm({ user }: ResumeFormProps) {
                             </label>
                             <form.Field name={`workExperience[${index}].achievements`}>
                               {field => (
-                                <textarea
-                                  className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none'
+                                <ExpandableTextarea
+                                  modalTitle='Key Achievements'
                                   onBlur={field.handleBlur}
-                                  onChange={e => field.handleChange(e.target.value)}
+                                  onChange={field.handleChange}
                                   placeholder='• Increased sales by 20%&#10;• Led a team of 5 developers'
                                   rows={3}
                                   value={field.state.value}
@@ -854,10 +853,10 @@ export function ResumeForm({ user }: ResumeFormProps) {
                             </div>
                             <form.Field name={`education[${index}].description`}>
                               {field => (
-                                <textarea
-                                  className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none'
+                                <ExpandableTextarea
+                                  modalTitle='Additional Information'
                                   onBlur={field.handleBlur}
-                                  onChange={e => field.handleChange(e.target.value)}
+                                  onChange={field.handleChange}
                                   placeholder='Relevant coursework, honors, activities...'
                                   rows={2}
                                   value={field.state.value}
@@ -885,16 +884,14 @@ export function ResumeForm({ user }: ResumeFormProps) {
             <h2 className='text-lg font-semibold text-foreground mb-4'>Skills</h2>
             <form.Field name='skills'>
               {field => (
-                <div>
-                  <textarea
-                    className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none'
-                    onBlur={field.handleBlur}
-                    onChange={e => field.handleChange(e.target.value)}
-                    placeholder='JavaScript, React, Node.js, Project Management, Team Leadership'
-                    rows={3}
-                    value={field.state.value || ''}
-                  />
-                </div>
+                <ExpandableTextarea
+                  modalTitle='Skills'
+                  onBlur={field.handleBlur}
+                  onChange={field.handleChange}
+                  placeholder='JavaScript, React, Node.js, Project Management, Team Leadership'
+                  rows={3}
+                  value={field.state.value || ''}
+                />
               )}
             </form.Field>
             <SectionGuide
