@@ -12,10 +12,12 @@ import {
   ExternalLink,
   GraduationCap,
   Lightbulb,
+  Mic,
   PlusCircle,
   RotateCcw,
   Save,
   Sparkles,
+  Square,
   Trash2,
   Upload,
 } from 'lucide-react'
@@ -26,14 +28,20 @@ import { ResumePreview } from '@/components/ResumePreview'
 import { ExpandableTextarea } from '@/components/ui/expandable-textarea'
 import { HeroVideoDialog } from '@/components/ui/hero-video-dialog'
 import { useToast } from '@/hooks/use-toast'
+import type {
+  EducationFromDictation,
+  ResumeExtraction,
+  ResumeFormData,
+  SummaryFromDictation,
+  WorkExperienceFromDictation,
+} from '@/lib/schemas/resume'
 import {
   createDefaultResumeFormValues,
   createEmptyEducation,
   createEmptyWorkExperience,
-  type ResumeExtraction,
-  type ResumeFormData,
   resumeFormSchema,
 } from '@/lib/schemas/resume'
+
 import { api } from '../../convex/_generated/api'
 
 function SectionGuide({
@@ -97,6 +105,65 @@ function SectionGuide({
   )
 }
 
+interface SectionToolbarProps {
+  onDictate?: () => void
+  onPolish?: () => void
+  isRecording?: boolean
+  isTranscribing?: boolean
+  isPolishing?: boolean
+  showDictate?: boolean
+  showPolish?: boolean
+}
+
+function SectionToolbar({
+  onDictate,
+  onPolish,
+  isRecording = false,
+  isTranscribing = false,
+  isPolishing = false,
+  showDictate = true,
+  showPolish = true,
+}: SectionToolbarProps) {
+  return (
+    <div className='flex items-center gap-1'>
+      {showDictate && onDictate && (
+        <button
+          className='flex flex-col items-center justify-center p-2 rounded-lg hover:bg-primary/10 disabled:opacity-50 transition-colors min-w-[52px]'
+          disabled={isTranscribing}
+          onClick={onDictate}
+          type='button'
+        >
+          <div className={`p-1.5 rounded-full ${isRecording ? 'bg-destructive/10' : 'bg-primary/10'}`}>
+            {isRecording ? (
+              <Square className='h-4 w-4 text-destructive' />
+            ) : (
+              <Mic className='h-4 w-4 text-primary' />
+            )}
+          </div>
+          <span className={`text-[10px] font-medium mt-1 ${isRecording ? 'text-destructive' : 'text-primary'}`}>
+            {isRecording ? 'Stop' : isTranscribing ? 'Wait...' : 'Dictate'}
+          </span>
+        </button>
+      )}
+      {showPolish && onPolish && (
+        <button
+          className='flex flex-col items-center justify-center p-2 rounded-lg hover:bg-primary/10 disabled:opacity-50 transition-colors min-w-[52px]'
+          disabled={isPolishing}
+          onClick={onPolish}
+          type='button'
+        >
+          <div className='p-1.5 rounded-full bg-primary/10'>
+            <Sparkles className='h-4 w-4 text-primary' />
+          </div>
+          <span className='text-[10px] font-medium mt-1 text-primary'>
+            {isPolishing ? 'Wait...' : 'Polish'}
+          </span>
+        </button>
+      )}
+    </div>
+  )
+}
+
 interface ResumeFormProps {
   user: {
     email: string
@@ -105,6 +172,34 @@ interface ResumeFormProps {
     lastName?: string | null
   }
 }
+
+type RecordingTarget =
+  | { type: 'summary' }
+  | { type: 'workExperience'; index: number }
+  | { type: 'education'; index: number }
+
+type TranscribedSummaryResult = {
+  section: 'summary'
+  summary: SummaryFromDictation['summary']
+  transcript: string
+}
+
+type TranscribedWorkResult = {
+  section: 'workExperience'
+  transcript: string
+  workExperience: WorkExperienceFromDictation['workExperience'][number]
+}
+
+type TranscribedEducationResult = {
+  education: EducationFromDictation['education'][number]
+  section: 'education'
+  transcript: string
+}
+
+type TranscribeSectionResult =
+  | TranscribedSummaryResult
+  | TranscribedWorkResult
+  | TranscribedEducationResult
 
 // Helper to map extracted resume data to form format
 function mapExtractedToFormData(
@@ -153,8 +248,13 @@ export function ResumeForm({ user }: ResumeFormProps) {
   const [polishingField, setPolishingField] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const [recordingTarget, setRecordingTarget] = useState<RecordingTarget | null>(null)
   const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Array<Blob>>([])
   const { toast } = useToast()
 
   // Cleanup timeout on unmount
@@ -188,6 +288,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
   const polishWithAI = useAction(api.resumes.polishWithAI)
   const generateUploadUrl = useConvexMutationDirect(api.resumes.generateUploadUrl)
   const parseResumeFromStorage = useAction(api.resumes.parseResumeFromStorage)
+  const transcribeSectionFromStorage = useAction(api.resumes.transcribeSectionFromStorage)
 
   const form = useForm({
     defaultValues: createDefaultResumeFormValues({
@@ -199,8 +300,11 @@ export function ResumeForm({ user }: ResumeFormProps) {
     }),
     onSubmit: async ({ value }) => {
       await saveResume({ workosUserId: user.id, ...value })
-      // Reset form with current values to clear dirty state
-      form.reset(value)
+      // Reset form with the submitted values to clear dirty state
+      // Use requestAnimationFrame to ensure the mutation has fully completed
+      requestAnimationFrame(() => {
+        form.reset(value)
+      })
     },
     validators: {
       onSubmit: resumeFormSchema,
@@ -324,6 +428,174 @@ export function ResumeForm({ user }: ResumeFormProps) {
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
+    }
+  }
+
+  const startRecording = async (target: RecordingTarget) => {
+    if (isRecording || isTranscribing) return
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast({
+        description: 'Your browser does not support audio recording or permission is blocked.',
+        title: 'Microphone unavailable',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+      audioChunksRef.current = []
+      setRecordingTarget(target)
+
+      recorder.ondataavailable = event => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      recorder.onstop = async () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        audioChunksRef.current = []
+        stream.getTracks().forEach(track => track.stop())
+        setIsRecording(false)
+        await handleAudioBlob(blob, target)
+      }
+
+      mediaRecorderRef.current = recorder
+      recorder.start()
+      setIsRecording(true)
+    } catch (error) {
+      console.error('Error starting recording:', error)
+      toast({
+        description: 'Please check microphone permissions and try again.',
+        title: 'Could not start recording',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const stopRecording = () => {
+    const recorder = mediaRecorderRef.current
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.stop()
+    }
+  }
+
+  const handleAudioBlob = async (blob: Blob, target: RecordingTarget) => {
+    setIsTranscribing(true)
+    try {
+      // 1. Upload audio to Convex storage (reusing generateUploadUrl)
+      const uploadUrl = await generateUploadUrl()
+      const uploadResponse = await fetch(uploadUrl, {
+        body: blob,
+        headers: { 'Content-Type': blob.type },
+        method: 'POST',
+      })
+      if (!uploadResponse.ok) throw new Error('Upload failed')
+      const { storageId } = (await uploadResponse.json()) as { storageId: string }
+
+      // 2. Ask Convex to transcribe + extract structured section
+      const result = (await transcribeSectionFromStorage({
+        mimeType: blob.type,
+        section: target.type,
+        storageId: storageId as never,
+      })) as TranscribeSectionResult
+
+      // 3. Merge structured data into the form, then polish text fields using existing polish logic
+      if (result.section === 'summary') {
+        // Polish the transcribed summary using the same logic as polishSummaryWithAI
+        const values = form.state.values
+        const polished = await polishWithAI({
+          context: {
+            personalInfo: {
+              location: values.personalInfo.location,
+              name: values.personalInfo.name,
+            },
+            skills: values.skills,
+            workExperience: values.workExperience.map(exp => ({
+              achievements: exp.achievements,
+              company: exp.company,
+              description: exp.description,
+              endDate: exp.endDate,
+              position: exp.position,
+              startDate: exp.startDate,
+            })),
+          },
+          currentText: result.summary,
+          type: 'summary',
+        })
+        form.setFieldValue('summary', polished.polishedText)
+      } else if (result.section === 'workExperience' && target.type === 'workExperience') {
+        const { index } = target
+        const current = form.state.values.workExperience[index]
+        const we = result.workExperience
+
+        // Update structured fields first
+        form.setFieldValue(`workExperience[${index}].company`, we.company ?? current.company)
+        form.setFieldValue(`workExperience[${index}].position`, we.position ?? current.position)
+        form.setFieldValue(`workExperience[${index}].startDate`, we.startDate ?? current.startDate)
+        form.setFieldValue(`workExperience[${index}].endDate`, we.endDate ?? current.endDate)
+        form.setFieldValue(`workExperience[${index}].achievements`, we.achievements ?? current.achievements)
+
+        // Polish the description using the same logic as polishWorkExperienceWithAI
+        if (we.description) {
+          const polished = await polishWithAI({
+            context: {
+              achievements: we.achievements ?? current.achievements,
+              company: we.company ?? current.company,
+              position: we.position ?? current.position,
+            },
+            currentText: we.description,
+            type: 'workExperience',
+          })
+          form.setFieldValue(`workExperience[${index}].description`, polished.polishedText)
+        } else {
+          form.setFieldValue(`workExperience[${index}].description`, current.description)
+        }
+      } else if (result.section === 'education' && target.type === 'education') {
+        const { index } = target
+        const currentEdu = form.state.values.education[index]
+        const edu = result.education
+
+        // Update structured fields first
+        form.setFieldValue(`education[${index}].institution`, edu.institution ?? currentEdu.institution)
+        form.setFieldValue(`education[${index}].degree`, edu.degree ?? currentEdu.degree)
+        form.setFieldValue(`education[${index}].field`, edu.field ?? currentEdu.field)
+        form.setFieldValue(`education[${index}].graduationDate`, edu.graduationDate ?? currentEdu.graduationDate)
+
+        // Polish the description using the same logic as polishEducationWithAI
+        if (edu.description) {
+          const polished = await polishWithAI({
+            context: {
+              degree: edu.degree ?? currentEdu.degree,
+              field: edu.field ?? currentEdu.field,
+              institution: edu.institution ?? currentEdu.institution,
+            },
+            currentText: edu.description,
+            type: 'education',
+          })
+          form.setFieldValue(`education[${index}].description`, polished.polishedText)
+        } else {
+          form.setFieldValue(`education[${index}].description`, currentEdu.description)
+        }
+      }
+
+      toast({
+        description: 'We used your recording to fill this section. Please review and adjust.',
+        title: 'Dictation captured',
+      })
+    } catch (error) {
+      console.error('Error transcribing audio:', error)
+      toast({
+        description: 'Something went wrong while transcribing. Please try again or type manually.',
+        title: 'Dictation failed',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsTranscribing(false)
+      setRecordingTarget(null)
     }
   }
 
@@ -679,17 +951,21 @@ export function ResumeForm({ user }: ResumeFormProps) {
 
           {/* Professional Summary */}
           <div>
-            <div className='flex justify-between items-center mb-4'>
+            <div className='flex justify-between items-start gap-2 mb-4'>
               <h2 className='text-lg font-semibold text-foreground'>Professional Summary</h2>
-              <button
-                className='text-sm text-primary hover:text-primary/80 disabled:opacity-50 transition-colors flex items-center gap-1'
-                disabled={isPolishing}
-                onClick={polishSummaryWithAI}
-                type='button'
-              >
-                <Sparkles className='h-3 w-3' />
-                {polishingField === 'summary' ? 'Polishing...' : 'Polish with AI'}
-              </button>
+              <SectionToolbar
+                isPolishing={polishingField === 'summary'}
+                isRecording={isRecording && recordingTarget?.type === 'summary'}
+                isTranscribing={isTranscribing && recordingTarget?.type === 'summary'}
+                onDictate={() => {
+                  if (isRecording && recordingTarget?.type === 'summary') {
+                    stopRecording()
+                  } else {
+                    void startRecording({ type: 'summary' })
+                  }
+                }}
+                onPolish={polishSummaryWithAI}
+              />
             </div>
             <form.Field name='summary'>
               {field => (
@@ -821,21 +1097,35 @@ export function ResumeForm({ user }: ResumeFormProps) {
                           </form.Field>
 
                           <div className='sm:col-span-2'>
-                            <div className='flex justify-between items-center mb-1.5'>
+                            <div className='flex justify-between items-start gap-2 mb-1.5'>
                               <label className='block text-sm font-medium text-foreground'>
                                 Description
                               </label>
-                              <button
-                                className='text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors flex items-center gap-1'
-                                disabled={isPolishing}
-                                onClick={() => polishWorkExperienceWithAI(experience.id, index)}
-                                type='button'
-                              >
-                                <Sparkles className='h-3 w-3' />
-                                {polishingField === `work-${experience.id}`
-                                  ? 'Polishing...'
-                                  : 'Polish with AI'}
-                              </button>
+                              <SectionToolbar
+                                isPolishing={polishingField === `work-${experience.id}`}
+                                isRecording={
+                                  isRecording &&
+                                  recordingTarget?.type === 'workExperience' &&
+                                  recordingTarget.index === index
+                                }
+                                isTranscribing={
+                                  isTranscribing &&
+                                  recordingTarget?.type === 'workExperience' &&
+                                  recordingTarget.index === index
+                                }
+                                onDictate={() => {
+                                  if (
+                                    isRecording &&
+                                    recordingTarget?.type === 'workExperience' &&
+                                    recordingTarget.index === index
+                                  ) {
+                                    stopRecording()
+                                  } else {
+                                    void startRecording({ type: 'workExperience', index })
+                                  }
+                                }}
+                                onPolish={() => polishWorkExperienceWithAI(experience.id, index)}
+                              />
                             </div>
                             <form.Field name={`workExperience[${index}].description`}>
                               {field => (
@@ -993,21 +1283,35 @@ export function ResumeForm({ user }: ResumeFormProps) {
                           </form.Field>
 
                           <div className='sm:col-span-2'>
-                            <div className='flex justify-between items-center mb-1.5'>
+                            <div className='flex justify-between items-start gap-2 mb-1.5'>
                               <label className='block text-sm font-medium text-foreground'>
                                 Additional Information
                               </label>
-                              <button
-                                className='text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors flex items-center gap-1'
-                                disabled={isPolishing}
-                                onClick={() => polishEducationWithAI(education.id, index)}
-                                type='button'
-                              >
-                                <Sparkles className='h-3 w-3' />
-                                {polishingField === `edu-${education.id}`
-                                  ? 'Polishing...'
-                                  : 'Polish with AI'}
-                              </button>
+                              <SectionToolbar
+                                isPolishing={polishingField === `edu-${education.id}`}
+                                isRecording={
+                                  isRecording &&
+                                  recordingTarget?.type === 'education' &&
+                                  recordingTarget.index === index
+                                }
+                                isTranscribing={
+                                  isTranscribing &&
+                                  recordingTarget?.type === 'education' &&
+                                  recordingTarget.index === index
+                                }
+                                onDictate={() => {
+                                  if (
+                                    isRecording &&
+                                    recordingTarget?.type === 'education' &&
+                                    recordingTarget.index === index
+                                  ) {
+                                    stopRecording()
+                                  } else {
+                                    void startRecording({ type: 'education', index })
+                                  }
+                                }}
+                                onPolish={() => polishEducationWithAI(education.id, index)}
+                              />
                             </div>
                             <form.Field name={`education[${index}].description`}>
                               {field => (

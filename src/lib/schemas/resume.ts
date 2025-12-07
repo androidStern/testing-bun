@@ -131,6 +131,83 @@ export const resumeExtractionSchema = z.object({
 
 export type ResumeExtraction = z.infer<typeof resumeExtractionSchema>
 
+// Section-level extraction schemas for dictation → generateObject
+export const summaryFromDictationSchema = z.object({
+  summary: z
+    .string()
+    .describe('A polished, ATS-friendly professional summary generated from a spoken transcript.'),
+})
+
+export const workExperienceFromDictationSchema = z.object({
+  workExperience: z
+    .array(
+      z.object({
+        achievements: z
+          .string()
+          .nullable()
+          .describe('Key achievements or accomplishments in this role, ideally bullet-ready.'),
+        company: z
+          .string()
+          .nullable()
+          .describe('Company or employer name for this role.'),
+        description: z
+          .string()
+          .nullable()
+          .describe('2–4 sentence job description summarizing responsibilities and impact.'),
+        endDate: z
+          .string()
+          .nullable()
+          .describe('End date or "Present" if this is the current role (e.g., Jan 2024 or Present).'),
+        position: z
+          .string()
+          .nullable()
+          .describe('Job title or position for this role.'),
+        startDate: z
+          .string()
+          .nullable()
+          .describe('Start date (e.g., Jan 2021).'),
+      }),
+    )
+    .min(1)
+    .max(1)
+    .describe('Exactly one work experience entry parsed from the spoken transcript.'),
+})
+
+export const educationFromDictationSchema = z.object({
+  education: z
+    .array(
+      z.object({
+        degree: z
+          .string()
+          .nullable()
+          .describe('Degree type (BS, MS, PhD, etc.) mentioned in the transcript.'),
+        description: z
+          .string()
+          .nullable()
+          .describe('Honors, GPA, relevant activities or notes to show under this education.'),
+        field: z
+          .string()
+          .nullable()
+          .describe('Field of study or major.'),
+        graduationDate: z
+          .string()
+          .nullable()
+          .describe('Graduation date or expected date.'),
+        institution: z
+          .string()
+          .nullable()
+          .describe('School or university name.'),
+      }),
+    )
+    .min(1)
+    .max(1)
+    .describe('Exactly one education entry parsed from the spoken transcript.'),
+})
+
+export type SummaryFromDictation = z.infer<typeof summaryFromDictationSchema>
+export type WorkExperienceFromDictation = z.infer<typeof workExperienceFromDictationSchema>
+export type EducationFromDictation = z.infer<typeof educationFromDictationSchema>
+
 // Default form values factory
 export function createDefaultResumeFormValues(options?: {
   email?: string

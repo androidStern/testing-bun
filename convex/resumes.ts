@@ -2,7 +2,13 @@ import { v } from 'convex/values'
 import { NoOp } from 'convex-helpers/server/customFunctions'
 import { zCustomMutation } from 'convex-helpers/server/zod4'
 
-import { resumeExtractionSchema, resumeMutationSchema } from '../src/lib/schemas/resume'
+import {
+  educationFromDictationSchema,
+  resumeExtractionSchema,
+  resumeMutationSchema,
+  summaryFromDictationSchema,
+  workExperienceFromDictationSchema,
+} from '../src/lib/schemas/resume'
 
 import { action, mutation, query } from './_generated/server'
 
@@ -253,5 +259,98 @@ export const parseResumeFromStorage = action({
         'You are a strict resume parser. Extract structured data from the resume. Use null for unknown fields.',
     })
     return object
+  },
+})
+
+// Transcribe audio and extract structured section data
+export const transcribeSectionFromStorage = action({
+  args: {
+    mimeType: v.string(),
+    section: v.union(
+      v.literal('summary'),
+      v.literal('workExperience'),
+      v.literal('education'),
+    ),
+    storageId: v.id('_storage'),
+  },
+  handler: async (ctx, args) => {
+    const url = await ctx.storage.getUrl(args.storageId)
+    if (!url) throw new Error('File URL not found')
+
+    const { default: OpenAI, toFile } = await import('openai')
+    const { generateObject } = await import('ai')
+    const { openai } = await import('@ai-sdk/openai')
+
+    const client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+
+    // Download audio from Convex storage
+    const response = await fetch(url)
+    if (!response.ok) throw new Error('Failed to download audio')
+    const arrayBuffer = await response.arrayBuffer()
+
+    // Convert ArrayBuffer → File for Whisper API
+    const file = await toFile(new Uint8Array(arrayBuffer), 'dictation.webm', {
+      type: args.mimeType,
+    })
+
+    const transcription = await client.audio.transcriptions.create({
+      file,
+      model: 'whisper-1',
+    })
+
+    const transcript = transcription.text
+    if (!transcript) throw new Error('Empty transcript from Whisper')
+
+    if (args.section === 'summary') {
+      const { object } = await generateObject({
+        model: openai('gpt-4.1'),
+        prompt: transcript,
+        schema: summaryFromDictationSchema,
+        system:
+          'You are an expert resume writer. Turn the transcript into a concise, ATS-friendly professional summary. Return only the summary field.',
+      })
+
+      return {
+        section: 'summary' as const,
+        summary: object.summary,
+        transcript,
+      }
+    }
+
+    if (args.section === 'workExperience') {
+      const { object } = await generateObject({
+        model: openai('gpt-4.1'),
+        prompt: transcript,
+        schema: workExperienceFromDictationSchema,
+        system:
+          'You are a strict resume parser. Extract exactly one work experience entry from the transcript. Use null for unknown fields.',
+      })
+
+      const entry = object.workExperience[0]
+
+      return {
+        section: 'workExperience' as const,
+        transcript,
+        workExperience: entry,
+      }
+    }
+
+    const { object } = await generateObject({
+      model: openai('gpt-4.1'),
+      prompt: transcript,
+      schema: educationFromDictationSchema,
+      system:
+        'You are a strict resume parser. Extract exactly one education entry from the transcript. Use null for unknown fields.',
+    })
+
+    const edu = object.education[0]
+
+    return {
+      education: edu,
+      section: 'education' as const,
+      transcript,
+    }
   },
 })
