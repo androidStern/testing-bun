@@ -56,7 +56,7 @@ function ResumePage() {
 
   return (
     <div className='min-h-screen bg-background'>
-      <div className='container mx-auto md:py-8 md:px-4'>
+      <div className='container mx-auto md:py-8 md:px-4 px-0'>
         <ResumeForm user={user} />
       </div>
       <Toaster />

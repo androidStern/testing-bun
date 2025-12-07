@@ -134,14 +134,18 @@ function SectionToolbar({
           onClick={onDictate}
           type='button'
         >
-          <div className={`p-1.5 rounded-full ${isRecording ? 'bg-destructive/10' : 'bg-primary/10'}`}>
+          <div
+            className={`p-1.5 rounded-full ${isRecording ? 'bg-destructive/10' : 'bg-primary/10'}`}
+          >
             {isRecording ? (
               <Square className='h-4 w-4 text-destructive' />
             ) : (
               <Mic className='h-4 w-4 text-primary' />
             )}
           </div>
-          <span className={`text-[10px] font-medium mt-1 ${isRecording ? 'text-destructive' : 'text-primary'}`}>
+          <span
+            className={`text-[10px] font-medium mt-1 ${isRecording ? 'text-destructive' : 'text-primary'}`}
+          >
             {isRecording ? 'Stop' : isTranscribing ? 'Wait...' : 'Dictate'}
           </span>
         </button>
@@ -316,8 +320,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
 
   // Block navigation when there are unsaved changes
   useBlocker({
-    shouldBlockFn: () => form.state.isDirty,
     enableBeforeUnload: () => form.state.isDirty,
+    shouldBlockFn: () => form.state.isDirty,
     withResolver: true,
   })
 
@@ -381,7 +385,11 @@ export function ResumeForm({ user }: ResumeFormProps) {
       console.log('[Resume Import] Step 1 complete. Upload URL:', uploadUrl)
 
       // 2. Upload file to Convex storage
-      console.log('[Resume Import] Step 2: Uploading file...', { name: file.name, type: file.type, size: file.size })
+      console.log('[Resume Import] Step 2: Uploading file...', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      })
       const uploadResponse = await fetch(uploadUrl, {
         body: file,
         headers: { 'Content-Type': file.type },
@@ -540,7 +548,10 @@ export function ResumeForm({ user }: ResumeFormProps) {
         form.setFieldValue(`workExperience[${index}].position`, we.position ?? current.position)
         form.setFieldValue(`workExperience[${index}].startDate`, we.startDate ?? current.startDate)
         form.setFieldValue(`workExperience[${index}].endDate`, we.endDate ?? current.endDate)
-        form.setFieldValue(`workExperience[${index}].achievements`, we.achievements ?? current.achievements)
+        form.setFieldValue(
+          `workExperience[${index}].achievements`,
+          we.achievements ?? current.achievements,
+        )
 
         // Polish the description using the same logic as polishWorkExperienceWithAI
         if (we.description) {
@@ -563,10 +574,16 @@ export function ResumeForm({ user }: ResumeFormProps) {
         const edu = result.education
 
         // Update structured fields first
-        form.setFieldValue(`education[${index}].institution`, edu.institution ?? currentEdu.institution)
+        form.setFieldValue(
+          `education[${index}].institution`,
+          edu.institution ?? currentEdu.institution,
+        )
         form.setFieldValue(`education[${index}].degree`, edu.degree ?? currentEdu.degree)
         form.setFieldValue(`education[${index}].field`, edu.field ?? currentEdu.field)
-        form.setFieldValue(`education[${index}].graduationDate`, edu.graduationDate ?? currentEdu.graduationDate)
+        form.setFieldValue(
+          `education[${index}].graduationDate`,
+          edu.graduationDate ?? currentEdu.graduationDate,
+        )
 
         // Polish the description using the same logic as polishEducationWithAI
         if (edu.description) {
@@ -853,58 +870,95 @@ export function ResumeForm({ user }: ResumeFormProps) {
               </div>
             </div>
 
-            ${formData.summary ? `
+            ${
+              formData.summary
+                ? `
               <div class="section">
                 <h2 class="section-title">Professional Summary</h2>
                 <p>${formData.summary}</p>
               </div>
-            ` : ''}
+            `
+                : ''
+            }
 
-            ${formData.workExperience.some(exp => exp.company || exp.position) ? `
+            ${
+              formData.workExperience.some(exp => exp.company || exp.position)
+                ? `
               <div class="section">
                 <h2 class="section-title">Work Experience</h2>
-                ${formData.workExperience.map(exp => `
+                ${formData.workExperience
+                  .map(
+                    exp => `
                   <div style="margin-bottom: 15px;">
                     <div class="job-header">
                       <div>
                         ${exp.position ? `<div class="job-title">${exp.position}</div>` : ''}
                         ${exp.company ? `<div>${exp.company}</div>` : ''}
                       </div>
-                      ${(exp.startDate || exp.endDate) ? `<div class="job-date">${exp.startDate}${exp.startDate && exp.endDate ? ' – ' : ''}${exp.endDate}</div>` : ''}
+                      ${exp.startDate || exp.endDate ? `<div class="job-date">${exp.startDate}${exp.startDate && exp.endDate ? ' – ' : ''}${exp.endDate}</div>` : ''}
                     </div>
                     ${exp.description ? `<p style="margin-top: 5px;">${exp.description}</p>` : ''}
-                    ${exp.achievements ? `<ul>${exp.achievements.split(/\n|•/).filter(a => a.trim()).map(a => `<li>${a.trim().replace(/^•\s*/, '')}</li>`).join('')}</ul>` : ''}
+                    ${
+                      exp.achievements
+                        ? `<ul>${exp.achievements
+                            .split(/\n|•/)
+                            .filter(a => a.trim())
+                            .map(a => `<li>${a.trim().replace(/^•\s*/, '')}</li>`)
+                            .join('')}</ul>`
+                        : ''
+                    }
                   </div>
-                `).join('')}
+                `,
+                  )
+                  .join('')}
               </div>
-            ` : ''}
+            `
+                : ''
+            }
 
-            ${formData.education.some(edu => edu.institution || edu.degree) ? `
+            ${
+              formData.education.some(edu => edu.institution || edu.degree)
+                ? `
               <div class="section">
                 <h2 class="section-title">Education</h2>
-                ${formData.education.map(edu => `
+                ${formData.education
+                  .map(
+                    edu => `
                   <div style="margin-bottom: 15px;">
                     <div class="job-header">
                       <div>
-                        ${edu.degree && edu.field ? `<div class="job-title">${edu.degree} in ${edu.field}</div>` : (edu.degree ? `<div class="job-title">${edu.degree}</div>` : (edu.field ? `<div class="job-title">${edu.field}</div>` : ''))}
+                        ${edu.degree && edu.field ? `<div class="job-title">${edu.degree} in ${edu.field}</div>` : edu.degree ? `<div class="job-title">${edu.degree}</div>` : edu.field ? `<div class="job-title">${edu.field}</div>` : ''}
                         ${edu.institution ? `<div>${edu.institution}</div>` : ''}
                       </div>
                       ${edu.graduationDate ? `<div class="job-date">${edu.graduationDate}</div>` : ''}
                     </div>
                     ${edu.description ? `<p style="margin-top: 5px;">${edu.description}</p>` : ''}
                   </div>
-                `).join('')}
+                `,
+                  )
+                  .join('')}
               </div>
-            ` : ''}
+            `
+                : ''
+            }
 
-            ${formData.skills ? `
+            ${
+              formData.skills
+                ? `
               <div class="section">
                 <h2 class="section-title">Skills</h2>
                 <div class="skills-list">
-                  ${formData.skills.split(/,|\n|•/).map(s => s.trim()).filter(Boolean).map(skill => `<span class="skill-item">${skill}</span>`).join('')}
+                  ${formData.skills
+                    .split(/,|\n|•/)
+                    .map(s => s.trim())
+                    .filter(Boolean)
+                    .map(skill => `<span class="skill-item">${skill}</span>`)
+                    .join('')}
                 </div>
               </div>
-            ` : ''}
+            `
+                : ''
+            }
           </body>
         </html>
       `)
@@ -932,7 +986,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
   }
 
   return (
-    <div className='flex-1 bg-background p-4 sm:p-6 lg:p-8'>
+    <div className='flex-1 bg-background p-0 md:p-6 lg:p-8'>
       {/* Floating Status Toolbar */}
       <form.Subscribe selector={state => [state.isDirty, state.isSubmitting, state.canSubmit]}>
         {([isDirty, isSubmitting, canSubmit]) =>
@@ -984,12 +1038,12 @@ export function ResumeForm({ user }: ResumeFormProps) {
 
         {/* Sticky Resume Toolbar */}
         <ResumeToolbar
+          isDownloading={isDownloading}
+          isImporting={isImporting}
+          onDownload={handleDownloadPDF}
           onImport={() => fileInputRef.current?.click()}
           onPreview={() => setActiveTab('preview')}
-          onDownload={handleDownloadPDF}
           onPrint={handlePrintResume}
-          isImporting={isImporting}
-          isDownloading={isDownloading}
         />
 
         <div className='mb-6 sm:mb-8'>
@@ -1298,7 +1352,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
                                   ) {
                                     stopRecording()
                                   } else {
-                                    void startRecording({ type: 'workExperience', index })
+                                    void startRecording({ index, type: 'workExperience' })
                                   }
                                 }}
                                 onPolish={() => polishWorkExperienceWithAI(experience.id, index)}
@@ -1484,7 +1538,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
                                   ) {
                                     stopRecording()
                                   } else {
-                                    void startRecording({ type: 'education', index })
+                                    void startRecording({ index, type: 'education' })
                                   }
                                 }}
                                 onPolish={() => polishEducationWithAI(education.id, index)}
@@ -1540,7 +1594,6 @@ export function ResumeForm({ user }: ResumeFormProps) {
               videoSrc='https://www.youtube.com/embed/9gVN5AD5SF8'
             />
           </div>
-
         </form>
       </div>
     </div>
