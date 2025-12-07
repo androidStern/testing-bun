@@ -1,21 +1,25 @@
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useForm } from '@tanstack/react-form'
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
+import { useBlocker } from '@tanstack/react-router'
 import { useAction } from 'convex/react'
 import {
+  AlertCircle,
   BookOpen,
+  CheckCircle,
   ChevronDown,
   ChevronUp,
   ExternalLink,
   GraduationCap,
   Lightbulb,
   PlusCircle,
+  RotateCcw,
   Save,
   Sparkles,
   Trash2,
 } from 'lucide-react'
 import { nanoid } from 'nanoid'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { ResumePreview } from '@/components/ResumePreview'
 import { HeroVideoDialog } from '@/components/ui/hero-video-dialog'
@@ -103,7 +107,18 @@ export function ResumeForm({ user }: ResumeFormProps) {
   const [activeTab, setActiveTab] = useState<'form' | 'preview'>('form')
   const [isPolishing, setIsPolishing] = useState(false)
   const [polishingField, setPolishingField] = useState<string | null>(null)
+  const [justSaved, setJustSaved] = useState(false)
+  const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { toast } = useToast()
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (savedTimeoutRef.current) {
+        clearTimeout(savedTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const { data: existingResume } = useSuspenseQuery(
     convexQuery(api.resumes.getByWorkosUserId, { workosUserId: user.id }),
@@ -119,10 +134,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
       })
     },
     onSuccess: () => {
-      toast({
-        description: 'Your resume has been saved successfully.',
-        title: 'Resume saved',
-      })
+      setJustSaved(true)
+      savedTimeoutRef.current = setTimeout(() => setJustSaved(false), 1500)
     },
   })
 
@@ -138,10 +151,19 @@ export function ResumeForm({ user }: ResumeFormProps) {
     }),
     onSubmit: async ({ value }) => {
       await saveResume({ workosUserId: user.id, ...value })
+      // Reset form with current values to clear dirty state
+      form.reset(value)
     },
     validators: {
       onSubmit: resumeFormSchema,
     },
+  })
+
+  // Block navigation when there are unsaved changes
+  useBlocker({
+    shouldBlockFn: () => form.state.isDirty,
+    enableBeforeUnload: () => form.state.isDirty,
+    withResolver: true,
   })
 
   const checkRateLimit = (): boolean => {
@@ -324,6 +346,45 @@ export function ResumeForm({ user }: ResumeFormProps) {
 
   return (
     <div className='flex-1 bg-background p-4 sm:p-6 lg:p-8'>
+      {/* Floating Status Toolbar */}
+      <form.Subscribe selector={state => [state.isDirty, state.isSubmitting, state.canSubmit]}>
+        {([isDirty, isSubmitting, canSubmit]) =>
+          justSaved ? (
+            <div className='fixed bottom-4 left-4 right-4 sm:bottom-auto sm:left-auto sm:top-4 sm:right-4 z-50 bg-card border border-border shadow-lg rounded-lg p-3 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 sm:slide-in-from-top-2'>
+              <CheckCircle className='h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-500' />
+              <span className='text-sm font-medium text-green-600 dark:text-green-500'>Saved</span>
+            </div>
+          ) : isDirty ? (
+            <div className='fixed bottom-4 left-4 right-4 sm:bottom-auto sm:left-auto sm:top-4 sm:right-4 z-50 bg-card border border-border shadow-lg rounded-lg p-3 flex items-center justify-between sm:justify-start gap-3 animate-in fade-in slide-in-from-bottom-2 sm:slide-in-from-top-2'>
+              <div className='flex items-center gap-2 text-amber-600 dark:text-amber-500'>
+                <AlertCircle className='h-4 w-4 flex-shrink-0' />
+                <span className='text-sm font-medium'>Unsaved changes</span>
+              </div>
+              <div className='flex items-center gap-2'>
+                <button
+                  className='text-muted-foreground hover:text-foreground px-3 py-1.5 text-sm rounded-md hover:bg-muted transition-colors flex items-center gap-2'
+                  disabled={isSubmitting}
+                  onClick={() => form.reset()}
+                  type='button'
+                >
+                  <RotateCcw className='h-3.5 w-3.5' />
+                  Discard
+                </button>
+                <button
+                  className='bg-primary text-primary-foreground px-4 py-1.5 text-sm rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center gap-2'
+                  disabled={!canSubmit || isSubmitting}
+                  onClick={() => form.handleSubmit()}
+                  type='button'
+                >
+                  <Save className='h-3.5 w-3.5' />
+                  {isSubmitting ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          ) : null
+        }
+      </form.Subscribe>
+
       <div className='max-w-2xl mx-auto bg-card rounded-lg shadow-sm sm:shadow-md p-4 sm:p-6 lg:p-8'>
         <h1 className='text-2xl sm:text-3xl font-bold text-card-foreground mb-2'>
           {existingResume ? 'Edit Your Resume' : 'Build Your Resume'}
@@ -844,20 +905,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
             />
           </div>
 
-          {/* Actions - Using form.Subscribe for reactive button state */}
-          <div className='flex flex-col-reverse sm:flex-row gap-3 pt-2'>
-            <form.Subscribe selector={state => [state.canSubmit, state.isSubmitting]}>
-              {([canSubmit, isSubmitting]) => (
-                <button
-                  className='w-full sm:w-auto bg-primary text-primary-foreground px-6 py-2.5 rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2'
-                  disabled={!canSubmit || isSubmitting}
-                  type='submit'
-                >
-                  <Save className='h-4 w-4' />
-                  {isSubmitting ? 'Saving...' : 'Save Resume'}
-                </button>
-              )}
-            </form.Subscribe>
+          {/* Actions */}
+          <div className='pt-2'>
             <button
               className='w-full sm:w-auto text-muted-foreground px-6 py-2.5 hover:text-foreground transition-colors'
               onClick={() => setActiveTab('preview')}
