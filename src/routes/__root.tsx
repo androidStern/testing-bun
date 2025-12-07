@@ -68,10 +68,19 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
     <html lang='en'>
       <head>
         <HeadContent />
+        {import.meta.env.DEV && (
+          <script src='//unpkg.com/react-grab/dist/index.global.js' />
+        )}
       </head>
       <body>
         {children}
         <Scripts />
+        {import.meta.env.DEV && (
+          <script
+            defer
+            src='//unpkg.com/@react-grab/claude-code/dist/client.global.js'
+          />
+        )}
       </body>
     </html>
   )

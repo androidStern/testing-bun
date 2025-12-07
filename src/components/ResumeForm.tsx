@@ -2,35 +2,112 @@ import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useForm } from '@tanstack/react-form'
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
 import { useAction } from 'convex/react'
-import { PlusCircle, Save, Sparkles, Trash2 } from 'lucide-react'
+import {
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  GraduationCap,
+  Lightbulb,
+  Play,
+  PlusCircle,
+  Save,
+  Sparkles,
+  Trash2,
+} from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { useState } from 'react'
-import { z } from 'zod'
 
 import { ResumePreview } from '@/components/ResumePreview'
 import { useToast } from '@/hooks/use-toast'
-import { type ResumeFormData, resumeFormSchema } from '@/lib/schemas/resume'
+import {
+  createDefaultResumeFormValues,
+  createEmptyEducation,
+  createEmptyWorkExperience,
+  type ResumeFormData,
+  resumeFormSchema,
+} from '@/lib/schemas/resume'
 import { api } from '../../convex/_generated/api'
+
+function SectionGuide({
+  learnTitle,
+  tipText,
+  tipTitle,
+  videoDuration,
+  videoSrc,
+}: {
+  learnTitle: string
+  tipText: string
+  tipTitle: string
+  videoDuration: string
+  videoSrc: string
+}) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div className='mt-4 border border-dashed border-primary/30 rounded-lg bg-primary/5'>
+      <button
+        className='w-full px-4 py-3 flex items-center justify-between text-left'
+        onClick={() => setExpanded(!expanded)}
+        type='button'
+      >
+        <div className='flex items-center gap-2'>
+          <GraduationCap className='h-4 w-4 text-primary' />
+          <span className='text-sm font-medium text-primary'>{learnTitle}</span>
+        </div>
+        {expanded ? (
+          <ChevronUp className='h-4 w-4 text-primary' />
+        ) : (
+          <ChevronDown className='h-4 w-4 text-primary' />
+        )}
+      </button>
+
+      {expanded && (
+        <div className='px-4 pb-4 animate-in fade-in slide-in-from-top-2'>
+          <div className='flex items-start gap-3 mb-3'>
+            <div className='p-2 bg-primary/10 rounded-lg'>
+              <Lightbulb className='h-4 w-4 text-primary' />
+            </div>
+            <div>
+              <h4 className='font-medium text-sm'>{tipTitle}</h4>
+              <p className='text-xs text-muted-foreground mt-1'>{tipText}</p>
+            </div>
+          </div>
+
+          <div className='relative rounded-lg overflow-hidden mb-3 group cursor-pointer'>
+            <img
+              alt='Video thumbnail'
+              className='w-full h-32 object-cover'
+              src={videoSrc || '/placeholder.svg'}
+            />
+            <div className='absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/50 transition-colors'>
+              <div className='p-3 bg-white rounded-full'>
+                <Play className='h-5 w-5 text-black fill-black' />
+              </div>
+            </div>
+            <span className='absolute bottom-2 right-2 text-xs text-white bg-black/60 px-1.5 py-0.5 rounded'>
+              {videoDuration}
+            </span>
+          </div>
+
+          <a className='flex items-center gap-2 text-sm text-primary hover:underline' href='#'>
+            <BookOpen className='h-4 w-4' />
+            View full course module
+            <ExternalLink className='h-3 w-3' />
+          </a>
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface ResumeFormProps {
   user: {
-    id: string
     email: string
     firstName?: string | null
+    id: string
     lastName?: string | null
   }
-}
-
-function getErrorMessage(error: unknown): string {
-  if (typeof error === 'string') return error
-  if (error instanceof z.ZodError) {
-    const firstIssue = error.issues[0]
-    if (firstIssue) return firstIssue.message
-  }
-  if (error && typeof error === 'object' && 'message' in error) {
-    return String(error.message)
-  }
-  return 'Validation error'
 }
 
 export function ResumeForm({ user }: ResumeFormProps) {
@@ -43,7 +120,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
     convexQuery(api.resumes.getByWorkosUserId, { workosUserId: user.id }),
   )
 
-  const { mutate: saveResume, isPending: isSaving } = useMutation({
+  const { mutateAsync: saveResume } = useMutation({
     mutationFn: useConvexMutation(api.resumes.upsert),
     onError: error => {
       toast({
@@ -62,63 +139,18 @@ export function ResumeForm({ user }: ResumeFormProps) {
 
   const polishWithAI = useAction(api.resumes.polishWithAI)
 
-  const form = useForm<ResumeFormData>({
-    defaultValues: {
-      education: existingResume?.education.length
-        ? existingResume.education.map(edu => ({
-            degree: edu.degree ?? '',
-            description: edu.description ?? '',
-            field: edu.field ?? '',
-            graduationDate: edu.graduationDate ?? '',
-            id: edu.id,
-            institution: edu.institution ?? '',
-          }))
-        : [
-            {
-              degree: '',
-              description: '',
-              field: '',
-              graduationDate: '',
-              id: nanoid(),
-              institution: '',
-            },
-          ],
-      personalInfo: {
-        email: existingResume?.personalInfo.email ?? user.email,
-        linkedin: existingResume?.personalInfo.linkedin ?? '',
-        location: existingResume?.personalInfo.location ?? '',
-        name:
-          existingResume?.personalInfo.name ??
-          [user.firstName, user.lastName].filter(Boolean).join(' ') ??
-          '',
-        phone: existingResume?.personalInfo.phone ?? '',
-      },
-      skills: existingResume?.skills ?? '',
-      summary: existingResume?.summary ?? '',
-      workExperience: existingResume?.workExperience.length
-        ? existingResume.workExperience.map(exp => ({
-            achievements: exp.achievements ?? '',
-            company: exp.company ?? '',
-            description: exp.description ?? '',
-            endDate: exp.endDate ?? '',
-            id: exp.id,
-            position: exp.position ?? '',
-            startDate: exp.startDate ?? '',
-          }))
-        : [
-            {
-              achievements: '',
-              company: '',
-              description: '',
-              endDate: '',
-              id: nanoid(),
-              position: '',
-              startDate: '',
-            },
-          ],
+  const form = useForm({
+    defaultValues: createDefaultResumeFormValues({
+      email: user.email,
+      existingResume,
+      firstName: user.firstName,
+      generateId: nanoid,
+      lastName: user.lastName,
+    }),
+    onSubmit: async ({ value }) => {
+      await saveResume({ workosUserId: user.id, ...value })
     },
     validators: {
-      onBlur: resumeFormSchema,
       onSubmit: resumeFormSchema,
     },
   })
@@ -145,10 +177,6 @@ export function ResumeForm({ user }: ResumeFormProps) {
       console.error('Rate limit check failed:', error)
       return true
     }
-  }
-
-  const handleSave = () => {
-    saveResume({ workosUserId: user.id, ...form.state.values })
   }
 
   const polishSummaryWithAI = async () => {
@@ -288,50 +316,6 @@ export function ResumeForm({ user }: ResumeFormProps) {
     }
   }
 
-  const addWorkExperience = () => {
-    const current = form.state.values.workExperience
-    form.setFieldValue('workExperience', [
-      ...current,
-      {
-        achievements: '',
-        company: '',
-        description: '',
-        endDate: '',
-        id: nanoid(),
-        position: '',
-        startDate: '',
-      },
-    ])
-  }
-
-  const removeWorkExperience = (index: number) => {
-    const current = form.state.values.workExperience
-    if (current.length > 1) {
-      form.setFieldValue(
-        'workExperience',
-        current.filter((_, i) => i !== index),
-      )
-    }
-  }
-
-  const addEducation = () => {
-    const current = form.state.values.education
-    form.setFieldValue('education', [
-      ...current,
-      { degree: '', description: '', field: '', graduationDate: '', id: nanoid(), institution: '' },
-    ])
-  }
-
-  const removeEducation = (index: number) => {
-    const current = form.state.values.education
-    if (current.length > 1) {
-      form.setFieldValue(
-        'education',
-        current.filter((_, i) => i !== index),
-      )
-    }
-  }
-
   if (activeTab === 'preview') {
     return (
       <div className='flex-1 bg-background p-4 sm:p-6 lg:p-8'>
@@ -364,7 +348,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
           onSubmit={e => {
             e.preventDefault()
             e.stopPropagation()
-            handleSave()
+            form.handleSubmit()
           }}
         >
           {/* Personal Information */}
@@ -387,7 +371,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className='mt-1 text-sm text-destructive'>
-                        {getErrorMessage(field.state.meta.errors[0])}
+                        {String(field.state.meta.errors[0])}
                       </p>
                     )}
                   </div>
@@ -410,7 +394,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className='mt-1 text-sm text-destructive'>
-                        {getErrorMessage(field.state.meta.errors[0])}
+                        {String(field.state.meta.errors[0])}
                       </p>
                     )}
                   </div>
@@ -469,13 +453,20 @@ export function ResumeForm({ user }: ResumeFormProps) {
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className='mt-1 text-sm text-destructive'>
-                        {getErrorMessage(field.state.meta.errors[0])}
+                        {String(field.state.meta.errors[0])}
                       </p>
                     )}
                   </div>
                 )}
               </form.Field>
             </div>
+            <SectionGuide
+              learnTitle='Master Your Personal Information'
+              tipText='Include a professional email address and ensure your phone number is current. Adding your city and state helps recruiters understand your location without revealing your full address.'
+              tipTitle='Make a Strong First Impression'
+              videoDuration='3:45'
+              videoSrc='/placeholder.svg'
+            />
           </div>
 
           {/* Professional Summary */}
@@ -506,308 +497,341 @@ export function ResumeForm({ user }: ResumeFormProps) {
                 </div>
               )}
             </form.Field>
+            <SectionGuide
+              learnTitle='Craft a Compelling Summary'
+              tipText='Your summary should be 2-4 sentences highlighting your experience level, key skills, and career goals. Focus on what makes you unique and what value you bring to employers.'
+              tipTitle='Hook Recruiters in 6 Seconds'
+              videoDuration='5:20'
+              videoSrc='/placeholder.svg'
+            />
           </div>
 
-          {/* Work Experience */}
+          {/* Work Experience - Using mode="array" */}
           <div>
-            <div className='flex justify-between items-center mb-4'>
-              <h2 className='text-lg font-semibold text-foreground'>Work Experience</h2>
-              <button
-                className='text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1'
-                onClick={addWorkExperience}
-                type='button'
-              >
-                <PlusCircle className='h-4 w-4' />
-                Add Experience
-              </button>
-            </div>
-
-            <div className='space-y-6'>
-              {form.state.values.workExperience.map((experience, index) => (
-                <div className='p-4 border border-border rounded-lg' key={experience.id}>
+            <form.Field mode='array' name='workExperience'>
+              {workExpField => (
+                <>
                   <div className='flex justify-between items-center mb-4'>
-                    <span className='text-sm font-medium text-muted-foreground'>
-                      Experience {index + 1}
-                    </span>
-                    {form.state.values.workExperience.length > 1 && (
-                      <button
-                        className='text-sm text-destructive hover:text-destructive/80 transition-colors flex items-center gap-1'
-                        onClick={() => removeWorkExperience(index)}
-                        type='button'
-                      >
-                        <Trash2 className='h-3 w-3' />
-                        Remove
-                      </button>
-                    )}
+                    <h2 className='text-lg font-semibold text-foreground'>Work Experience</h2>
+                    <button
+                      className='text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1'
+                      onClick={() => workExpField.pushValue(createEmptyWorkExperience(nanoid()))}
+                      type='button'
+                    >
+                      <PlusCircle className='h-4 w-4' />
+                      Add Experience
+                    </button>
                   </div>
 
-                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                    <form.Field name={`workExperience[${index}].company`}>
-                      {field => (
-                        <div>
-                          <label className='block text-sm font-medium text-foreground mb-1.5'>
-                            Company
-                          </label>
-                          <input
-                            className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
-                            onBlur={field.handleBlur}
-                            onChange={e => field.handleChange(e.target.value)}
-                            placeholder='Company Name'
-                            type='text'
-                            value={field.state.value || ''}
-                          />
+                  <div className='space-y-6'>
+                    {workExpField.state.value.map((experience, index) => (
+                      <div className='p-4 border border-border rounded-lg' key={experience.id}>
+                        <div className='flex justify-between items-center mb-4'>
+                          <span className='text-sm font-medium text-muted-foreground'>
+                            Experience {index + 1}
+                          </span>
+                          {workExpField.state.value.length > 1 && (
+                            <button
+                              className='text-sm text-destructive hover:text-destructive/80 transition-colors flex items-center gap-1'
+                              onClick={() => workExpField.removeValue(index)}
+                              type='button'
+                            >
+                              <Trash2 className='h-3 w-3' />
+                              Remove
+                            </button>
+                          )}
                         </div>
-                      )}
-                    </form.Field>
 
-                    <form.Field name={`workExperience[${index}].position`}>
-                      {field => (
-                        <div>
-                          <label className='block text-sm font-medium text-foreground mb-1.5'>
-                            Position
-                          </label>
-                          <input
-                            className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
-                            onBlur={field.handleBlur}
-                            onChange={e => field.handleChange(e.target.value)}
-                            placeholder='Job Title'
-                            type='text'
-                            value={field.state.value || ''}
-                          />
+                        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                          <form.Field name={`workExperience[${index}].company`}>
+                            {field => (
+                              <div>
+                                <label className='block text-sm font-medium text-foreground mb-1.5'>
+                                  Company
+                                </label>
+                                <input
+                                  className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
+                                  onBlur={field.handleBlur}
+                                  onChange={e => field.handleChange(e.target.value)}
+                                  placeholder='Company Name'
+                                  type='text'
+                                  value={field.state.value}
+                                />
+                              </div>
+                            )}
+                          </form.Field>
+
+                          <form.Field name={`workExperience[${index}].position`}>
+                            {field => (
+                              <div>
+                                <label className='block text-sm font-medium text-foreground mb-1.5'>
+                                  Position
+                                </label>
+                                <input
+                                  className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
+                                  onBlur={field.handleBlur}
+                                  onChange={e => field.handleChange(e.target.value)}
+                                  placeholder='Job Title'
+                                  type='text'
+                                  value={field.state.value}
+                                />
+                              </div>
+                            )}
+                          </form.Field>
+
+                          <form.Field name={`workExperience[${index}].startDate`}>
+                            {field => (
+                              <div>
+                                <label className='block text-sm font-medium text-foreground mb-1.5'>
+                                  Start Date
+                                </label>
+                                <input
+                                  className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
+                                  onBlur={field.handleBlur}
+                                  onChange={e => field.handleChange(e.target.value)}
+                                  placeholder='MM/YYYY'
+                                  type='text'
+                                  value={field.state.value}
+                                />
+                              </div>
+                            )}
+                          </form.Field>
+
+                          <form.Field name={`workExperience[${index}].endDate`}>
+                            {field => (
+                              <div>
+                                <label className='block text-sm font-medium text-foreground mb-1.5'>
+                                  End Date
+                                </label>
+                                <input
+                                  className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
+                                  onBlur={field.handleBlur}
+                                  onChange={e => field.handleChange(e.target.value)}
+                                  placeholder='MM/YYYY or Present'
+                                  type='text'
+                                  value={field.state.value}
+                                />
+                              </div>
+                            )}
+                          </form.Field>
+
+                          <div className='sm:col-span-2'>
+                            <div className='flex justify-between items-center mb-1.5'>
+                              <label className='block text-sm font-medium text-foreground'>
+                                Description
+                              </label>
+                              <button
+                                className='text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors flex items-center gap-1'
+                                disabled={isPolishing}
+                                onClick={() => polishWorkExperienceWithAI(experience.id, index)}
+                                type='button'
+                              >
+                                <Sparkles className='h-3 w-3' />
+                                {polishingField === `work-${experience.id}`
+                                  ? 'Polishing...'
+                                  : 'Polish with AI'}
+                              </button>
+                            </div>
+                            <form.Field name={`workExperience[${index}].description`}>
+                              {field => (
+                                <textarea
+                                  className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none'
+                                  onBlur={field.handleBlur}
+                                  onChange={e => field.handleChange(e.target.value)}
+                                  placeholder='Describe your role and responsibilities...'
+                                  rows={3}
+                                  value={field.state.value}
+                                />
+                              )}
+                            </form.Field>
+                          </div>
+
+                          <div className='sm:col-span-2'>
+                            <label className='block text-sm font-medium text-foreground mb-1.5'>
+                              Key Achievements
+                            </label>
+                            <form.Field name={`workExperience[${index}].achievements`}>
+                              {field => (
+                                <textarea
+                                  className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none'
+                                  onBlur={field.handleBlur}
+                                  onChange={e => field.handleChange(e.target.value)}
+                                  placeholder='• Increased sales by 20%&#10;• Led a team of 5 developers'
+                                  rows={3}
+                                  value={field.state.value}
+                                />
+                              )}
+                            </form.Field>
+                          </div>
                         </div>
-                      )}
-                    </form.Field>
-
-                    <form.Field name={`workExperience[${index}].startDate`}>
-                      {field => (
-                        <div>
-                          <label className='block text-sm font-medium text-foreground mb-1.5'>
-                            Start Date
-                          </label>
-                          <input
-                            className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
-                            onBlur={field.handleBlur}
-                            onChange={e => field.handleChange(e.target.value)}
-                            placeholder='MM/YYYY'
-                            type='text'
-                            value={field.state.value || ''}
-                          />
-                        </div>
-                      )}
-                    </form.Field>
-
-                    <form.Field name={`workExperience[${index}].endDate`}>
-                      {field => (
-                        <div>
-                          <label className='block text-sm font-medium text-foreground mb-1.5'>
-                            End Date
-                          </label>
-                          <input
-                            className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
-                            onBlur={field.handleBlur}
-                            onChange={e => field.handleChange(e.target.value)}
-                            placeholder='MM/YYYY or Present'
-                            type='text'
-                            value={field.state.value || ''}
-                          />
-                        </div>
-                      )}
-                    </form.Field>
-
-                    <div className='sm:col-span-2'>
-                      <div className='flex justify-between items-center mb-1.5'>
-                        <label className='block text-sm font-medium text-foreground'>
-                          Description
-                        </label>
-                        <button
-                          className='text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors flex items-center gap-1'
-                          disabled={isPolishing}
-                          onClick={() => polishWorkExperienceWithAI(experience.id, index)}
-                          type='button'
-                        >
-                          <Sparkles className='h-3 w-3' />
-                          {polishingField === `work-${experience.id}`
-                            ? 'Polishing...'
-                            : 'Polish with AI'}
-                        </button>
                       </div>
-                      <form.Field name={`workExperience[${index}].description`}>
-                        {field => (
-                          <textarea
-                            className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none'
-                            onBlur={field.handleBlur}
-                            onChange={e => field.handleChange(e.target.value)}
-                            placeholder='Describe your role and responsibilities...'
-                            rows={3}
-                            value={field.state.value || ''}
-                          />
-                        )}
-                      </form.Field>
-                    </div>
-
-                    <div className='sm:col-span-2'>
-                      <label className='block text-sm font-medium text-foreground mb-1.5'>
-                        Key Achievements
-                      </label>
-                      <form.Field name={`workExperience[${index}].achievements`}>
-                        {field => (
-                          <textarea
-                            className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none'
-                            onBlur={field.handleBlur}
-                            onChange={e => field.handleChange(e.target.value)}
-                            placeholder='• Increased sales by 20%&#10;• Led a team of 5 developers'
-                            rows={3}
-                            value={field.state.value || ''}
-                          />
-                        )}
-                      </form.Field>
-                    </div>
+                    ))}
                   </div>
-                </div>
-              ))}
-            </div>
+                </>
+              )}
+            </form.Field>
+            <SectionGuide
+              learnTitle='Showcase Your Experience'
+              tipText='Use action verbs and quantify achievements where possible. Focus on results and impact rather than just listing responsibilities. Tailor your descriptions to match the job you are applying for.'
+              tipTitle='Turn Job Duties Into Achievements'
+              videoDuration='7:15'
+              videoSrc='/placeholder.svg'
+            />
           </div>
 
-          {/* Education */}
+          {/* Education - Using mode="array" */}
           <div>
-            <div className='flex justify-between items-center mb-4'>
-              <h2 className='text-lg font-semibold text-foreground'>Education</h2>
-              <button
-                className='text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1'
-                onClick={addEducation}
-                type='button'
-              >
-                <PlusCircle className='h-4 w-4' />
-                Add Education
-              </button>
-            </div>
-
-            <div className='space-y-6'>
-              {form.state.values.education.map((education, index) => (
-                <div className='p-4 border border-border rounded-lg' key={education.id}>
+            <form.Field mode='array' name='education'>
+              {eduField => (
+                <>
                   <div className='flex justify-between items-center mb-4'>
-                    <span className='text-sm font-medium text-muted-foreground'>
-                      Education {index + 1}
-                    </span>
-                    {form.state.values.education.length > 1 && (
-                      <button
-                        className='text-sm text-destructive hover:text-destructive/80 transition-colors flex items-center gap-1'
-                        onClick={() => removeEducation(index)}
-                        type='button'
-                      >
-                        <Trash2 className='h-3 w-3' />
-                        Remove
-                      </button>
-                    )}
+                    <h2 className='text-lg font-semibold text-foreground'>Education</h2>
+                    <button
+                      className='text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1'
+                      onClick={() => eduField.pushValue(createEmptyEducation(nanoid()))}
+                      type='button'
+                    >
+                      <PlusCircle className='h-4 w-4' />
+                      Add Education
+                    </button>
                   </div>
 
-                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                    <form.Field name={`education[${index}].institution`}>
-                      {field => (
-                        <div>
-                          <label className='block text-sm font-medium text-foreground mb-1.5'>
-                            Institution
-                          </label>
-                          <input
-                            className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
-                            onBlur={field.handleBlur}
-                            onChange={e => field.handleChange(e.target.value)}
-                            placeholder='University Name'
-                            type='text'
-                            value={field.state.value || ''}
-                          />
+                  <div className='space-y-6'>
+                    {eduField.state.value.map((education, index) => (
+                      <div className='p-4 border border-border rounded-lg' key={education.id}>
+                        <div className='flex justify-between items-center mb-4'>
+                          <span className='text-sm font-medium text-muted-foreground'>
+                            Education {index + 1}
+                          </span>
+                          {eduField.state.value.length > 1 && (
+                            <button
+                              className='text-sm text-destructive hover:text-destructive/80 transition-colors flex items-center gap-1'
+                              onClick={() => eduField.removeValue(index)}
+                              type='button'
+                            >
+                              <Trash2 className='h-3 w-3' />
+                              Remove
+                            </button>
+                          )}
                         </div>
-                      )}
-                    </form.Field>
 
-                    <form.Field name={`education[${index}].degree`}>
-                      {field => (
-                        <div>
-                          <label className='block text-sm font-medium text-foreground mb-1.5'>
-                            Degree
-                          </label>
-                          <input
-                            className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
-                            onBlur={field.handleBlur}
-                            onChange={e => field.handleChange(e.target.value)}
-                            placeholder='Bachelor of Science'
-                            type='text'
-                            value={field.state.value || ''}
-                          />
+                        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                          <form.Field name={`education[${index}].institution`}>
+                            {field => (
+                              <div>
+                                <label className='block text-sm font-medium text-foreground mb-1.5'>
+                                  Institution
+                                </label>
+                                <input
+                                  className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
+                                  onBlur={field.handleBlur}
+                                  onChange={e => field.handleChange(e.target.value)}
+                                  placeholder='University Name'
+                                  type='text'
+                                  value={field.state.value}
+                                />
+                              </div>
+                            )}
+                          </form.Field>
+
+                          <form.Field name={`education[${index}].degree`}>
+                            {field => (
+                              <div>
+                                <label className='block text-sm font-medium text-foreground mb-1.5'>
+                                  Degree
+                                </label>
+                                <input
+                                  className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
+                                  onBlur={field.handleBlur}
+                                  onChange={e => field.handleChange(e.target.value)}
+                                  placeholder='Bachelor of Science'
+                                  type='text'
+                                  value={field.state.value}
+                                />
+                              </div>
+                            )}
+                          </form.Field>
+
+                          <form.Field name={`education[${index}].field`}>
+                            {field => (
+                              <div>
+                                <label className='block text-sm font-medium text-foreground mb-1.5'>
+                                  Field of Study
+                                </label>
+                                <input
+                                  className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
+                                  onBlur={field.handleBlur}
+                                  onChange={e => field.handleChange(e.target.value)}
+                                  placeholder='Computer Science'
+                                  type='text'
+                                  value={field.state.value}
+                                />
+                              </div>
+                            )}
+                          </form.Field>
+
+                          <form.Field name={`education[${index}].graduationDate`}>
+                            {field => (
+                              <div>
+                                <label className='block text-sm font-medium text-foreground mb-1.5'>
+                                  Graduation Date
+                                </label>
+                                <input
+                                  className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
+                                  onBlur={field.handleBlur}
+                                  onChange={e => field.handleChange(e.target.value)}
+                                  placeholder='MM/YYYY'
+                                  type='text'
+                                  value={field.state.value}
+                                />
+                              </div>
+                            )}
+                          </form.Field>
+
+                          <div className='sm:col-span-2'>
+                            <div className='flex justify-between items-center mb-1.5'>
+                              <label className='block text-sm font-medium text-foreground'>
+                                Additional Information
+                              </label>
+                              <button
+                                className='text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors flex items-center gap-1'
+                                disabled={isPolishing}
+                                onClick={() => polishEducationWithAI(education.id, index)}
+                                type='button'
+                              >
+                                <Sparkles className='h-3 w-3' />
+                                {polishingField === `edu-${education.id}`
+                                  ? 'Polishing...'
+                                  : 'Polish with AI'}
+                              </button>
+                            </div>
+                            <form.Field name={`education[${index}].description`}>
+                              {field => (
+                                <textarea
+                                  className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none'
+                                  onBlur={field.handleBlur}
+                                  onChange={e => field.handleChange(e.target.value)}
+                                  placeholder='Relevant coursework, honors, activities...'
+                                  rows={2}
+                                  value={field.state.value}
+                                />
+                              )}
+                            </form.Field>
+                          </div>
                         </div>
-                      )}
-                    </form.Field>
-
-                    <form.Field name={`education[${index}].field`}>
-                      {field => (
-                        <div>
-                          <label className='block text-sm font-medium text-foreground mb-1.5'>
-                            Field of Study
-                          </label>
-                          <input
-                            className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
-                            onBlur={field.handleBlur}
-                            onChange={e => field.handleChange(e.target.value)}
-                            placeholder='Computer Science'
-                            type='text'
-                            value={field.state.value || ''}
-                          />
-                        </div>
-                      )}
-                    </form.Field>
-
-                    <form.Field name={`education[${index}].graduationDate`}>
-                      {field => (
-                        <div>
-                          <label className='block text-sm font-medium text-foreground mb-1.5'>
-                            Graduation Date
-                          </label>
-                          <input
-                            className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
-                            onBlur={field.handleBlur}
-                            onChange={e => field.handleChange(e.target.value)}
-                            placeholder='MM/YYYY'
-                            type='text'
-                            value={field.state.value || ''}
-                          />
-                        </div>
-                      )}
-                    </form.Field>
-
-                    <div className='sm:col-span-2'>
-                      <div className='flex justify-between items-center mb-1.5'>
-                        <label className='block text-sm font-medium text-foreground'>
-                          Additional Information
-                        </label>
-                        <button
-                          className='text-xs text-primary hover:text-primary/80 disabled:opacity-50 transition-colors flex items-center gap-1'
-                          disabled={isPolishing}
-                          onClick={() => polishEducationWithAI(education.id, index)}
-                          type='button'
-                        >
-                          <Sparkles className='h-3 w-3' />
-                          {polishingField === `edu-${education.id}`
-                            ? 'Polishing...'
-                            : 'Polish with AI'}
-                        </button>
                       </div>
-                      <form.Field name={`education[${index}].description`}>
-                        {field => (
-                          <textarea
-                            className='bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none'
-                            onBlur={field.handleBlur}
-                            onChange={e => field.handleChange(e.target.value)}
-                            placeholder='Relevant coursework, honors, activities...'
-                            rows={2}
-                            value={field.state.value || ''}
-                          />
-                        )}
-                      </form.Field>
-                    </div>
+                    ))}
                   </div>
-                </div>
-              ))}
-            </div>
+                </>
+              )}
+            </form.Field>
+            <SectionGuide
+              learnTitle='Highlight Your Education'
+              tipText='List your most recent or relevant education first. Include honors, relevant coursework, and extracurricular activities that demonstrate skills applicable to your target role.'
+              tipTitle='Education That Stands Out'
+              videoDuration='4:30'
+              videoSrc='/placeholder.svg'
+            />
           </div>
 
           {/* Skills */}
@@ -827,18 +851,29 @@ export function ResumeForm({ user }: ResumeFormProps) {
                 </div>
               )}
             </form.Field>
+            <SectionGuide
+              learnTitle='Optimize Your Skills Section'
+              tipText='Include a mix of hard and soft skills relevant to your target role. Use keywords from job descriptions to help pass ATS screening. Group similar skills together for better readability.'
+              tipTitle='Skills That Get You Noticed'
+              videoDuration='4:00'
+              videoSrc='/placeholder.svg'
+            />
           </div>
 
-          {/* Actions */}
+          {/* Actions - Using form.Subscribe for reactive button state */}
           <div className='flex flex-col-reverse sm:flex-row gap-3 pt-2'>
-            <button
-              className='w-full sm:w-auto bg-primary text-primary-foreground px-6 py-2.5 rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2'
-              disabled={isSaving}
-              type='submit'
-            >
-              <Save className='h-4 w-4' />
-              {isSaving ? 'Saving...' : 'Save Resume'}
-            </button>
+            <form.Subscribe selector={state => [state.canSubmit, state.isSubmitting]}>
+              {([canSubmit, isSubmitting]) => (
+                <button
+                  className='w-full sm:w-auto bg-primary text-primary-foreground px-6 py-2.5 rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2'
+                  disabled={!canSubmit || isSubmitting}
+                  type='submit'
+                >
+                  <Save className='h-4 w-4' />
+                  {isSubmitting ? 'Saving...' : 'Save Resume'}
+                </button>
+              )}
+            </form.Subscribe>
             <button
               className='w-full sm:w-auto text-muted-foreground px-6 py-2.5 hover:text-foreground transition-colors'
               onClick={() => setActiveTab('preview')}
