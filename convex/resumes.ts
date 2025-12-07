@@ -2,7 +2,7 @@ import { v } from 'convex/values'
 import { NoOp } from 'convex-helpers/server/customFunctions'
 import { zCustomMutation } from 'convex-helpers/server/zod4'
 
-import { resumeMutationSchema } from '../src/lib/schemas/resume'
+import { resumeExtractionSchema, resumeMutationSchema } from '../src/lib/schemas/resume'
 
 import { action, mutation, query } from './_generated/server'
 
@@ -185,5 +185,73 @@ Generate ONLY the professional summary text, without any additional commentary o
     })
 
     return { polishedText: text.trim() }
+  },
+})
+
+// Generate upload URL for resume file
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async ctx => {
+    return await ctx.storage.generateUploadUrl()
+  },
+})
+
+// Parse resume from Convex storage
+export const parseResumeFromStorage = action({
+  args: {
+    filename: v.string(),
+    mimeType: v.string(),
+    storageId: v.id('_storage'),
+  },
+  handler: async (ctx, { filename, mimeType, storageId }) => {
+    const url = await ctx.storage.getUrl(storageId)
+    if (!url) throw new Error('File URL not found')
+
+    const { generateObject } = await import('ai')
+    const { createOpenRouter } = await import('@openrouter/ai-sdk-provider')
+
+    const openrouter = createOpenRouter({
+      apiKey: process.env.OPENROUTER_API_KEY,
+    })
+    const model = openrouter('qwen/qwen-2.5-7b-instruct')
+
+    const isDocx =
+      mimeType.includes('wordprocessingml.document') || filename.toLowerCase().endsWith('.docx')
+
+    if (isDocx) {
+      // DOCX: fetch and extract text with mammoth
+      const response = await fetch(url)
+      if (!response.ok) throw new Error('Failed to download DOCX')
+      const buffer = Buffer.from(await response.arrayBuffer())
+      const mammoth = await import('mammoth')
+      const { value: text } = await mammoth.extractRawText({ buffer })
+
+      const { object } = await generateObject({
+        model,
+        prompt: `Resume content:\n\n${text}`,
+        schema: resumeExtractionSchema,
+        system:
+          'You are a strict resume parser. Extract structured data from the resume. Use null for unknown fields.',
+      })
+      return object
+    }
+
+    // PDF: pass file URL directly to the model
+    const { object } = await generateObject({
+      messages: [
+        {
+          content: [
+            { text: 'Parse this resume into the schema.', type: 'text' },
+            { data: url, mediaType: (mimeType || 'application/pdf') as 'application/pdf', type: 'file' },
+          ],
+          role: 'user',
+        },
+      ],
+      model,
+      schema: resumeExtractionSchema,
+      system:
+        'You are a strict resume parser. Extract structured data from the resume. Use null for unknown fields.',
+    })
+    return object
   },
 })

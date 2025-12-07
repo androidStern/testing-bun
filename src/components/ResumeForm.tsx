@@ -2,7 +2,7 @@ import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useForm } from '@tanstack/react-form'
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
 import { useBlocker } from '@tanstack/react-router'
-import { useAction } from 'convex/react'
+import { useAction, useMutation as useConvexMutationDirect } from 'convex/react'
 import {
   AlertCircle,
   BookOpen,
@@ -17,6 +17,7 @@ import {
   Save,
   Sparkles,
   Trash2,
+  Upload,
 } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { useEffect, useRef, useState } from 'react'
@@ -29,6 +30,7 @@ import {
   createDefaultResumeFormValues,
   createEmptyEducation,
   createEmptyWorkExperience,
+  type ResumeExtraction,
   type ResumeFormData,
   resumeFormSchema,
 } from '@/lib/schemas/resume'
@@ -104,12 +106,55 @@ interface ResumeFormProps {
   }
 }
 
+// Helper to map extracted resume data to form format
+function mapExtractedToFormData(
+  extracted: ResumeExtraction,
+  generateId: () => string,
+): ResumeFormData {
+  return {
+    education:
+      extracted.education.length > 0
+        ? extracted.education.map(edu => ({
+            degree: edu.degree ?? '',
+            description: edu.description ?? '',
+            field: edu.field ?? '',
+            graduationDate: edu.graduationDate ?? '',
+            id: generateId(),
+            institution: edu.institution ?? '',
+          }))
+        : [createEmptyEducation(generateId())],
+    personalInfo: {
+      email: extracted.personalInfo.email ?? '',
+      linkedin: extracted.personalInfo.linkedin ?? '',
+      location: extracted.personalInfo.location ?? '',
+      name: extracted.personalInfo.name ?? '',
+      phone: extracted.personalInfo.phone ?? '',
+    },
+    skills: extracted.skills ?? '',
+    summary: extracted.summary ?? '',
+    workExperience:
+      extracted.workExperience.length > 0
+        ? extracted.workExperience.map(exp => ({
+            achievements: exp.achievements ?? '',
+            company: exp.company ?? '',
+            description: exp.description ?? '',
+            endDate: exp.endDate ?? '',
+            id: generateId(),
+            position: exp.position ?? '',
+            startDate: exp.startDate ?? '',
+          }))
+        : [createEmptyWorkExperience(generateId())],
+  }
+}
+
 export function ResumeForm({ user }: ResumeFormProps) {
   const [activeTab, setActiveTab] = useState<'form' | 'preview'>('form')
   const [isPolishing, setIsPolishing] = useState(false)
   const [polishingField, setPolishingField] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
   const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
   // Cleanup timeout on unmount
@@ -141,6 +186,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
   })
 
   const polishWithAI = useAction(api.resumes.polishWithAI)
+  const generateUploadUrl = useConvexMutationDirect(api.resumes.generateUploadUrl)
+  const parseResumeFromStorage = useAction(api.resumes.parseResumeFromStorage)
 
   const form = useForm({
     defaultValues: createDefaultResumeFormValues({
@@ -188,6 +235,95 @@ export function ResumeForm({ user }: ResumeFormProps) {
     } catch (error) {
       console.error('Rate limit check failed:', error)
       return true
+    }
+  }
+
+  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    const validTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ]
+    if (!validTypes.includes(file.type)) {
+      toast({
+        description: 'Please upload a PDF or DOCX file.',
+        title: 'Invalid file type',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        description: 'Please upload a file smaller than 10MB.',
+        title: 'File too large',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setIsImporting(true)
+    try {
+      // 1. Get upload URL from Convex
+      console.log('[Resume Import] Step 1: Getting upload URL...')
+      const uploadUrl = await generateUploadUrl()
+      console.log('[Resume Import] Step 1 complete. Upload URL:', uploadUrl)
+
+      // 2. Upload file to Convex storage
+      console.log('[Resume Import] Step 2: Uploading file...', { name: file.name, type: file.type, size: file.size })
+      const uploadResponse = await fetch(uploadUrl, {
+        body: file,
+        headers: { 'Content-Type': file.type },
+        method: 'POST',
+      })
+      if (!uploadResponse.ok) throw new Error('Upload failed')
+      const { storageId } = (await uploadResponse.json()) as { storageId: string }
+      console.log('[Resume Import] Step 2 complete. Storage ID:', storageId)
+
+      // 3. Parse resume with AI
+      console.log('[Resume Import] Step 3: Parsing resume with AI...')
+      const result = await parseResumeFromStorage({
+        filename: file.name,
+        mimeType: file.type,
+        storageId: storageId as never, // Convex ID type
+      })
+      console.log('[Resume Import] Step 3 complete. Extraction result:', result)
+
+      // 4. Populate form with extracted data
+      console.log('[Resume Import] Step 4: Mapping to form data...')
+      const formData = mapExtractedToFormData(result, nanoid)
+      console.log('[Resume Import] Step 4 complete. Form data:', formData)
+
+      console.log('[Resume Import] Step 5: Resetting form with new data...')
+      // Use setFieldValue for each field to force re-render
+      form.setFieldValue('personalInfo', formData.personalInfo)
+      form.setFieldValue('summary', formData.summary)
+      form.setFieldValue('skills', formData.skills)
+      form.setFieldValue('workExperience', formData.workExperience)
+      form.setFieldValue('education', formData.education)
+      console.log('[Resume Import] Step 5 complete. Form state after update:', form.state.values)
+
+      toast({
+        description: 'Your resume has been imported and the form has been populated.',
+        title: 'Resume imported',
+      })
+    } catch (error) {
+      console.error('[Resume Import] ERROR:', error)
+      toast({
+        description: 'Failed to parse resume. Please try again or enter details manually.',
+        title: 'Import failed',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsImporting(false)
+      // Reset file input so the same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
   }
 
@@ -387,12 +523,34 @@ export function ResumeForm({ user }: ResumeFormProps) {
       </form.Subscribe>
 
       <div className='max-w-4xl mx-auto bg-card rounded-lg shadow-sm sm:shadow-md p-4 sm:p-6 lg:p-8'>
-        <h1 className='text-2xl sm:text-3xl font-bold text-card-foreground mb-2'>
-          {existingResume ? 'Edit Your Resume' : 'Build Your Resume'}
-        </h1>
-        <p className='text-muted-foreground mb-6 sm:mb-8'>
-          Create an ATS-friendly resume to help you land your next job.
-        </p>
+        <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-8'>
+          <div>
+            <h1 className='text-2xl sm:text-3xl font-bold text-card-foreground mb-2'>
+              {existingResume ? 'Edit Your Resume' : 'Build Your Resume'}
+            </h1>
+            <p className='text-muted-foreground'>
+              Create an ATS-friendly resume to help you land your next job.
+            </p>
+          </div>
+          <div className='flex-shrink-0'>
+            <input
+              accept='.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+              className='hidden'
+              onChange={handleFileImport}
+              ref={fileInputRef}
+              type='file'
+            />
+            <button
+              className='w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 border border-border rounded-md text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+              disabled={isImporting}
+              onClick={() => fileInputRef.current?.click()}
+              type='button'
+            >
+              <Upload className='h-4 w-4' />
+              {isImporting ? 'Importing...' : 'Import Resume'}
+            </button>
+          </div>
+        </div>
 
         <form
           className='space-y-6'

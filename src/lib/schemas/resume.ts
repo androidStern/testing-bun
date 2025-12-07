@@ -93,6 +93,44 @@ export function createEmptyEducation(id: string): EducationInput {
   }
 }
 
+// Schema for AI SDK generateObject (no transforms - must be JSON Schema compatible)
+export const resumeExtractionSchema = z.object({
+  education: z
+    .array(
+      z.object({
+        degree: z.string().nullable().describe('Degree type (BS, MS, PhD, etc.)'),
+        description: z.string().nullable().describe('Honors, GPA, relevant activities'),
+        field: z.string().nullable().describe('Field of study or major'),
+        graduationDate: z.string().nullable().describe('Graduation date'),
+        institution: z.string().describe('School or university name'),
+      }),
+    )
+    .describe('Educational background'),
+  personalInfo: z.object({
+    email: z.string().nullable().describe('Email address'),
+    linkedin: z.string().nullable().describe('LinkedIn profile URL'),
+    location: z.string().nullable().describe('City, State or full address'),
+    name: z.string().nullable().describe('Full name of the candidate'),
+    phone: z.string().nullable().describe('Phone number'),
+  }),
+  skills: z.string().nullable().describe('Skills as a comma-separated list'),
+  summary: z.string().nullable().describe('Professional summary or objective statement'),
+  workExperience: z
+    .array(
+      z.object({
+        achievements: z.string().nullable().describe('Key achievements or accomplishments'),
+        company: z.string().describe('Company or employer name'),
+        description: z.string().nullable().describe('Job responsibilities and duties'),
+        endDate: z.string().nullable().describe('End date or "Present" if current'),
+        position: z.string().describe('Job title or position'),
+        startDate: z.string().nullable().describe('Start date (e.g., Jan 2020)'),
+      }),
+    )
+    .describe('Work history, most recent first'),
+})
+
+export type ResumeExtraction = z.infer<typeof resumeExtractionSchema>
+
 // Default form values factory
 export function createDefaultResumeFormValues(options?: {
   email?: string
