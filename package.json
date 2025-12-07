@@ -42,6 +42,7 @@
     "convex": "^1.29.1",
     "convex-helpers": "^0.1.106",
     "cookie": "^1.1.1",
+    "framer-motion": "^12.23.25",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.4",
     "lucide-react": "^0.556.0",

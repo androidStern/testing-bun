@@ -9,7 +9,6 @@ import {
   ExternalLink,
   GraduationCap,
   Lightbulb,
-  Play,
   PlusCircle,
   Save,
   Sparkles,
@@ -19,6 +18,7 @@ import { nanoid } from 'nanoid'
 import { useState } from 'react'
 
 import { ResumePreview } from '@/components/ResumePreview'
+import { HeroVideoDialog } from '@/components/ui/hero-video-dialog'
 import { useToast } from '@/hooks/use-toast'
 import {
   createDefaultResumeFormValues,
@@ -33,13 +33,11 @@ function SectionGuide({
   learnTitle,
   tipText,
   tipTitle,
-  videoDuration,
   videoSrc,
 }: {
   learnTitle: string
   tipText: string
   tipTitle: string
-  videoDuration: string
   videoSrc: string
 }) {
   const [expanded, setExpanded] = useState(false)
@@ -74,21 +72,12 @@ function SectionGuide({
             </div>
           </div>
 
-          <div className='relative rounded-lg overflow-hidden mb-3 group cursor-pointer'>
-            <img
-              alt='Video thumbnail'
-              className='w-full h-32 object-cover'
-              src={videoSrc || '/placeholder.svg'}
-            />
-            <div className='absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/50 transition-colors'>
-              <div className='p-3 bg-white rounded-full'>
-                <Play className='h-5 w-5 text-black fill-black' />
-              </div>
-            </div>
-            <span className='absolute bottom-2 right-2 text-xs text-white bg-black/60 px-1.5 py-0.5 rounded'>
-              {videoDuration}
-            </span>
-          </div>
+          <HeroVideoDialog
+            animationStyle='from-center'
+            className='mb-3'
+            thumbnailAlt={learnTitle}
+            videoSrc={videoSrc}
+          />
 
           <a className='flex items-center gap-2 text-sm text-primary hover:underline' href='#'>
             <BookOpen className='h-4 w-4' />
@@ -464,8 +453,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
               learnTitle='Master Your Personal Information'
               tipText='Include a professional email address and ensure your phone number is current. Adding your city and state helps recruiters understand your location without revealing your full address.'
               tipTitle='Make a Strong First Impression'
-              videoDuration='3:45'
-              videoSrc='/placeholder.svg'
+              videoSrc='https://www.youtube.com/embed/9gVN5AD5SF8'
             />
           </div>
 
@@ -501,8 +489,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
               learnTitle='Craft a Compelling Summary'
               tipText='Your summary should be 2-4 sentences highlighting your experience level, key skills, and career goals. Focus on what makes you unique and what value you bring to employers.'
               tipTitle='Hook Recruiters in 6 Seconds'
-              videoDuration='5:20'
-              videoSrc='/placeholder.svg'
+              videoSrc='https://www.youtube.com/embed/9gVN5AD5SF8'
             />
           </div>
 
@@ -674,8 +661,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
               learnTitle='Showcase Your Experience'
               tipText='Use action verbs and quantify achievements where possible. Focus on results and impact rather than just listing responsibilities. Tailor your descriptions to match the job you are applying for.'
               tipTitle='Turn Job Duties Into Achievements'
-              videoDuration='7:15'
-              videoSrc='/placeholder.svg'
+              videoSrc='https://www.youtube.com/embed/9gVN5AD5SF8'
             />
           </div>
 
@@ -829,8 +815,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
               learnTitle='Highlight Your Education'
               tipText='List your most recent or relevant education first. Include honors, relevant coursework, and extracurricular activities that demonstrate skills applicable to your target role.'
               tipTitle='Education That Stands Out'
-              videoDuration='4:30'
-              videoSrc='/placeholder.svg'
+              videoSrc='https://www.youtube.com/embed/9gVN5AD5SF8'
             />
           </div>
 
@@ -855,8 +840,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
               learnTitle='Optimize Your Skills Section'
               tipText='Include a mix of hard and soft skills relevant to your target role. Use keywords from job descriptions to help pass ATS screening. Group similar skills together for better readability.'
               tipTitle='Skills That Get You Noticed'
-              videoDuration='4:00'
-              videoSrc='/placeholder.svg'
+              videoSrc='https://www.youtube.com/embed/9gVN5AD5SF8'
             />
           </div>
 
