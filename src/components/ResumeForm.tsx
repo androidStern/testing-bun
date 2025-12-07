@@ -25,6 +25,7 @@ import { nanoid } from 'nanoid'
 import { useEffect, useRef, useState } from 'react'
 
 import { ResumePreview } from '@/components/ResumePreview'
+import { ResumeToolbar } from '@/components/ResumeToolbar'
 import { ExpandableTextarea } from '@/components/ui/expandable-textarea'
 import { HeroVideoDialog } from '@/components/ui/hero-video-dialog'
 import { useToast } from '@/hooks/use-toast'
@@ -248,11 +249,13 @@ export function ResumeForm({ user }: ResumeFormProps) {
   const [polishingField, setPolishingField] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [recordingTarget, setRecordingTarget] = useState<RecordingTarget | null>(null)
   const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const resumeRef = useRef<HTMLDivElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Array<Blob>>([])
   const { toast } = useToast()
@@ -736,6 +739,181 @@ export function ResumeForm({ user }: ResumeFormProps) {
     }
   }
 
+  const handleDownloadPDF = async () => {
+    try {
+      setIsDownloading(true)
+      const { generateResumePDF } = await import('./ResumePDF')
+      const blob = await generateResumePDF(form.state.values)
+
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${form.state.values.personalInfo.name || 'Resume'}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      toast({
+        description: 'Your resume has been downloaded as a PDF.',
+        title: 'Download complete',
+      })
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      toast({
+        description: 'Failed to generate PDF. Please try again.',
+        title: 'Download failed',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const handlePrintResume = () => {
+    const formData = form.state.values
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>${formData.personalInfo.name} - Resume</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+              }
+              h1, h2, h3 {
+                color: #111;
+                margin-top: 20px;
+                margin-bottom: 10px;
+              }
+              h1 {
+                font-size: 24px;
+                text-align: center;
+                margin-bottom: 5px;
+              }
+              .contact-info {
+                text-align: center;
+                margin-bottom: 20px;
+                font-size: 14px;
+              }
+              .section {
+                margin-bottom: 20px;
+              }
+              .section-title {
+                font-size: 18px;
+                border-bottom: 1px solid #ddd;
+                padding-bottom: 5px;
+                margin-bottom: 10px;
+              }
+              .job-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+              }
+              .job-title {
+                font-weight: bold;
+              }
+              .job-date {
+                white-space: nowrap;
+              }
+              .skills-list {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+              }
+              .skill-item {
+                background-color: #f5f5f5;
+                padding: 4px 12px;
+                border-radius: 4px;
+                font-size: 14px;
+              }
+              ul {
+                margin-top: 5px;
+                padding-left: 20px;
+              }
+              @media print {
+                body {
+                  padding: 0;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <h1>${formData.personalInfo.name || 'Your Name'}</h1>
+            <div class="contact-info">
+              ${formData.personalInfo.email ? `<div>${formData.personalInfo.email}</div>` : ''}
+              <div>
+                ${[formData.personalInfo.phone, formData.personalInfo.location, formData.personalInfo.linkedin].filter(Boolean).join(' | ')}
+              </div>
+            </div>
+
+            ${formData.summary ? `
+              <div class="section">
+                <h2 class="section-title">Professional Summary</h2>
+                <p>${formData.summary}</p>
+              </div>
+            ` : ''}
+
+            ${formData.workExperience.some(exp => exp.company || exp.position) ? `
+              <div class="section">
+                <h2 class="section-title">Work Experience</h2>
+                ${formData.workExperience.map(exp => `
+                  <div style="margin-bottom: 15px;">
+                    <div class="job-header">
+                      <div>
+                        ${exp.position ? `<div class="job-title">${exp.position}</div>` : ''}
+                        ${exp.company ? `<div>${exp.company}</div>` : ''}
+                      </div>
+                      ${(exp.startDate || exp.endDate) ? `<div class="job-date">${exp.startDate}${exp.startDate && exp.endDate ? ' – ' : ''}${exp.endDate}</div>` : ''}
+                    </div>
+                    ${exp.description ? `<p style="margin-top: 5px;">${exp.description}</p>` : ''}
+                    ${exp.achievements ? `<ul>${exp.achievements.split(/\n|•/).filter(a => a.trim()).map(a => `<li>${a.trim().replace(/^•\s*/, '')}</li>`).join('')}</ul>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+
+            ${formData.education.some(edu => edu.institution || edu.degree) ? `
+              <div class="section">
+                <h2 class="section-title">Education</h2>
+                ${formData.education.map(edu => `
+                  <div style="margin-bottom: 15px;">
+                    <div class="job-header">
+                      <div>
+                        ${edu.degree && edu.field ? `<div class="job-title">${edu.degree} in ${edu.field}</div>` : (edu.degree ? `<div class="job-title">${edu.degree}</div>` : (edu.field ? `<div class="job-title">${edu.field}</div>` : ''))}
+                        ${edu.institution ? `<div>${edu.institution}</div>` : ''}
+                      </div>
+                      ${edu.graduationDate ? `<div class="job-date">${edu.graduationDate}</div>` : ''}
+                    </div>
+                    ${edu.description ? `<p style="margin-top: 5px;">${edu.description}</p>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+
+            ${formData.skills ? `
+              <div class="section">
+                <h2 class="section-title">Skills</h2>
+                <div class="skills-list">
+                  ${formData.skills.split(/,|\n|•/).map(s => s.trim()).filter(Boolean).map(skill => `<span class="skill-item">${skill}</span>`).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </body>
+        </html>
+      `)
+      printWindow.document.close()
+      printWindow.focus()
+      printWindow.print()
+    }
+  }
+
   if (activeTab === 'preview') {
     return (
       <div className='flex-1 bg-background p-4 sm:p-6 lg:p-8'>
@@ -795,33 +973,32 @@ export function ResumeForm({ user }: ResumeFormProps) {
       </form.Subscribe>
 
       <div className='max-w-4xl mx-auto bg-card rounded-lg shadow-sm sm:shadow-md p-4 sm:p-6 lg:p-8'>
-        <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-8'>
-          <div>
-            <h1 className='text-2xl sm:text-3xl font-bold text-card-foreground mb-2'>
-              {existingResume ? 'Edit Your Resume' : 'Build Your Resume'}
-            </h1>
-            <p className='text-muted-foreground'>
-              Create an ATS-friendly resume to help you land your next job.
-            </p>
-          </div>
-          <div className='flex-shrink-0'>
-            <input
-              accept='.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-              className='hidden'
-              onChange={handleFileImport}
-              ref={fileInputRef}
-              type='file'
-            />
-            <button
-              className='w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 border border-border rounded-md text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-              disabled={isImporting}
-              onClick={() => fileInputRef.current?.click()}
-              type='button'
-            >
-              <Upload className='h-4 w-4' />
-              {isImporting ? 'Importing...' : 'Import Resume'}
-            </button>
-          </div>
+        {/* Hidden file input for import */}
+        <input
+          accept='.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          className='hidden'
+          onChange={handleFileImport}
+          ref={fileInputRef}
+          type='file'
+        />
+
+        {/* Sticky Resume Toolbar */}
+        <ResumeToolbar
+          onImport={() => fileInputRef.current?.click()}
+          onPreview={() => setActiveTab('preview')}
+          onDownload={handleDownloadPDF}
+          onPrint={handlePrintResume}
+          isImporting={isImporting}
+          isDownloading={isDownloading}
+        />
+
+        <div className='mb-6 sm:mb-8'>
+          <h1 className='text-2xl sm:text-3xl font-bold text-card-foreground mb-2'>
+            {existingResume ? 'Edit Your Resume' : 'Build Your Resume'}
+          </h1>
+          <p className='text-muted-foreground'>
+            Create an ATS-friendly resume to help you land your next job.
+          </p>
         </div>
 
         <form
@@ -1364,16 +1541,6 @@ export function ResumeForm({ user }: ResumeFormProps) {
             />
           </div>
 
-          {/* Actions */}
-          <div className='pt-2'>
-            <button
-              className='w-full sm:w-auto text-muted-foreground px-6 py-2.5 hover:text-foreground transition-colors'
-              onClick={() => setActiveTab('preview')}
-              type='button'
-            >
-              Preview Resume
-            </button>
-          </div>
         </form>
       </div>
     </div>
