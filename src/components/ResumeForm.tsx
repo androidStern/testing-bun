@@ -937,12 +937,12 @@ export function ResumeForm({ user }: ResumeFormProps) {
       <form.Subscribe selector={state => [state.isDirty, state.isSubmitting, state.canSubmit]}>
         {([isDirty, isSubmitting, canSubmit]) =>
           justSaved ? (
-            <div className='fixed bottom-4 left-4 right-4 sm:bottom-auto sm:left-auto sm:top-4 sm:right-4 z-50 bg-card border border-border shadow-lg rounded-lg p-3 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 sm:slide-in-from-top-2'>
+            <div className='fixed bottom-4 left-4 right-4 z-50 bg-card border border-border shadow-lg rounded-lg p-3 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2'>
               <CheckCircle className='h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-500' />
               <span className='text-sm font-medium text-green-600 dark:text-green-500'>Saved</span>
             </div>
           ) : isDirty ? (
-            <div className='fixed bottom-4 left-4 right-4 sm:bottom-auto sm:left-auto sm:top-4 sm:right-4 z-50 bg-card border border-border shadow-lg rounded-lg p-3 flex items-center justify-between sm:justify-start gap-3 animate-in fade-in slide-in-from-bottom-2 sm:slide-in-from-top-2'>
+            <div className='fixed bottom-4 left-4 right-4 z-50 bg-card border border-border shadow-lg rounded-lg p-3 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2'>
               <div className='flex items-center gap-2 text-amber-600 dark:text-amber-500'>
                 <AlertCircle className='h-4 w-4 flex-shrink-0' />
                 <span className='text-sm font-medium'>Unsaved changes</span>
