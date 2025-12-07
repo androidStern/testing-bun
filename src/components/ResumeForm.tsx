@@ -386,7 +386,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
         }
       </form.Subscribe>
 
-      <div className='max-w-2xl mx-auto bg-card rounded-lg shadow-sm sm:shadow-md p-4 sm:p-6 lg:p-8'>
+      <div className='max-w-4xl mx-auto bg-card rounded-lg shadow-sm sm:shadow-md p-4 sm:p-6 lg:p-8'>
         <h1 className='text-2xl sm:text-3xl font-bold text-card-foreground mb-2'>
           {existingResume ? 'Edit Your Resume' : 'Build Your Resume'}
         </h1>
