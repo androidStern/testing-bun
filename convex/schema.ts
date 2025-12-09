@@ -105,4 +105,15 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index('by_workos_user_id', ['workosUserId']),
+
+  // Inbound job submissions from SMS (Twilio webhooks)
+  inboundJobSubmissions: defineTable({
+    phone: v.string(),
+    rawText: v.string(),
+    twilioMessageSid: v.string(),
+    status: v.string(),
+    createdAt: v.number(),
+  })
+    .index('by_status', ['status'])
+    .index('by_twilio_message_sid', ['twilioMessageSid']),
 });
