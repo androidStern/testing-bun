@@ -20,6 +20,8 @@ import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
 import { Route as OauthAuthorizeRouteImport } from './routes/oauth/authorize'
 import { Route as AuthenticatedResumesRouteImport } from './routes/_authenticated/resumes'
 import { Route as AuthenticatedAuthenticatedRouteImport } from './routes/_authenticated/authenticated'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/_admin'
+import { Route as AuthenticatedAdminAdminRouteImport } from './routes/_authenticated/_admin/admin'
 
 const CallbackRoute = CallbackRouteImport.update({
   id: '/callback',
@@ -76,6 +78,15 @@ const AuthenticatedAuthenticatedRoute =
     path: '/authenticated',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/_admin',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAdminAdminRoute = AuthenticatedAdminAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -88,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/oauth/profile': typeof OauthProfileRoute
   '/oauth/token': typeof OauthTokenRoute
   '/oauth/userinfo': typeof OauthUserinfoRoute
+  '/admin': typeof AuthenticatedAdminAdminRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -100,12 +112,14 @@ export interface FileRoutesByTo {
   '/oauth/profile': typeof OauthProfileRoute
   '/oauth/token': typeof OauthTokenRoute
   '/oauth/userinfo': typeof OauthUserinfoRoute
+  '/admin': typeof AuthenticatedAdminAdminRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/callback': typeof CallbackRoute
+  '/_authenticated/_admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/authenticated': typeof AuthenticatedAuthenticatedRoute
   '/_authenticated/resumes': typeof AuthenticatedResumesRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
@@ -114,6 +128,7 @@ export interface FileRoutesById {
   '/oauth/profile': typeof OauthProfileRoute
   '/oauth/token': typeof OauthTokenRoute
   '/oauth/userinfo': typeof OauthUserinfoRoute
+  '/_authenticated/_admin/admin': typeof AuthenticatedAdminAdminRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -128,6 +143,7 @@ export interface FileRouteTypes {
     | '/oauth/profile'
     | '/oauth/token'
     | '/oauth/userinfo'
+    | '/admin'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -140,11 +156,13 @@ export interface FileRouteTypes {
     | '/oauth/profile'
     | '/oauth/token'
     | '/oauth/userinfo'
+    | '/admin'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/callback'
+    | '/_authenticated/_admin'
     | '/_authenticated/authenticated'
     | '/_authenticated/resumes'
     | '/oauth/authorize'
@@ -153,6 +171,7 @@ export interface FileRouteTypes {
     | '/oauth/profile'
     | '/oauth/token'
     | '/oauth/userinfo'
+    | '/_authenticated/_admin/admin'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -246,15 +265,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAuthenticatedRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/_admin': {
+      id: '/_authenticated/_admin'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/_admin/admin': {
+      id: '/_authenticated/_admin/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminAdminRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAdminRoute: typeof AuthenticatedAdminAdminRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAdminRoute: AuthenticatedAdminAdminRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAuthenticatedRoute: typeof AuthenticatedAuthenticatedRoute
   AuthenticatedResumesRoute: typeof AuthenticatedResumesRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAuthenticatedRoute: AuthenticatedAuthenticatedRoute,
   AuthenticatedResumesRoute: AuthenticatedResumesRoute,
 }

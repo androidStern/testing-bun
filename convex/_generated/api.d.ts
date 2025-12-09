@@ -8,8 +8,9 @@
  * @module
  */
 
+import type * as auth from "../auth.js";
+import type * as functions from "../functions.js";
 import type * as http from "../http.js";
-import type * as inboundJobs from "../inboundJobs.js";
 import type * as inboundMessages from "../inboundMessages.js";
 import type * as inngest from "../inngest.js";
 import type * as myFunctions from "../myFunctions.js";
@@ -25,8 +26,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
+  functions: typeof functions;
   http: typeof http;
-  inboundJobs: typeof inboundJobs;
   inboundMessages: typeof inboundMessages;
   inngest: typeof inngest;
   myFunctions: typeof myFunctions;

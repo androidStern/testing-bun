@@ -106,17 +106,6 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index('by_workos_user_id', ['workosUserId']),
 
-  // Inbound job submissions from SMS (Twilio webhooks) - DEPRECATED, use inboundMessages
-  inboundJobSubmissions: defineTable({
-    phone: v.string(),
-    rawText: v.string(),
-    twilioMessageSid: v.string(),
-    status: v.string(),
-    createdAt: v.number(),
-  })
-    .index('by_status', ['status'])
-    .index('by_twilio_message_sid', ['twilioMessageSid']),
-
   // SMS senders - tracks phone numbers and approval status
   senders: defineTable({
     phone: v.string(),
@@ -141,5 +130,6 @@ export default defineSchema({
   })
     .index('by_status', ['status'])
     .index('by_phone', ['phone'])
-    .index('by_createdAt', ['createdAt']),
+    .index('by_createdAt', ['createdAt'])
+    .index('by_senderId', ['senderId']),
 });
