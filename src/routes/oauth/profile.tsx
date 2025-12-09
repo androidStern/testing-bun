@@ -57,5 +57,5 @@ function ProfilePage() {
     window.location.href = '/oauth/complete';
   };
 
-  return <ProfileForm user={user} onSuccess={handleSuccess} showSkip={true} />;
+  return <ProfileForm user={user} onSuccess={handleSuccess} />;
 }

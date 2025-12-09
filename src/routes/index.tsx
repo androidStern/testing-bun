@@ -50,7 +50,7 @@ function HomeContent({
       </header>
       <AuthDebug />
       <main className='flex-1'>
-        <Authenticated>{user && <ProfileForm user={user} showSkip={false} />}</Authenticated>
+        <Authenticated>{user && <ProfileForm user={user} />}</Authenticated>
         <Unauthenticated>
           <div className='flex flex-col items-center justify-center min-h-[calc(100vh-53px)] gap-6 px-4 py-8'>
             <h1 className='text-2xl sm:text-3xl font-bold text-center'>Welcome to Recovery Jobs</h1>

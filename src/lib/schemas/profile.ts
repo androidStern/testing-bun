@@ -17,8 +17,8 @@ export const profileFormSchema = z.object({
   thingsICanOffer: z
     .array(z.string())
     .min(1, 'Please select at least one option for "What brings you here?"'),
-  headline: optionalString,
-  bio: optionalString,
+  headline: z.string().min(1, 'Please enter your most recent position'),
+  bio: z.string().min(1, 'Please enter a professional summary'),
   resumeLink: optionalUrl,
   location: optionalString,
   website: optionalUrl,

@@ -1,6 +1,8 @@
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
 import { useForm } from '@tanstack/react-form';
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
+import { useAction } from 'convex/react';
+import { Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { z } from 'zod';
 
@@ -9,6 +11,8 @@ import { profileFormSchema } from '../lib/schemas/profile';
 
 import type { ProfileFormData } from '../lib/schemas/profile';
 import type { User } from '@workos/authkit-tanstack-react-start';
+
+import { useToast } from '@/hooks/use-toast';
 
 const OFFER_OPTIONS = [
   { value: 'To find a job', emoji: '🔍' },
@@ -20,7 +24,6 @@ const OFFER_OPTIONS = [
 interface ProfileFormProps {
   user: User;
   onSuccess?: () => void;
-  showSkip?: boolean;
 }
 
 function getErrorMessage(error: unknown): string {
@@ -41,8 +44,35 @@ function getErrorMessage(error: unknown): string {
   return 'Validation error';
 }
 
-export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormProps) {
+const checkRateLimit = (): boolean => {
+  const storageKey = '_resume_polish_cache';
+  const maxRequests = 5;
+  const timeWindow = 60 * 1000;
+
+  try {
+    const stored = localStorage.getItem(storageKey);
+    const timestamps: number[] = stored ? JSON.parse(stored) : [];
+    const now = Date.now();
+    const recentTimestamps = timestamps.filter(ts => now - ts < timeWindow);
+
+    if (recentTimestamps.length >= maxRequests) {
+      return false;
+    }
+
+    recentTimestamps.push(now);
+    localStorage.setItem(storageKey, JSON.stringify(recentTimestamps));
+    return true;
+  } catch (error) {
+    console.error('Rate limit check failed:', error);
+    return true;
+  }
+};
+
+export function ProfileForm({ user, onSuccess }: ProfileFormProps) {
   const [errorDismissed, setErrorDismissed] = useState(false);
+  const [isPolishing, setIsPolishing] = useState(false);
+  const { toast } = useToast();
+  const polishWithAI = useAction(api.resumes.polishWithAI);
 
   const { data: existingProfile } = useSuspenseQuery(
     convexQuery(api.profiles.getByWorkosUserId, { workosUserId: user.id }),
@@ -86,8 +116,53 @@ export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormPro
     },
   });
 
-  const handleSkip = () => {
-    window.location.href = '/oauth/complete';
+  const polishBioWithAI = async () => {
+    if (!checkRateLimit()) {
+      toast({
+        description: 'You have reached your limit. Please try again later.',
+        title: 'Rate limit reached',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsPolishing(true);
+    try {
+      const values = form.state.values;
+      const result = await polishWithAI({
+        context: {
+          personalInfo: {
+            location: values.location,
+            name: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
+          },
+          skills: '',
+          workExperience: values.headline ? [{
+            achievements: '',
+            company: '',
+            description: '',
+            endDate: '',
+            position: values.headline,
+            startDate: '',
+          }] : [],
+        },
+        currentText: values.bio,
+        type: 'summary',
+      });
+      form.setFieldValue('bio', result.polishedText);
+      toast({
+        description: 'Your professional summary has been enhanced.',
+        title: 'Summary polished',
+      });
+    } catch (error) {
+      console.error('Error polishing bio:', error);
+      toast({
+        description: 'Failed to polish summary. Please try again.',
+        title: 'Error',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPolishing(false);
+    }
   };
 
   if (isSuccess) {
@@ -190,7 +265,7 @@ export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormPro
             {(field) => (
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Most Recent Position
+                  Most Recent Position <span className="text-destructive">*</span>
                 </label>
                 <input
                   type="text"
@@ -207,9 +282,24 @@ export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormPro
           <form.Field name="bio">
             {(field) => (
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Professional Summary
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm font-medium text-foreground">
+                    Professional Summary <span className="text-destructive">*</span>
+                  </label>
+                  <button
+                    className="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-primary/10 disabled:opacity-50 transition-colors min-w-[52px]"
+                    disabled={isPolishing}
+                    onClick={polishBioWithAI}
+                    type="button"
+                  >
+                    <div className="p-1.5 rounded-full bg-primary/10">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-[10px] font-medium mt-1 text-primary">
+                      {isPolishing ? 'Wait...' : 'Polish'}
+                    </span>
+                  </button>
+                </div>
                 <textarea
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
@@ -246,15 +336,6 @@ export function ProfileForm({ user, onSuccess, showSkip = true }: ProfileFormPro
                 </button>
               )}
             </form.Subscribe>
-            {showSkip && (
-              <button
-                type="button"
-                onClick={handleSkip}
-                className="w-full sm:w-auto text-muted-foreground px-6 py-2.5 hover:text-foreground transition-colors"
-              >
-                Skip for now
-              </button>
-            )}
           </div>
         </form>
       </div>
