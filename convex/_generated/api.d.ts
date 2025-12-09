@@ -10,11 +10,13 @@
 
 import type * as http from "../http.js";
 import type * as inboundJobs from "../inboundJobs.js";
+import type * as inboundMessages from "../inboundMessages.js";
 import type * as inngest from "../inngest.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as oauth from "../oauth.js";
 import type * as profiles from "../profiles.js";
 import type * as resumes from "../resumes.js";
+import type * as senders from "../senders.js";
 
 import type {
   ApiFromModules,
@@ -25,11 +27,13 @@ import type {
 declare const fullApi: ApiFromModules<{
   http: typeof http;
   inboundJobs: typeof inboundJobs;
+  inboundMessages: typeof inboundMessages;
   inngest: typeof inngest;
   myFunctions: typeof myFunctions;
   oauth: typeof oauth;
   profiles: typeof profiles;
   resumes: typeof resumes;
+  senders: typeof senders;
 }>;
 
 /**
