@@ -4,7 +4,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
 import { ConvexProvider, ConvexProviderWithAuth, ConvexReactClient } from 'convex/react';
 import { AuthKitProvider, useAccessToken, useAuth } from '@workos/authkit-tanstack-react-start/client';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { routeTree } from './routeTree.gen';
 
 export function getRouter() {
@@ -51,10 +51,30 @@ function useAuthFromWorkOS() {
   const { loading, user } = useAuth();
   const { accessToken, getAccessToken } = useAccessToken();
 
+  // Debug logging for auth race condition
+  useEffect(() => {
+    console.log('[useAuthFromWorkOS] state change', {
+      loading,
+      isAuthenticated: !!user,
+      hasAccessToken: !!accessToken,
+      timestamp: Date.now(),
+    });
+  }, [loading, user, accessToken]);
+
   const fetchAccessToken = useCallback(
     async ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
+      console.log('[useAuthFromWorkOS] fetchAccessToken called', {
+        forceRefreshToken,
+        hasExistingToken: !!accessToken,
+        timestamp: Date.now(),
+      });
       if (!accessToken || forceRefreshToken) {
-        return (await getAccessToken()) ?? null;
+        const token = (await getAccessToken()) ?? null;
+        console.log('[useAuthFromWorkOS] fetched new token', {
+          gotToken: !!token,
+          timestamp: Date.now(),
+        });
+        return token;
       }
 
       return accessToken;

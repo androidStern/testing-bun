@@ -15,19 +15,42 @@ import {
 export const Route = createFileRoute('/_authenticated/_admin/admin')({
   component: AdminDashboard,
   loader: async ({ context }) => {
+    const isServer = typeof window === 'undefined';
+    const hasServerHttpClient = !!context.convexQueryClient.serverHttpClient;
+    console.log('[admin loader]', {
+      isServer,
+      hasServerHttpClient,
+      timestamp: Date.now(),
+    });
+
     // Preload ALL tab data in parallel - useSuspenseQuery won't suspend since data is cached
-    await Promise.all([
-      context.queryClient.ensureQueryData(
-        convexQuery(api.senders.list, { status: 'pending' }),
-      ),
-      context.queryClient.ensureQueryData(convexQuery(api.senders.list, {})),
-      context.queryClient.ensureQueryData(
-        convexQuery(api.inboundMessages.list, { status: 'pending_review' }),
-      ),
-      context.queryClient.ensureQueryData(
-        convexQuery(api.inboundMessages.list, {}),
-      ),
-    ]);
+    const startTime = Date.now();
+    try {
+      await Promise.all([
+        context.queryClient.ensureQueryData(
+          convexQuery(api.senders.list, { status: 'pending' }),
+        ),
+        context.queryClient.ensureQueryData(convexQuery(api.senders.list, {})),
+        context.queryClient.ensureQueryData(
+          convexQuery(api.inboundMessages.list, { status: 'pending_review' }),
+        ),
+        context.queryClient.ensureQueryData(
+          convexQuery(api.inboundMessages.list, {}),
+        ),
+      ]);
+      console.log('[admin loader] queries succeeded', {
+        isServer,
+        duration: Date.now() - startTime,
+      });
+    } catch (err) {
+      console.error('[admin loader] queries FAILED', {
+        isServer,
+        hasServerHttpClient,
+        duration: Date.now() - startTime,
+        error: err instanceof Error ? err.message : err,
+      });
+      throw err;
+    }
   },
 });
 
