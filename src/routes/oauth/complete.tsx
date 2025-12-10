@@ -7,6 +7,7 @@ import {
   decryptSession,
   getOAuthSessionFromRequest,
 } from '../../lib/oauth-session';
+import { clearReferralCookie } from '../../lib/referral-cookie';
 import { generateAuthorizationCode } from '../../lib/oauth-tokens';
 
 const getConvexClient = () => {
@@ -62,6 +63,7 @@ export const Route = createFileRoute('/oauth/complete')({
         const headers = new Headers();
         headers.set('Location', redirectUrl.toString());
         clearOAuthSessionCookie(headers);
+        clearReferralCookie(headers); // Clear any pending referral cookie
 
         return new Response(null, {
           status: 302,

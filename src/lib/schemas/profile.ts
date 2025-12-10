@@ -32,6 +32,8 @@ export const profileMutationSchema = profileFormSchema.extend({
   email: z.string().email(),
   firstName: optionalString,
   lastName: optionalString,
+  // Optional referral code from the person who referred this user
+  referredByCode: z.string().optional(),
 });
 
 // Type exports for use throughout the app

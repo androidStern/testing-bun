@@ -307,6 +307,7 @@ export const markRewarded = mutation({
 #### 2.2 Modify `convex/profiles.ts`
 
 Update the `create` mutation to:
+
 1. Generate a referral code for new profiles
 2. Accept optional `referredByCode` parameter
 3. Record referral attribution after creation
@@ -326,9 +327,7 @@ export const create = zodMutation({
 
     const existing = await ctx.db
       .query('profiles')
-      .withIndex('by_workos_user_id', (q) =>
-        q.eq('workosUserId', args.workosUserId),
-      )
+      .withIndex('by_workos_user_id', (q) => q.eq('workosUserId', args.workosUserId))
       .first();
 
     const now = Date.now();
@@ -345,10 +344,7 @@ export const create = zodMutation({
       profileId = existing._id;
     } else {
       // NEW PROFILE: Generate unique referral code
-      const referralCode = await ctx.runMutation(
-        internal.referrals.generateUniqueCode,
-        {}
-      );
+      const referralCode = await ctx.runMutation(internal.referrals.generateUniqueCode, {});
 
       profileId = await ctx.db.insert('profiles', {
         ...profileData,
@@ -655,10 +651,7 @@ Read referral cookie and include in OAuth session:
 
 import { createFileRoute } from '@tanstack/react-router';
 import { getSignUpUrl } from '@workos/authkit-tanstack-react-start';
-import {
-  encryptSession,
-  setOAuthSessionCookie
-} from '../../lib/oauth-session';
+import { encryptSession, setOAuthSessionCookie } from '../../lib/oauth-session';
 import { getReferralFromRequest } from '../../lib/referral-cookie';
 import type { OAuthSessionData } from '../../lib/oauth-session';
 
@@ -703,7 +696,7 @@ export const Route = createFileRoute('/oauth/authorize')({
           codeChallengeMethod: codeChallengeMethod || undefined,
           scope: scope || undefined,
           createdAt: Date.now(),
-          referralCode: referralCode || undefined,  // NEW
+          referralCode: referralCode || undefined, // NEW
         };
 
         const encryptedSession = await encryptSession(sessionData);
@@ -829,7 +822,7 @@ export const Route = createFileRoute('/oauth/callback')({
         const headers = new Headers();
         headers.set('Location', redirectUrl.toString());
         clearOAuthSessionCookie(headers);
-        clearReferralCookie(headers);  // NEW: Clear referral cookie
+        clearReferralCookie(headers); // NEW: Clear referral cookie
 
         return new Response(null, {
           status: 302,
@@ -926,12 +919,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { getAuth } from '@workos/authkit-tanstack-react-start';
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '../../../convex/_generated/api';
-import {
-  clearOAuthSessionCookie,
-  decryptSession,
-  getOAuthSessionFromRequest,
-} from '../../lib/oauth-session';
-import { clearReferralCookie } from '../../lib/referral-cookie';  // NEW
+import { clearOAuthSessionCookie, decryptSession, getOAuthSessionFromRequest } from '../../lib/oauth-session';
+import { clearReferralCookie } from '../../lib/referral-cookie'; // NEW
 import { generateAuthorizationCode } from '../../lib/oauth-tokens';
 
 const getConvexClient = () => {
@@ -953,10 +942,7 @@ export const Route = createFileRoute('/oauth/complete')({
         // Retrieve OAuth session
         const encryptedSession = getOAuthSessionFromRequest(request);
         if (!encryptedSession) {
-          return new Response(
-            'OAuth session expired. Please start the login process again.',
-            { status: 400 },
-          );
+          return new Response('OAuth session expired. Please start the login process again.', { status: 400 });
         }
 
         const oauthSession = await decryptSession(encryptedSession);
@@ -987,7 +973,7 @@ export const Route = createFileRoute('/oauth/complete')({
         const headers = new Headers();
         headers.set('Location', redirectUrl.toString());
         clearOAuthSessionCookie(headers);
-        clearReferralCookie(headers);  // NEW: Clear referral cookie
+        clearReferralCookie(headers); // NEW: Clear referral cookie
 
         return new Response(null, {
           status: 302,
@@ -1011,9 +997,9 @@ Accept and pass referral code to mutation:
 // src/components/ProfileForm.tsx - MODIFIED SECTIONS
 
 interface ProfileFormProps {
-  user: User
-  onSuccess?: () => void
-  referredByCode?: string  // NEW
+  user: User;
+  onSuccess?: () => void;
+  referredByCode?: string; // NEW
 }
 
 export function ProfileForm({ user, onSuccess, referredByCode }: ProfileFormProps) {
@@ -1022,17 +1008,17 @@ export function ProfileForm({ user, onSuccess, referredByCode }: ProfileFormProp
   const form = useForm({
     defaultValues,
     onSubmit: ({ value }) => {
-      setErrorDismissed(false)
+      setErrorDismissed(false);
       createProfile({
         email: user.email,
         firstName: user.firstName ?? '',
         lastName: user.lastName ?? '',
         workosUserId: user.id,
-        referredByCode,  // NEW: Pass referral code
+        referredByCode, // NEW: Pass referral code
         ...value,
-      })
+      });
     },
-  })
+  });
 
   // ... rest of component unchanged ...
 }
@@ -1055,7 +1041,7 @@ export const profileMutationSchema = profileFormSchema.extend({
   email: z.string().email(),
   firstName: optionalString,
   lastName: optionalString,
-  referredByCode: optionalString,  // NEW: Optional referral attribution
+  referredByCode: optionalString, // NEW: Optional referral attribution
 });
 ```
 
@@ -1066,6 +1052,7 @@ export const profileMutationSchema = profileFormSchema.extend({
 #### 7.1 Modify Home Page to Read Referral Cookie
 
 For users who sign up directly (not through Circle), we need to:
+
 1. Read the `pending_referral` cookie server-side
 2. Pass it to the ProfileForm
 
@@ -1361,6 +1348,7 @@ DEFAULT_CIRCLE_INVITE=your_default_invite_code
 ## Summary of Files to Modify/Create
 
 ### New Files
+
 - `convex/referrals.ts` - Referral functions
 - `convex/migrations.ts` - Backfill migration
 - `src/lib/referral-cookie.ts` - Cookie utilities
@@ -1368,6 +1356,7 @@ DEFAULT_CIRCLE_INVITE=your_default_invite_code
 - `src/components/ReferralCard.tsx` - Dashboard widget
 
 ### Modified Files
+
 - `convex/schema.ts` - Add `referralCode` to profiles, add `referrals` table
 - `convex/profiles.ts` - Accept `referredByCode`, generate codes
 - `src/lib/oauth-session.ts` - Add `referralCode` to session

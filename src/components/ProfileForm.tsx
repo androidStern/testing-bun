@@ -21,6 +21,7 @@ const OFFER_OPTIONS = [
 interface ProfileFormProps {
   user: User
   onSuccess?: () => void
+  referredByCode?: string
 }
 
 function getErrorMessage(error: unknown): string {
@@ -65,7 +66,7 @@ const checkRateLimit = (): boolean => {
   }
 }
 
-export function ProfileForm({ user, onSuccess }: ProfileFormProps) {
+export function ProfileForm({ user, onSuccess, referredByCode }: ProfileFormProps) {
   const [errorDismissed, setErrorDismissed] = useState(false)
   const [isPolishing, setIsPolishing] = useState(false)
   const { toast } = useToast()
@@ -111,6 +112,7 @@ export function ProfileForm({ user, onSuccess }: ProfileFormProps) {
         firstName: user.firstName ?? '',
         lastName: user.lastName ?? '',
         workosUserId: user.id,
+        referredByCode,
         ...value,
       })
     },

@@ -8,6 +8,7 @@ import {
 } from '../src/lib/schemas/profile';
 
 import { internal } from './_generated/api';
+import type { Id } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
 
 const zodMutation = zCustomMutation(mutation, NoOp);
@@ -38,6 +39,8 @@ export const create = zodMutation({
   args: profileMutationSchema,
   handler: async (ctx, args) => {
     // Schema transforms handle empty string -> undefined conversion
+    const { referredByCode, ...profileData } = args;
+
     const existing = await ctx.db
       .query('profiles')
       .withIndex('by_workos_user_id', (q) =>
@@ -47,19 +50,37 @@ export const create = zodMutation({
 
     const now = Date.now();
 
-    let profileId: string;
+    let profileId: Id<'profiles'>;
+    let isNewProfile = false;
 
     if (existing) {
+      // Update existing profile (don't change referralCode)
       await ctx.db.patch(existing._id, {
-        ...args,
+        ...profileData,
         updatedAt: now,
       });
       profileId = existing._id;
     } else {
+      // New profile: generate unique referral code
+      const referralCode = await ctx.runMutation(
+        internal.referrals.generateUniqueCode,
+        {},
+      );
+
       profileId = await ctx.db.insert('profiles', {
-        ...args,
+        ...profileData,
+        referralCode,
         createdAt: now,
         updatedAt: now,
+      });
+      isNewProfile = true;
+    }
+
+    // Record referral attribution if this is a new profile with a referral code
+    if (isNewProfile && referredByCode) {
+      await ctx.scheduler.runAfter(0, internal.referrals.recordReferral, {
+        referrerCode: referredByCode,
+        referredProfileId: profileId,
       });
     }
 

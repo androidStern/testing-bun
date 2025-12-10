@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { getSignUpUrl } from '@workos/authkit-tanstack-react-start';
 import {
-  
   encryptSession,
-  setOAuthSessionCookie
+  setOAuthSessionCookie,
 } from '../../lib/oauth-session';
-import type {OAuthSessionData} from '../../lib/oauth-session';
+import { getReferralFromRequest } from '../../lib/referral-cookie';
+import type { OAuthSessionData } from '../../lib/oauth-session';
 
 export const Route = createFileRoute('/oauth/authorize')({
   server: {
@@ -38,7 +38,10 @@ export const Route = createFileRoute('/oauth/authorize')({
           );
         }
 
-        // Store OAuth session data
+        // Read referral cookie if present
+        const referralCode = getReferralFromRequest(request);
+
+        // Store OAuth session data (includes referral code for attribution)
         const sessionData: OAuthSessionData = {
           clientId,
           redirectUri,
@@ -47,6 +50,7 @@ export const Route = createFileRoute('/oauth/authorize')({
           codeChallengeMethod: codeChallengeMethod || undefined,
           scope: scope || undefined,
           createdAt: Date.now(),
+          referralCode: referralCode || undefined,
         };
 
         const encryptedSession = await encryptSession(sessionData);

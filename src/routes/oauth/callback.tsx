@@ -8,6 +8,7 @@ import {
   getOAuthSessionFromRequest,
   setOAuthSessionCookie,
 } from '../../lib/oauth-session';
+import { clearReferralCookie } from '../../lib/referral-cookie';
 import { generateAuthorizationCode } from '../../lib/oauth-tokens';
 
 const getConvexClient = () => {
@@ -54,9 +55,13 @@ export const Route = createFileRoute('/oauth/callback')({
         });
 
         if (!profile) {
-          // Redirect to profile form
+          // Redirect to profile form with referral code if present
           const headers = new Headers();
-          headers.set('Location', '/oauth/profile');
+          let profileUrl = '/oauth/profile';
+          if (oauthSession.referralCode) {
+            profileUrl += `?ref=${encodeURIComponent(oauthSession.referralCode)}`;
+          }
+          headers.set('Location', profileUrl);
           // Keep the session cookie for the profile form
           setOAuthSessionCookie(headers, encryptedSession);
 
@@ -88,6 +93,7 @@ export const Route = createFileRoute('/oauth/callback')({
         const headers = new Headers();
         headers.set('Location', redirectUrl.toString());
         clearOAuthSessionCookie(headers);
+        clearReferralCookie(headers); // Clear any pending referral cookie
 
         return new Response(null, {
           status: 302,

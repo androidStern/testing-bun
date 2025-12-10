@@ -29,6 +29,9 @@ function ProfileError({ error, reset }: ErrorComponentProps) {
 
 export const Route = createFileRoute('/oauth/profile')({
   errorComponent: ProfileError,
+  validateSearch: (search: Record<string, unknown>) => ({
+    ref: typeof search.ref === 'string' ? search.ref : undefined,
+  }),
   loader: async ({ context }) => {
     const auth = await getAuth();
 
@@ -52,10 +55,11 @@ export const Route = createFileRoute('/oauth/profile')({
 
 function ProfilePage() {
   const { user } = Route.useLoaderData();
+  const { ref } = Route.useSearch();
 
   const handleSuccess = () => {
     window.location.href = '/oauth/complete';
   };
 
-  return <ProfileForm user={user} onSuccess={handleSuccess} />;
+  return <ProfileForm user={user} onSuccess={handleSuccess} referredByCode={ref} />;
 }

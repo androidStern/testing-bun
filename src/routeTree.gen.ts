@@ -18,7 +18,9 @@ import { Route as OauthProfileRouteImport } from './routes/oauth/profile'
 import { Route as OauthCompleteRouteImport } from './routes/oauth/complete'
 import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
 import { Route as OauthAuthorizeRouteImport } from './routes/oauth/authorize'
+import { Route as JoinCodeRouteImport } from './routes/join/$code'
 import { Route as AuthenticatedResumesRouteImport } from './routes/_authenticated/resumes'
+import { Route as AuthenticatedInviteRouteImport } from './routes/_authenticated/invite'
 import { Route as AuthenticatedAuthenticatedRouteImport } from './routes/_authenticated/authenticated'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/_admin'
 import { Route as AuthenticatedAdminAdminRouteImport } from './routes/_authenticated/_admin/admin'
@@ -67,9 +69,19 @@ const OauthAuthorizeRoute = OauthAuthorizeRouteImport.update({
   path: '/oauth/authorize',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JoinCodeRoute = JoinCodeRouteImport.update({
+  id: '/join/$code',
+  path: '/join/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedResumesRoute = AuthenticatedResumesRouteImport.update({
   id: '/resumes',
   path: '/resumes',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedInviteRoute = AuthenticatedInviteRouteImport.update({
+  id: '/invite',
+  path: '/invite',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedAuthenticatedRoute =
@@ -92,7 +104,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/callback': typeof CallbackRoute
   '/authenticated': typeof AuthenticatedAuthenticatedRoute
+  '/invite': typeof AuthenticatedInviteRoute
   '/resumes': typeof AuthenticatedResumesRoute
+  '/join/$code': typeof JoinCodeRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/complete': typeof OauthCompleteRoute
@@ -105,7 +119,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/callback': typeof CallbackRoute
   '/authenticated': typeof AuthenticatedAuthenticatedRoute
+  '/invite': typeof AuthenticatedInviteRoute
   '/resumes': typeof AuthenticatedResumesRoute
+  '/join/$code': typeof JoinCodeRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/complete': typeof OauthCompleteRoute
@@ -121,7 +137,9 @@ export interface FileRoutesById {
   '/callback': typeof CallbackRoute
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/authenticated': typeof AuthenticatedAuthenticatedRoute
+  '/_authenticated/invite': typeof AuthenticatedInviteRoute
   '/_authenticated/resumes': typeof AuthenticatedResumesRoute
+  '/join/$code': typeof JoinCodeRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/complete': typeof OauthCompleteRoute
@@ -136,7 +154,9 @@ export interface FileRouteTypes {
     | '/'
     | '/callback'
     | '/authenticated'
+    | '/invite'
     | '/resumes'
+    | '/join/$code'
     | '/oauth/authorize'
     | '/oauth/callback'
     | '/oauth/complete'
@@ -149,7 +169,9 @@ export interface FileRouteTypes {
     | '/'
     | '/callback'
     | '/authenticated'
+    | '/invite'
     | '/resumes'
+    | '/join/$code'
     | '/oauth/authorize'
     | '/oauth/callback'
     | '/oauth/complete'
@@ -164,7 +186,9 @@ export interface FileRouteTypes {
     | '/callback'
     | '/_authenticated/_admin'
     | '/_authenticated/authenticated'
+    | '/_authenticated/invite'
     | '/_authenticated/resumes'
+    | '/join/$code'
     | '/oauth/authorize'
     | '/oauth/callback'
     | '/oauth/complete'
@@ -178,6 +202,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   CallbackRoute: typeof CallbackRoute
+  JoinCodeRoute: typeof JoinCodeRoute
   OauthAuthorizeRoute: typeof OauthAuthorizeRoute
   OauthCallbackRoute: typeof OauthCallbackRoute
   OauthCompleteRoute: typeof OauthCompleteRoute
@@ -251,11 +276,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OauthAuthorizeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/join/$code': {
+      id: '/join/$code'
+      path: '/join/$code'
+      fullPath: '/join/$code'
+      preLoaderRoute: typeof JoinCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/resumes': {
       id: '/_authenticated/resumes'
       path: '/resumes'
       fullPath: '/resumes'
       preLoaderRoute: typeof AuthenticatedResumesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/invite': {
+      id: '/_authenticated/invite'
+      path: '/invite'
+      fullPath: '/invite'
+      preLoaderRoute: typeof AuthenticatedInviteRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/authenticated': {
@@ -296,12 +335,14 @@ const AuthenticatedAdminRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAuthenticatedRoute: typeof AuthenticatedAuthenticatedRoute
+  AuthenticatedInviteRoute: typeof AuthenticatedInviteRoute
   AuthenticatedResumesRoute: typeof AuthenticatedResumesRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAuthenticatedRoute: AuthenticatedAuthenticatedRoute,
+  AuthenticatedInviteRoute: AuthenticatedInviteRoute,
   AuthenticatedResumesRoute: AuthenticatedResumesRoute,
 }
 
@@ -313,6 +354,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   CallbackRoute: CallbackRoute,
+  JoinCodeRoute: JoinCodeRoute,
   OauthAuthorizeRoute: OauthAuthorizeRoute,
   OauthCallbackRoute: OauthCallbackRoute,
   OauthCompleteRoute: OauthCompleteRoute,

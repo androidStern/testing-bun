@@ -10,6 +10,8 @@ export interface OAuthSessionData {
   codeChallengeMethod?: string;
   scope?: string;
   createdAt: number;
+  // Referral code if user came through a referral link
+  referralCode?: string;
 }
 
 function getSecret(): Uint8Array {

@@ -22,9 +22,23 @@ export default defineSchema({
     linkedinUrl: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
+    // Unique referral code for this user (6-char alphanumeric)
+    // Uniqueness is enforced by generateUniqueCode in referrals.ts
+    referralCode: v.optional(v.string()),
   })
     .index('by_workos_user_id', ['workosUserId'])
-    .index('by_email', ['email']),
+    .index('by_email', ['email'])
+    .index('by_referral_code', ['referralCode']),
+
+  // Referral attribution - tracks who referred whom
+  referrals: defineTable({
+    referrerProfileId: v.id('profiles'),
+    referredProfileId: v.id('profiles'),
+    referralCode: v.string(), // The code that was used
+    createdAt: v.number(),
+  })
+    .index('by_referrer', ['referrerProfileId'])
+    .index('by_referred', ['referredProfileId']),
 
   // OAuth authorization codes - short-lived, single-use
   oauthAuthorizationCodes: defineTable({
