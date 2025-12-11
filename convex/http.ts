@@ -1,35 +1,54 @@
 import { httpRouter } from 'convex/server';
 
-import { api } from './_generated/api';
+import { api, internal } from './_generated/api';
 import { Id } from './_generated/dataModel';
 import { httpAction } from './_generated/server';
-import { createConvexServe, inngest, processJobSubmission } from './inngest';
-
-// Inngest serve handler - passes ActionCtx to middleware
-const inngestHandler = createConvexServe({
-  client: inngest,
-  functions: [processJobSubmission],
-});
 
 const http = httpRouter();
 
-// Inngest API endpoint - handles GET (introspection), POST and PUT (function execution)
+// Helper to convert Headers to plain object
+function headersToObject(headers: Headers): Record<string, string> {
+  const result: Record<string, string> = {};
+  headers.forEach((value, key) => {
+    result[key] = value;
+  });
+  return result;
+}
+
+// Helper to bridge HTTP action to Node.js action for Inngest
+async function bridgeToNodeAction(
+  ctx: Parameters<Parameters<typeof httpAction>[0]>[0],
+  request: Request
+) {
+  const result = await ctx.runAction(internal.inngestNode.handle, {
+    method: request.method,
+    url: request.url,
+    headers: headersToObject(request.headers),
+    body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : '',
+  });
+  return new Response(result.body, {
+    status: result.status,
+    headers: result.headers as HeadersInit,
+  });
+}
+
+// Inngest API endpoint - bridges to Node.js action for node:async_hooks support
 http.route({
   path: '/api/inngest',
   method: 'GET',
-  handler: httpAction(async (ctx, request) => inngestHandler(request, ctx)),
+  handler: httpAction(async (ctx, request) => bridgeToNodeAction(ctx, request)),
 });
 
 http.route({
   path: '/api/inngest',
   method: 'POST',
-  handler: httpAction(async (ctx, request) => inngestHandler(request, ctx)),
+  handler: httpAction(async (ctx, request) => bridgeToNodeAction(ctx, request)),
 });
 
 http.route({
   path: '/api/inngest',
   method: 'PUT',
-  handler: httpAction(async (ctx, request) => inngestHandler(request, ctx)),
+  handler: httpAction(async (ctx, request) => bridgeToNodeAction(ctx, request)),
 });
 
 http.route({

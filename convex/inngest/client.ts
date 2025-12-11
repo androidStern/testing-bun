@@ -1,10 +1,4 @@
-import {
-  EventSchemas,
-  Inngest,
-  InngestCommHandler,
-  InngestMiddleware,
-  type ServeHandlerOptions,
-} from 'inngest';
+import { EventSchemas, Inngest, InngestMiddleware } from 'inngest';
 
 import type { ActionCtx } from '../_generated/server';
 
@@ -17,21 +11,23 @@ type JobSubmittedEvent = {
   };
 };
 
-type JobDecisionEvent = {
-  name: 'job/decision';
+// Slack approval event - received from Inngest webhook source
+// Transform function in Inngest dashboard converts Slack button click to this format
+type SlackApprovalClickedEvent = {
+  name: 'slack/approval.clicked';
   data: {
-    submissionId: string;
+    approvalId: string; // = submissionId
     decision: 'approved' | 'denied';
-    // Slack approval fields (present when approved via Slack)
+    // Slack-specific fields (present when from Slack webhook)
     slack?: {
       responseUrl: string;
       userName: string;
     };
-    // Signature verification (for Slack)
+    // Signature verification (from Slack headers)
     _raw?: string;
     _sig?: string;
     _ts?: string;
-    // In-app approval fields
+    // In-app approval fields (present when from in-app)
     approvedBy?: string;
     denyReason?: string;
   };
@@ -39,7 +35,7 @@ type JobDecisionEvent = {
 
 type Events = {
   'job/submitted': JobSubmittedEvent;
-  'job/decision': JobDecisionEvent;
+  'slack/approval.clicked': SlackApprovalClickedEvent;
 };
 
 // Middleware to inject Convex ActionCtx into Inngest function context
@@ -62,23 +58,4 @@ export const inngest = new Inngest({
   middleware: [convexMiddleware],
 });
 
-// Custom serve handler that accepts (Request, ActionCtx)
-export function createConvexServe(options: Pick<ServeHandlerOptions, 'client' | 'functions'>) {
-  const handler = new InngestCommHandler<[Request, ActionCtx], Response>({
-    frameworkName: 'convex',
-    client: options.client,
-    functions: options.functions,
-    handler: (req: Request, _ctx: ActionCtx) => ({
-      body: () => req.json(),
-      headers: (key: string) => req.headers.get(key),
-      method: () => req.method,
-      url: () => new URL(req.url, `https://${req.headers.get('host') || 'localhost'}`),
-      transformResponse: (res: { body: string; status: number; headers: Record<string, string> }) =>
-        new Response(res.body, { status: res.status, headers: res.headers }),
-    }),
-  });
-
-  return handler.createHandler();
-}
-
-export type { JobSubmittedEvent, JobDecisionEvent, Events };
+export type { JobSubmittedEvent, SlackApprovalClickedEvent, Events };

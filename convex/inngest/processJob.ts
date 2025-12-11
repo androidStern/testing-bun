@@ -8,7 +8,7 @@ import { postSlackApproval, updateSlackApproval, verifySlackSignature } from '..
 import type { SlackBlock } from '../lib/slack';
 import { postToCircle } from '../lib/circle';
 import { ParsedJobSchema, type ParsedJob } from '../lib/jobSchema';
-import { inngest, type JobDecisionEvent } from './client';
+import { inngest, type SlackApprovalClickedEvent } from './client';
 
 // Extended handler args type with our middleware-injected convex context
 interface HandlerArgs {
@@ -72,9 +72,12 @@ For contact info, use any phone/email found in the text.`,
     });
 
     // Step 3: Wait for approval (from Slack or in-app, timeout 7 days)
-    const approval = await step.waitForEvent<JobDecisionEvent>('wait-approval', {
-      event: 'job/decision',
-      if: `async.data.submissionId == "${submissionId}"`,
+    // Event comes from either:
+    // - Inngest webhook source (Slack button click transformed to slack/approval.clicked)
+    // - sendApprovalEvent action (in-app approval)
+    const approval = await step.waitForEvent<SlackApprovalClickedEvent>('wait-approval', {
+      event: 'slack/approval.clicked',
+      if: `async.data.approvalId == "${submissionId}"`,
       timeout: '7d',
     });
 
