@@ -3,8 +3,34 @@ import { httpRouter } from 'convex/server';
 import { api } from './_generated/api';
 import { Id } from './_generated/dataModel';
 import { httpAction } from './_generated/server';
+import { createConvexServe, inngest, processJobSubmission } from './inngest';
+
+// Inngest serve handler - passes ActionCtx to middleware
+const inngestHandler = createConvexServe({
+  client: inngest,
+  functions: [processJobSubmission],
+});
 
 const http = httpRouter();
+
+// Inngest API endpoint - handles GET (introspection), POST and PUT (function execution)
+http.route({
+  path: '/api/inngest',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => inngestHandler(request, ctx)),
+});
+
+http.route({
+  path: '/api/inngest',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => inngestHandler(request, ctx)),
+});
+
+http.route({
+  path: '/api/inngest',
+  method: 'PUT',
+  handler: httpAction(async (ctx, request) => inngestHandler(request, ctx)),
+});
 
 http.route({
   path: '/webhooks/twilio-sms',

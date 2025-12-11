@@ -1,5 +1,8 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
+import { zodOutputToConvex } from 'convex-helpers/server/zod4';
+
+import { ParsedJobSchema } from './lib/jobSchema';
 
 export default defineSchema({
   numbers: defineTable({
@@ -120,9 +123,10 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index('by_workos_user_id', ['workosUserId']),
 
-  // SMS senders - tracks phone numbers and approval status
+  // Senders - tracks phone/email and approval status (for both SMS and form submissions)
   senders: defineTable({
-    phone: v.string(),
+    phone: v.optional(v.string()),
+    email: v.optional(v.string()),
     status: v.string(), // "pending" | "approved" | "blocked"
     name: v.optional(v.string()),
     company: v.optional(v.string()),
@@ -131,9 +135,10 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index('by_phone', ['phone'])
+    .index('by_email', ['email'])
     .index('by_status', ['status']),
 
-  // Inbound SMS messages
+  // Inbound SMS messages (legacy - will be replaced by jobSubmissions)
   inboundMessages: defineTable({
     phone: v.string(),
     body: v.string(),
@@ -146,4 +151,37 @@ export default defineSchema({
     .index('by_phone', ['phone'])
     .index('by_createdAt', ['createdAt'])
     .index('by_senderId', ['senderId']),
+
+  // Job submissions - unified table for SMS and form submissions
+  jobSubmissions: defineTable({
+    // Source tracking
+    source: v.union(v.literal('sms'), v.literal('form')),
+    senderId: v.id('senders'),
+
+    // Raw input
+    rawContent: v.string(), // SMS body or form JSON
+
+    // Parsed job (after AI processing) - generated from shared Zod schema
+    parsedJob: v.optional(zodOutputToConvex(ParsedJobSchema)),
+
+    // Workflow state
+    status: v.union(
+      v.literal('pending_parse'), // awaiting AI parsing
+      v.literal('pending_approval'), // awaiting human approval
+      v.literal('approved'),
+      v.literal('denied')
+    ),
+
+    // Timestamps
+    createdAt: v.number(),
+    approvedAt: v.optional(v.number()),
+    approvedBy: v.optional(v.string()),
+    denyReason: v.optional(v.string()),
+
+    // External links (set after approval)
+    circlePostUrl: v.optional(v.string()),
+  })
+    .index('by_status', ['status'])
+    .index('by_sender', ['senderId'])
+    .index('by_created_at', ['createdAt']),
 });

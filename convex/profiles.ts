@@ -85,7 +85,7 @@ export const create = zodMutation({
     }
 
     // Send profile data to Inngest webhook
-    await ctx.scheduler.runAfter(0, internal.inngest.sendProfileWebhook, {
+    await ctx.scheduler.runAfter(0, internal.profileWebhook.sendProfileWebhook, {
       workosUserId: args.workosUserId,
       email: args.email,
       firstName: args.firstName,
@@ -132,7 +132,7 @@ export const update = zodMutation({
     // Send updated profile data to Inngest webhook
     // Merge existing profile with updates
     const mergedProfile = { ...profile, ...updates };
-    await ctx.scheduler.runAfter(0, internal.inngest.sendProfileWebhook, {
+    await ctx.scheduler.runAfter(0, internal.profileWebhook.sendProfileWebhook, {
       workosUserId: profile.workosUserId,
       email: profile.email,
       firstName: profile.firstName,
