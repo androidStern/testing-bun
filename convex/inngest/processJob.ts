@@ -233,11 +233,7 @@ IMPORTANT RULES:
           body: smsBody,
         });
 
-        if (smsResult.success) {
-          console.log(`First applicant notification sent to ${sender.phone}, SID: ${smsResult.messageSid}`);
-        } else {
-          console.error(`Failed to send first applicant notification: ${smsResult.error}`);
-        }
+        console.log(`First applicant notification sent to ${sender.phone}, SID: ${smsResult.messageSid}`);
       });
     }
 

@@ -45,36 +45,24 @@ export async function sendSms({
     Body: body,
   });
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
-      },
-      body: formData.toString(),
-    });
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+    },
+    body: formData.toString(),
+  });
 
-    const data = (await response.json()) as { sid?: string; message?: string };
+  const data = (await response.json()) as { sid?: string; message?: string; code?: number };
 
-    if (!response.ok) {
-      console.error('Twilio API error:', data);
-      return {
-        success: false,
-        error: data.message || `HTTP ${response.status}`,
-      };
-    }
-
-    console.log(`SMS sent to ${to}, SID: ${data.sid}`);
-    return {
-      success: true,
-      messageSid: data.sid,
-    };
-  } catch (error) {
-    console.error('Failed to send SMS:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
+  if (!response.ok) {
+    throw new Error(`Twilio API error: ${data.message || `HTTP ${response.status}`} (code: ${data.code})`);
   }
+
+  console.log(`SMS sent to ${to}, SID: ${data.sid}`);
+  return {
+    success: true,
+    messageSid: data.sid,
+  };
 }

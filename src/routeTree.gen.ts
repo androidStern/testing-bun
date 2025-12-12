@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SmsTermsRouteImport } from './routes/sms-terms'
 import { Route as CallbackRouteImport } from './routes/callback'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -28,6 +29,11 @@ import { Route as AuthenticatedAuthenticatedRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/_admin'
 import { Route as AuthenticatedAdminAdminRouteImport } from './routes/_authenticated/_admin/admin'
 
+const SmsTermsRoute = SmsTermsRouteImport.update({
+  id: '/sms-terms',
+  path: '/sms-terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CallbackRoute = CallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
@@ -121,6 +127,7 @@ const AuthenticatedAdminAdminRoute = AuthenticatedAdminAdminRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/callback': typeof CallbackRoute
+  '/sms-terms': typeof SmsTermsRoute
   '/authenticated': typeof AuthenticatedAuthenticatedRoute
   '/invite': typeof AuthenticatedInviteRoute
   '/resumes': typeof AuthenticatedResumesRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/callback': typeof CallbackRoute
+  '/sms-terms': typeof SmsTermsRoute
   '/authenticated': typeof AuthenticatedAuthenticatedRoute
   '/invite': typeof AuthenticatedInviteRoute
   '/resumes': typeof AuthenticatedResumesRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/callback': typeof CallbackRoute
+  '/sms-terms': typeof SmsTermsRoute
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/authenticated': typeof AuthenticatedAuthenticatedRoute
   '/_authenticated/invite': typeof AuthenticatedInviteRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/callback'
+    | '/sms-terms'
     | '/authenticated'
     | '/invite'
     | '/resumes'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/callback'
+    | '/sms-terms'
     | '/authenticated'
     | '/invite'
     | '/resumes'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/callback'
+    | '/sms-terms'
     | '/_authenticated/_admin'
     | '/_authenticated/authenticated'
     | '/_authenticated/invite'
@@ -238,6 +250,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   CallbackRoute: typeof CallbackRoute
+  SmsTermsRoute: typeof SmsTermsRoute
   ApplyJobIdRoute: typeof ApplyJobIdRoute
   EmployerCandidatesRoute: typeof EmployerCandidatesRoute
   EmployerSetupRoute: typeof EmployerSetupRoute
@@ -252,6 +265,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sms-terms': {
+      id: '/sms-terms'
+      path: '/sms-terms'
+      fullPath: '/sms-terms'
+      preLoaderRoute: typeof SmsTermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/callback': {
       id: '/callback'
       path: '/callback'
@@ -414,6 +434,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   CallbackRoute: CallbackRoute,
+  SmsTermsRoute: SmsTermsRoute,
   ApplyJobIdRoute: ApplyJobIdRoute,
   EmployerCandidatesRoute: EmployerCandidatesRoute,
   EmployerSetupRoute: EmployerSetupRoute,

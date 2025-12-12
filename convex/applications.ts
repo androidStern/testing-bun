@@ -161,18 +161,12 @@ export const apply = authMutation({
     const isFirstApplicant = existingApplications.length === 0;
 
     // Trigger application workflow
-    // Note: If this fails, the application is still saved - workflow is fire-and-forget
-    try {
-      await ctx.scheduler.runAfter(0, internal.inngestNode.sendApplicationSubmittedEvent, {
-        applicationId: result,
-        jobSubmissionId: args.jobSubmissionId,
-        seekerProfileId: profile._id,
-        isFirstApplicant,
-      });
-    } catch (err) {
-      // Log but don't fail the mutation - application is saved
-      console.error('Failed to trigger application workflow:', err);
-    }
+    await ctx.scheduler.runAfter(0, internal.inngestNode.sendApplicationSubmittedEvent, {
+      applicationId: result,
+      jobSubmissionId: args.jobSubmissionId,
+      seekerProfileId: profile._id,
+      isFirstApplicant,
+    });
 
     return { applicationId: result };
   },
