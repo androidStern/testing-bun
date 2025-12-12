@@ -2,13 +2,17 @@ import { openai } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
 
 import { internal } from '../_generated/api';
-import type { Id } from '../_generated/dataModel';
-import type { ActionCtx } from '../_generated/server';
-import { postSlackApproval, updateSlackApproval, verifySlackSignature } from '../lib/slack';
-import type { SlackBlock } from '../lib/slack';
 import { postToCircle } from '../lib/circle';
-import { AIExtractedJobSchema, type ParsedJob } from '../lib/jobSchema';
-import { inngest, type SlackApprovalClickedEvent } from './client';
+import { AIExtractedJobSchema } from '../lib/jobSchema';
+import { postSlackApproval, updateSlackApproval, verifySlackSignature } from '../lib/slack';
+import { sendSms } from '../lib/twilio';
+import { inngest } from './client';
+
+import type { ActionCtx } from '../_generated/server';
+import type { Id } from '../_generated/dataModel';
+import type { ParsedJob } from '../lib/jobSchema';
+import type { SlackBlock } from '../lib/slack';
+import type { JobFirstApplicantEvent, SlackApprovalClickedEvent } from './client';
 
 // Extended handler args type with our middleware-injected convex context
 interface HandlerArgs {
@@ -26,7 +30,7 @@ interface HandlerArgs {
 export const processJobSubmission = inngest.createFunction(
   { id: 'process-job-submission' },
   { event: 'job/submitted' },
-  async (args): Promise<{ status: string; reason?: string; circleUrl?: string }> => {
+  async (args): Promise<{ status: string; reason?: string; circleUrl?: string; firstApplicantReceived?: boolean }> => {
     // Cast to get our middleware-injected convex context
     const { event, step, convex } = args as unknown as HandlerArgs;
     const submissionId = event.data.submissionId as Id<'jobSubmissions'>;
@@ -99,7 +103,7 @@ IMPORTANT RULES:
     });
 
     // Step 2: Post to Slack for approval
-    const blocks = await step.run('post-slack-message', async (): Promise<SlackBlock[]> => {
+    const blocks = await step.run('post-slack-message', async (): Promise<Array<SlackBlock>> => {
       const result = await postSlackApproval({
         token: process.env.SLACK_BOT_TOKEN!,
         channel: process.env.SLACK_APPROVAL_CHANNEL!,
@@ -133,7 +137,7 @@ IMPORTANT RULES:
     }
 
     // If Slack approval, verify signature and update message
-    if (approval?.data.slack) {
+    if (approval.data.slack) {
       const valid = await verifySlackSignature({
         body: approval.data._raw!,
         requestSignature: approval.data._sig!,
@@ -158,7 +162,7 @@ IMPORTANT RULES:
       await step.run('finalize-denial', async (): Promise<void> => {
         await convex.runMutation(internal.jobSubmissions.deny, {
           id: submissionId,
-          denyReason: approval?.data.denyReason ?? 'Denied',
+          denyReason: approval.data.denyReason ?? 'Denied',
         });
       });
       return { status: 'denied' };
@@ -168,8 +172,10 @@ IMPORTANT RULES:
     const circleResult = await step.run('post-to-circle', async (): Promise<{ postUrl: string }> => {
       return await postToCircle({
         job: parsedJob,
+        jobSubmissionId: submissionId,
         spaceId: process.env.CIRCLE_SPACE_ID!,
         apiToken: process.env.CIRCLE_API_TOKEN!,
+        appBaseUrl: process.env.APP_BASE_URL || 'https://recoveryjobs.com',
       });
     });
 
@@ -177,14 +183,68 @@ IMPORTANT RULES:
     await step.run('finalize-approval', async (): Promise<void> => {
       await convex.runMutation(internal.jobSubmissions.approve, {
         id: submissionId,
-        approvedBy: approval?.data.slack?.userName ?? approval?.data.approvedBy,
+        approvedBy: approval.data.slack?.userName ?? approval.data.approvedBy,
         circlePostUrl: circleResult.postUrl,
       });
     });
 
+    // Step 6: Wait for first applicant (no timeout - wait indefinitely until job is closed)
+    // This event is sent by processApplication workflow when isFirstApplicant=true
+    const firstApplicant = await step.waitForEvent<JobFirstApplicantEvent>(
+      'wait-first-applicant',
+      {
+        event: 'job/first-applicant',
+        if: `async.data.jobSubmissionId == "${submissionId}"`,
+        timeout: '90d', // Long timeout - job auto-closes after ~3 months if no applicants
+      }
+    );
+
+    // Step 7: Notify poster about first applicant
+    if (firstApplicant) {
+      await step.run('notify-poster', async (): Promise<void> => {
+        // Get sender phone for SMS
+        const submission = await convex.runQuery(internal.jobSubmissions.get, {
+          id: submissionId,
+        });
+        if (!submission) return;
+
+        const sender = await convex.runQuery(internal.senders.get, {
+          id: submission.senderId,
+        });
+        if (!sender?.phone) return;
+
+        // Generate magic link token for employer setup
+        // Token contains: submissionId, senderId, expiry (7d)
+        const token = Buffer.from(
+          JSON.stringify({
+            submissionId,
+            senderId: submission.senderId,
+            exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+          })
+        ).toString('base64url');
+
+        const setupUrl = `${process.env.APP_BASE_URL || 'https://recoveryjobs.com'}/employer/setup?token=${token}`;
+
+        // Send SMS via Twilio
+        const smsBody = `Someone is interested in your ${parsedJob.title} job! Set up your account to view applicants: ${setupUrl}\n\nReply STOP to close this job posting.`;
+
+        const smsResult = await sendSms({
+          to: sender.phone,
+          body: smsBody,
+        });
+
+        if (smsResult.success) {
+          console.log(`First applicant notification sent to ${sender.phone}, SID: ${smsResult.messageSid}`);
+        } else {
+          console.error(`Failed to send first applicant notification: ${smsResult.error}`);
+        }
+      });
+    }
+
     return {
       status: 'approved',
       circleUrl: circleResult.postUrl,
+      firstApplicantReceived: !!firstApplicant,
     };
   }
 );

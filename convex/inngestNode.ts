@@ -83,3 +83,81 @@ export const sendApprovalEvent = internalAction({
     });
   },
 });
+
+// Action to send application/submitted event (triggers application workflow)
+export const sendApplicationSubmittedEvent = internalAction({
+  args: {
+    applicationId: v.string(),
+    jobSubmissionId: v.string(),
+    seekerProfileId: v.string(),
+    isFirstApplicant: v.boolean(),
+  },
+  handler: async (_ctx, args) => {
+    const { inngest } = await import("./inngest");
+    await inngest.send({
+      name: "application/submitted",
+      data: {
+        applicationId: args.applicationId,
+        jobSubmissionId: args.jobSubmissionId,
+        seekerProfileId: args.seekerProfileId,
+        isFirstApplicant: args.isFirstApplicant,
+      },
+    });
+  },
+});
+
+// Action to send employer/approved event (resumes waiting job workflow)
+export const sendEmployerApprovedEvent = internalAction({
+  args: {
+    employerId: v.string(),
+    approvedBy: v.string(),
+  },
+  handler: async (_ctx, args) => {
+    const { inngest } = await import("./inngest");
+    await inngest.send({
+      name: "employer/approved",
+      data: {
+        employerId: args.employerId,
+        approvedBy: args.approvedBy,
+      },
+    });
+  },
+});
+
+// Action to post employer vetting notification to Slack (Checkpoint 3)
+export const postEmployerVettingToSlack = internalAction({
+  args: {
+    employerId: v.string(),
+    name: v.string(),
+    email: v.string(),
+    phone: v.string(),
+    company: v.string(),
+    role: v.optional(v.string()),
+    website: v.optional(v.string()),
+  },
+  handler: async (_ctx, args) => {
+    const { postEmployerVetting } = await import("./lib/slack");
+
+    const token = process.env.SLACK_BOT_TOKEN;
+    const channel = process.env.SLACK_APPROVAL_CHANNEL;
+
+    if (!token || !channel) {
+      console.warn("Slack credentials not configured, skipping employer vetting notification");
+      return;
+    }
+
+    await postEmployerVetting({
+      token,
+      channel,
+      employer: {
+        id: args.employerId,
+        name: args.name,
+        email: args.email,
+        phone: args.phone,
+        company: args.company,
+        role: args.role,
+        website: args.website,
+      },
+    });
+  },
+});

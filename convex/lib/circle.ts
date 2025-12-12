@@ -1,15 +1,19 @@
-import type { Doc } from '../_generated/dataModel';
+import type { Doc, Id } from '../_generated/dataModel';
 
 interface PostToCircleOptions {
   job: NonNullable<Doc<'jobSubmissions'>['parsedJob']>;
+  jobSubmissionId: Id<'jobSubmissions'>;
   spaceId: string;
   apiToken: string;
+  appBaseUrl: string; // e.g., "https://recoveryjobs.com"
 }
 
 export async function postToCircle({
   job,
+  jobSubmissionId,
   spaceId,
   apiToken,
+  appBaseUrl,
 }: PostToCircleOptions): Promise<{ postId: string; postUrl: string }> {
   const locationStr = job.location
     ? [job.location.city, job.location.state].filter(Boolean).join(', ')
@@ -18,8 +22,9 @@ export async function postToCircle({
   const companyName = job.company?.name || 'Recovery-Friendly Employer';
   const name = `${job.title} at ${companyName}${locationStr ? ` — ${locationStr}` : ''}`;
 
-  // Build HTML content for the post
-  const html = buildJobPostHtml(job);
+  // Build HTML content for the post with apply URL
+  const applyUrl = `${appBaseUrl}/apply/${jobSubmissionId}`;
+  const html = buildJobPostHtml(job, applyUrl);
 
   const res = await fetch('https://app.circle.so/api/admin/v2/posts', {
     method: 'POST',
@@ -55,11 +60,10 @@ export async function postToCircle({
 }
 
 function buildJobPostHtml(
-  job: NonNullable<Doc<'jobSubmissions'>['parsedJob']>
+  job: NonNullable<Doc<'jobSubmissions'>['parsedJob']>,
+  applyUrl: string
 ): string {
   const companyName = job.company?.name || 'Recovery-Friendly Employer';
-  const contactEmail = job.contact?.email || '';
-  const contactPhone = job.contact?.phone || '';
 
   const salaryStr =
     job.salary?.min !== undefined && job.salary?.max !== undefined
@@ -135,7 +139,7 @@ function buildJobPostHtml(
     }
 
     <div style="display: flex; gap: 12px; margin-top: 20px;">
-      <a href="${contactEmail ? `mailto:${contactEmail}` : (contactPhone ? `tel:${contactPhone}` : '#')}" style="flex: 1; background: #3b82f6; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; text-align: center; font-weight: 500; font-size: 14px;">
+      <a href="${applyUrl}" style="flex: 1; background: #3b82f6; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; text-align: center; font-weight: 500; font-size: 14px;">
         Apply Now
       </a>
     </div>

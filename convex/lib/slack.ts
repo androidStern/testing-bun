@@ -31,7 +31,7 @@ export async function postSlackApproval({
   channel,
   submissionId,
   job,
-}: PostSlackApprovalOptions): Promise<{ blocks: SlackBlock[]; ts: string }> {
+}: PostSlackApprovalOptions): Promise<{ blocks: Array<SlackBlock>; ts: string }> {
   const allFields: Array<{ type: 'mrkdwn'; text: string }> = [];
 
   // Build fields from job data
@@ -79,17 +79,15 @@ export async function postSlackApproval({
     });
   }
 
-  if (job.contact) {
-    const contactParts = [];
-    if (job.contact.name) contactParts.push(job.contact.name);
-    const contactValue = job.contact.email || job.contact.phone;
-    if (contactValue) contactParts.push(`${job.contact.method}: ${contactValue}`);
-    if (contactParts.length) {
-      allFields.push({
-        type: 'mrkdwn',
-        text: `*Contact:*\n${contactParts.join(' - ')}`,
-      });
-    }
+  const contactParts = [];
+  if (job.contact.name) contactParts.push(job.contact.name);
+  const contactValue = job.contact.email ?? job.contact.phone;
+  if (contactValue) contactParts.push(`${job.contact.method}: ${contactValue}`);
+  if (contactParts.length) {
+    allFields.push({
+      type: 'mrkdwn',
+      text: `*Contact:*\n${contactParts.join(' - ')}`,
+    });
   }
 
   allFields.push({
@@ -104,7 +102,7 @@ export async function postSlackApproval({
   }
 
   // Build blocks
-  const blocks: SlackBlock[] = [
+  const blocks: Array<SlackBlock> = [
     {
       type: 'section',
       text: {
@@ -178,7 +176,7 @@ interface UpdateSlackApprovalOptions {
   responseUrl: string;
   decision: 'approved' | 'denied';
   userName: string;
-  originalBlocks: SlackBlock[];
+  originalBlocks: Array<SlackBlock>;
 }
 
 export async function updateSlackApproval({
@@ -216,6 +214,97 @@ export async function updateSlackApproval({
   if (!res.ok) {
     console.error('Slack update failed:', await res.text());
   }
+}
+
+interface PostEmployerVettingOptions {
+  token: string;
+  channel: string;
+  employer: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    company: string;
+    role?: string;
+    website?: string;
+  };
+}
+
+/**
+ * Post Slack notification for employer account vetting (Checkpoint 3)
+ */
+export async function postEmployerVetting({
+  token,
+  channel,
+  employer,
+}: PostEmployerVettingOptions): Promise<{ ts: string }> {
+  const fields: Array<{ type: 'mrkdwn'; text: string }> = [
+    { type: 'mrkdwn', text: `*Name:*\n${employer.name}` },
+    { type: 'mrkdwn', text: `*Email:*\n${employer.email}` },
+    { type: 'mrkdwn', text: `*Phone:*\n${employer.phone}` },
+    { type: 'mrkdwn', text: `*Company:*\n${employer.company}` },
+  ];
+
+  if (employer.role) {
+    fields.push({ type: 'mrkdwn', text: `*Role:*\n${employer.role}` });
+  }
+  if (employer.website) {
+    fields.push({ type: 'mrkdwn', text: `*Website:*\n${employer.website}` });
+  }
+
+  const blocks: Array<SlackBlock> = [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `:briefcase: *New Employer Account Pending Review*\n${employer.name} from ${employer.company} has requested access to view candidates.`,
+      },
+    },
+    {
+      type: 'section',
+      fields,
+    },
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `_Approve or reject from the admin dashboard._`,
+      },
+    },
+  ];
+
+  const body = {
+    channel,
+    text: `Employer vetting: ${employer.name} from ${employer.company}`,
+    blocks,
+  };
+
+  const res = await fetch('https://slack.com/api/chat.postMessage', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json; charset=utf-8',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    throw new Error(
+      `Slack chat.postMessage failed: ${res.status} ${await res.text()}`
+    );
+  }
+
+  const responseBody = (await res.json()) as {
+    ok: boolean;
+    ts?: string;
+    error?: string;
+  };
+
+  if (!responseBody.ok) {
+    throw new Error(`Slack API error: ${responseBody.error}`);
+  }
+
+  return { ts: responseBody.ts || '' };
 }
 
 /**

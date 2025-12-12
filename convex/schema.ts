@@ -169,7 +169,8 @@ export default defineSchema({
       v.literal('pending_parse'), // awaiting AI parsing
       v.literal('pending_approval'), // awaiting human approval
       v.literal('approved'),
-      v.literal('denied')
+      v.literal('denied'),
+      v.literal('closed') // job closed by employer or auto-expired
     ),
 
     // Timestamps
@@ -177,6 +178,8 @@ export default defineSchema({
     approvedAt: v.optional(v.number()),
     approvedBy: v.optional(v.string()),
     denyReason: v.optional(v.string()),
+    closedAt: v.optional(v.number()),
+    closedReason: v.optional(v.string()), // "employer_request" | "auto_expired"
 
     // External links (set after approval)
     circlePostUrl: v.optional(v.string()),
@@ -184,4 +187,57 @@ export default defineSchema({
     .index('by_status', ['status'])
     .index('by_sender', ['senderId'])
     .index('by_created_at', ['createdAt']),
+
+  // Employers - job poster accounts (Checkpoint 3 vetting)
+  employers: defineTable({
+    senderId: v.id('senders'), // Link to original sender
+
+    // From signup form
+    name: v.string(),
+    email: v.string(),
+    phone: v.string(),
+    company: v.string(),
+    role: v.optional(v.string()),
+    website: v.optional(v.string()),
+
+    // Vetting status
+    status: v.union(
+      v.literal('pending_review'),
+      v.literal('approved'),
+      v.literal('rejected')
+    ),
+
+    // WorkOS account (created after approval)
+    workosUserId: v.optional(v.string()),
+
+    // Timestamps
+    createdAt: v.number(),
+    approvedAt: v.optional(v.number()),
+    approvedBy: v.optional(v.string()),
+  })
+    .index('by_sender', ['senderId'])
+    .index('by_status', ['status'])
+    .index('by_email', ['email'])
+    .index('by_workos_user_id', ['workosUserId']),
+
+  // Applications - seeker applications to job postings
+  applications: defineTable({
+    jobSubmissionId: v.id('jobSubmissions'),
+    seekerProfileId: v.id('profiles'),
+
+    message: v.optional(v.string()), // Optional note from seeker
+
+    status: v.union(
+      v.literal('pending'),
+      v.literal('connected'),
+      v.literal('passed')
+    ),
+
+    appliedAt: v.number(),
+    connectedAt: v.optional(v.number()),
+    passedAt: v.optional(v.number()),
+  })
+    .index('by_job', ['jobSubmissionId'])
+    .index('by_seeker', ['seekerProfileId'])
+    .index('by_job_and_status', ['jobSubmissionId', 'status']),
 });

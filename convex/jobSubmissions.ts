@@ -2,7 +2,7 @@ import { v } from 'convex/values';
 import { zodOutputToConvex } from 'convex-helpers/server/zod4';
 
 import { internal } from './_generated/api';
-import { internalMutation, internalQuery, mutation } from './_generated/server';
+import { internalMutation, internalQuery, mutation, query } from './_generated/server';
 import { ParsedJobSchema } from './lib/jobSchema';
 
 // Auth helper - verifies internal API secret
@@ -153,5 +153,77 @@ export const denyFromUI = mutation({
       decision: 'denied',
       denyReason: args.reason ?? 'Denied via admin UI',
     });
+  },
+});
+
+// Public query for apply page - only returns approved (non-closed) jobs
+export const getForApply = query({
+  args: { id: v.id('jobSubmissions') },
+  handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.id);
+    if (!job) return null;
+    // Only approved jobs can be applied to (not pending, denied, or closed)
+    if (job.status !== 'approved') return null;
+    if (!job.parsedJob) return null;
+
+    return {
+      _id: job._id,
+      title: job.parsedJob.title,
+      company: job.parsedJob.company.name,
+      description: job.parsedJob.description,
+      location: job.parsedJob.location
+        ? [job.parsedJob.location.city, job.parsedJob.location.state]
+            .filter(Boolean)
+            .join(', ')
+        : null,
+      employmentType: job.parsedJob.employmentType,
+      workArrangement: job.parsedJob.workArrangement,
+    };
+  },
+});
+
+// Close a job posting (internal mutation for SMS handling)
+export const close = internalMutation({
+  args: {
+    id: v.id('jobSubmissions'),
+    reason: v.union(v.literal('employer_request'), v.literal('auto_expired')),
+  },
+  handler: async (ctx, args) => {
+    const submission = await ctx.db.get(args.id);
+    if (!submission) throw new Error('Submission not found');
+
+    // Idempotent: already closed, nothing to do
+    if (submission.status === 'closed') {
+      return { alreadyClosed: true };
+    }
+
+    // Only approved jobs can be closed
+    if (submission.status !== 'approved') {
+      throw new Error(`Cannot close: status is ${submission.status}`);
+    }
+
+    await ctx.db.patch(args.id, {
+      status: 'closed',
+      closedAt: Date.now(),
+      closedReason: args.reason,
+    });
+
+    return { alreadyClosed: false };
+  },
+});
+
+// Get the most recent open job for a sender (for STOP command handling)
+export const getOpenBySender = internalQuery({
+  args: { senderId: v.id('senders') },
+  handler: async (ctx, args) => {
+    // Find all approved jobs from this sender, sorted by creation date desc
+    const jobs = await ctx.db
+      .query('jobSubmissions')
+      .withIndex('by_sender', (q) => q.eq('senderId', args.senderId))
+      .filter((q) => q.eq(q.field('status'), 'approved'))
+      .order('desc')
+      .take(1);
+
+    return jobs[0] || null;
   },
 });

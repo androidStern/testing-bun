@@ -1,8 +1,9 @@
 "use node";
 
 import { InngestCommHandler } from "inngest";
+
+import { inngest, processApplication, processJobSubmission } from "./index";
 import type { ActionCtx } from "../_generated/server";
-import { inngest, processJobSubmission } from "./index";
 
 /**
  * Factory that creates an Inngest handler with a specific ActionCtx.
@@ -12,7 +13,7 @@ export function createInngestHandler(ctx: ActionCtx) {
   const handler = new InngestCommHandler<[Request, ActionCtx], Response>({
     frameworkName: "convex-node",
     client: inngest,
-    functions: [processJobSubmission],
+    functions: [processJobSubmission, processApplication],
     handler: (req: Request, _actionCtx: ActionCtx) => ({
       body: () => req.json(),
       headers: (key: string) => req.headers.get(key),

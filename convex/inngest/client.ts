@@ -33,9 +33,52 @@ type SlackApprovalClickedEvent = {
   };
 };
 
+// Application submitted - triggers application workflow
+type ApplicationSubmittedEvent = {
+  name: 'application/submitted';
+  data: {
+    applicationId: string;
+    jobSubmissionId: string;
+    seekerProfileId: string;
+    isFirstApplicant: boolean;
+  };
+};
+
+// First applicant for a job - sent by application workflow, received by job workflow
+type JobFirstApplicantEvent = {
+  name: 'job/first-applicant';
+  data: {
+    jobSubmissionId: string;
+    applicationId: string;
+  };
+};
+
+// Employer approved - admin approved employer account (Checkpoint 3)
+type EmployerApprovedEvent = {
+  name: 'employer/approved';
+  data: {
+    employerId: string;
+    approvedBy: string;
+  };
+};
+
+// Employer account created - employer filled out signup form
+type EmployerAccountCreatedEvent = {
+  name: 'employer/account-created';
+  data: {
+    employerId: string;
+    senderId: string;
+    jobSubmissionId: string;
+  };
+};
+
 type Events = {
   'job/submitted': JobSubmittedEvent;
   'slack/approval.clicked': SlackApprovalClickedEvent;
+  'application/submitted': ApplicationSubmittedEvent;
+  'job/first-applicant': JobFirstApplicantEvent;
+  'employer/approved': EmployerApprovedEvent;
+  'employer/account-created': EmployerAccountCreatedEvent;
 };
 
 // Middleware to inject Convex ActionCtx into Inngest function context
@@ -58,4 +101,12 @@ export const inngest = new Inngest({
   middleware: [convexMiddleware],
 });
 
-export type { JobSubmittedEvent, SlackApprovalClickedEvent, Events };
+export type {
+  JobSubmittedEvent,
+  SlackApprovalClickedEvent,
+  ApplicationSubmittedEvent,
+  JobFirstApplicantEvent,
+  EmployerApprovedEvent,
+  EmployerAccountCreatedEvent,
+  Events,
+};

@@ -3,6 +3,7 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 
 import { api } from '../../../../convex/_generated/api';
+import { EmployerCard } from '../../../components/admin/EmployerCard';
 import { MessageCard } from '../../../components/admin/MessageCard';
 import { SenderCard } from '../../../components/admin/SenderCard';
 import {
@@ -37,6 +38,10 @@ export const Route = createFileRoute('/_authenticated/_admin/admin')({
         context.queryClient.ensureQueryData(
           convexQuery(api.inboundMessages.list, {}),
         ),
+        context.queryClient.ensureQueryData(
+          convexQuery(api.employers.list, { status: 'pending_review' as const }),
+        ),
+        context.queryClient.ensureQueryData(convexQuery(api.employers.list, {})),
       ]);
       console.log('[admin loader] queries succeeded', {
         isServer,
@@ -60,11 +65,13 @@ function AdminDashboard() {
       <h1 className="mb-6 text-2xl font-bold">SMS Admin Dashboard</h1>
 
       <Tabs defaultValue="pending-senders">
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 flex-wrap">
           <TabsTrigger value="pending-senders">Pending Senders</TabsTrigger>
           <TabsTrigger value="all-senders">All Senders</TabsTrigger>
           <TabsTrigger value="pending-messages">Pending Messages</TabsTrigger>
           <TabsTrigger value="all-messages">All Messages</TabsTrigger>
+          <TabsTrigger value="pending-employers">Pending Employers</TabsTrigger>
+          <TabsTrigger value="all-employers">All Employers</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending-senders">
@@ -81,6 +88,14 @@ function AdminDashboard() {
 
         <TabsContent value="all-messages">
           <AllMessagesTab />
+        </TabsContent>
+
+        <TabsContent value="pending-employers">
+          <PendingEmployersTab />
+        </TabsContent>
+
+        <TabsContent value="all-employers">
+          <AllEmployersTab />
         </TabsContent>
       </Tabs>
     </div>
@@ -169,6 +184,50 @@ function AllMessagesTab() {
           showActions={
             message.status === 'pending_review' || message.status === 'approved'
           }
+        />
+      ))}
+    </div>
+  );
+}
+
+function PendingEmployersTab() {
+  const { data: employers } = useSuspenseQuery(
+    convexQuery(api.employers.list, { status: 'pending_review' as const }),
+  );
+
+  if (!employers?.length) {
+    return <div className="text-gray-500">No pending employer accounts</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {employers.map((employer) => (
+        <EmployerCard
+          key={employer._id}
+          employer={employer as any}
+          showActions
+        />
+      ))}
+    </div>
+  );
+}
+
+function AllEmployersTab() {
+  const { data: employers } = useSuspenseQuery(
+    convexQuery(api.employers.list, {}),
+  );
+
+  if (!employers?.length) {
+    return <div className="text-gray-500">No employer accounts yet</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {employers.map((employer) => (
+        <EmployerCard
+          key={employer._id}
+          employer={employer as any}
+          showActions={employer.status === 'pending_review'}
         />
       ))}
     </div>

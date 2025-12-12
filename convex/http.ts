@@ -1,8 +1,9 @@
 import { httpRouter } from 'convex/server';
 
 import { api, internal } from './_generated/api';
-import { Id } from './_generated/dataModel';
 import { httpAction } from './_generated/server';
+
+import type { Id } from './_generated/dataModel';
 
 const http = httpRouter();
 
@@ -69,6 +70,31 @@ http.route({
     if (!phone || !body || !twilioMessageSid) {
       console.error('Missing required Twilio fields:', { phone, body, twilioMessageSid });
       return new Response('Missing required fields', { status: 400 });
+    }
+
+    // Check for STOP/CLOSE command (case-insensitive, allow whitespace)
+    const normalizedBody = body.trim().toUpperCase();
+    if (normalizedBody === 'STOP' || normalizedBody === 'CLOSE') {
+      // Look up sender
+      const sender = await ctx.runQuery(api.senders.getByPhone, { phone });
+      if (sender) {
+        // Find their most recent open job
+        const openJob = await ctx.runQuery(internal.jobSubmissions.getOpenBySender, {
+          senderId: sender._id,
+        });
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- openJob can be null at runtime
+        if (openJob) {
+          await ctx.runMutation(internal.jobSubmissions.close, {
+            id: openJob._id,
+            reason: 'employer_request',
+          });
+          console.log(`Job ${openJob._id} closed by sender ${sender._id} via SMS STOP command`);
+        }
+      }
+      // Return empty TwiML - no need to log the STOP message as a job submission
+      return new Response('<Response></Response>', {
+        headers: { 'Content-Type': 'text/xml' },
+      });
     }
 
     // Look up sender

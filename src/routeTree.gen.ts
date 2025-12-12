@@ -19,6 +19,9 @@ import { Route as OauthCompleteRouteImport } from './routes/oauth/complete'
 import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
 import { Route as OauthAuthorizeRouteImport } from './routes/oauth/authorize'
 import { Route as JoinCodeRouteImport } from './routes/join/$code'
+import { Route as EmployerSetupRouteImport } from './routes/employer/setup'
+import { Route as EmployerCandidatesRouteImport } from './routes/employer/candidates'
+import { Route as ApplyJobIdRouteImport } from './routes/apply/$jobId'
 import { Route as AuthenticatedResumesRouteImport } from './routes/_authenticated/resumes'
 import { Route as AuthenticatedInviteRouteImport } from './routes/_authenticated/invite'
 import { Route as AuthenticatedAuthenticatedRouteImport } from './routes/_authenticated/authenticated'
@@ -74,6 +77,21 @@ const JoinCodeRoute = JoinCodeRouteImport.update({
   path: '/join/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmployerSetupRoute = EmployerSetupRouteImport.update({
+  id: '/employer/setup',
+  path: '/employer/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerCandidatesRoute = EmployerCandidatesRouteImport.update({
+  id: '/employer/candidates',
+  path: '/employer/candidates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApplyJobIdRoute = ApplyJobIdRouteImport.update({
+  id: '/apply/$jobId',
+  path: '/apply/$jobId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedResumesRoute = AuthenticatedResumesRouteImport.update({
   id: '/resumes',
   path: '/resumes',
@@ -106,6 +124,9 @@ export interface FileRoutesByFullPath {
   '/authenticated': typeof AuthenticatedAuthenticatedRoute
   '/invite': typeof AuthenticatedInviteRoute
   '/resumes': typeof AuthenticatedResumesRoute
+  '/apply/$jobId': typeof ApplyJobIdRoute
+  '/employer/candidates': typeof EmployerCandidatesRoute
+  '/employer/setup': typeof EmployerSetupRoute
   '/join/$code': typeof JoinCodeRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/callback': typeof OauthCallbackRoute
@@ -121,6 +142,9 @@ export interface FileRoutesByTo {
   '/authenticated': typeof AuthenticatedAuthenticatedRoute
   '/invite': typeof AuthenticatedInviteRoute
   '/resumes': typeof AuthenticatedResumesRoute
+  '/apply/$jobId': typeof ApplyJobIdRoute
+  '/employer/candidates': typeof EmployerCandidatesRoute
+  '/employer/setup': typeof EmployerSetupRoute
   '/join/$code': typeof JoinCodeRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/callback': typeof OauthCallbackRoute
@@ -139,6 +163,9 @@ export interface FileRoutesById {
   '/_authenticated/authenticated': typeof AuthenticatedAuthenticatedRoute
   '/_authenticated/invite': typeof AuthenticatedInviteRoute
   '/_authenticated/resumes': typeof AuthenticatedResumesRoute
+  '/apply/$jobId': typeof ApplyJobIdRoute
+  '/employer/candidates': typeof EmployerCandidatesRoute
+  '/employer/setup': typeof EmployerSetupRoute
   '/join/$code': typeof JoinCodeRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/callback': typeof OauthCallbackRoute
@@ -156,6 +183,9 @@ export interface FileRouteTypes {
     | '/authenticated'
     | '/invite'
     | '/resumes'
+    | '/apply/$jobId'
+    | '/employer/candidates'
+    | '/employer/setup'
     | '/join/$code'
     | '/oauth/authorize'
     | '/oauth/callback'
@@ -171,6 +201,9 @@ export interface FileRouteTypes {
     | '/authenticated'
     | '/invite'
     | '/resumes'
+    | '/apply/$jobId'
+    | '/employer/candidates'
+    | '/employer/setup'
     | '/join/$code'
     | '/oauth/authorize'
     | '/oauth/callback'
@@ -188,6 +221,9 @@ export interface FileRouteTypes {
     | '/_authenticated/authenticated'
     | '/_authenticated/invite'
     | '/_authenticated/resumes'
+    | '/apply/$jobId'
+    | '/employer/candidates'
+    | '/employer/setup'
     | '/join/$code'
     | '/oauth/authorize'
     | '/oauth/callback'
@@ -202,6 +238,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   CallbackRoute: typeof CallbackRoute
+  ApplyJobIdRoute: typeof ApplyJobIdRoute
+  EmployerCandidatesRoute: typeof EmployerCandidatesRoute
+  EmployerSetupRoute: typeof EmployerSetupRoute
   JoinCodeRoute: typeof JoinCodeRoute
   OauthAuthorizeRoute: typeof OauthAuthorizeRoute
   OauthCallbackRoute: typeof OauthCallbackRoute
@@ -283,6 +322,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/employer/setup': {
+      id: '/employer/setup'
+      path: '/employer/setup'
+      fullPath: '/employer/setup'
+      preLoaderRoute: typeof EmployerSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/candidates': {
+      id: '/employer/candidates'
+      path: '/employer/candidates'
+      fullPath: '/employer/candidates'
+      preLoaderRoute: typeof EmployerCandidatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/apply/$jobId': {
+      id: '/apply/$jobId'
+      path: '/apply/$jobId'
+      fullPath: '/apply/$jobId'
+      preLoaderRoute: typeof ApplyJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/resumes': {
       id: '/_authenticated/resumes'
       path: '/resumes'
@@ -354,6 +414,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   CallbackRoute: CallbackRoute,
+  ApplyJobIdRoute: ApplyJobIdRoute,
+  EmployerCandidatesRoute: EmployerCandidatesRoute,
+  EmployerSetupRoute: EmployerSetupRoute,
   JoinCodeRoute: JoinCodeRoute,
   OauthAuthorizeRoute: OauthAuthorizeRoute,
   OauthCallbackRoute: OauthCallbackRoute,
