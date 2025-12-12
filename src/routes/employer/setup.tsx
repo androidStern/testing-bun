@@ -110,7 +110,7 @@ function EmployerSetupPage() {
     const statusMessages: Record<string, { title: string; text: string }> = {
       pending_review: {
         title: 'Account Under Review',
-        text: "We're reviewing your information. You'll receive an SMS when your account is approved and you can view candidates.",
+        text: "We're reviewing your information. You'll receive an email when your account is approved.",
       },
       approved: {
         title: 'Account Ready',
@@ -145,6 +145,14 @@ function EmployerSetupPage() {
           </div>
           <h1 style={styles.successTitle}>{status.title}</h1>
           <p style={styles.successText}>{status.text}</p>
+          {setupData.employerStatus === 'approved' && (
+            <a
+              href={`/employer/candidates?token=${token}`}
+              style={styles.viewCandidatesButton}
+            >
+              View Candidates
+            </a>
+          )}
         </div>
       </div>
     );
@@ -386,5 +394,17 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '1rem',
     fontWeight: 500,
     cursor: 'pointer',
+  },
+  viewCandidatesButton: {
+    display: 'inline-block',
+    marginTop: '1.5rem',
+    background: '#22c55e',
+    color: 'white',
+    padding: '0.75rem 1.5rem',
+    borderRadius: '0.5rem',
+    fontSize: '1rem',
+    fontWeight: 500,
+    textDecoration: 'none',
+    textAlign: 'center',
   },
 };

@@ -5,14 +5,13 @@ import { internal } from '../_generated/api';
 import { postToCircle } from '../lib/circle';
 import { AIExtractedJobSchema } from '../lib/jobSchema';
 import { postSlackApproval, updateSlackApproval, verifySlackSignature } from '../lib/slack';
-import { sendSms } from '../lib/twilio';
 import { inngest } from './client';
 
 import type { ActionCtx } from '../_generated/server';
 import type { Id } from '../_generated/dataModel';
 import type { ParsedJob } from '../lib/jobSchema';
 import type { SlackBlock } from '../lib/slack';
-import type { JobFirstApplicantEvent, SlackApprovalClickedEvent } from './client';
+import type { SlackApprovalClickedEvent } from './client';
 
 // Extended handler args type with our middleware-injected convex context
 interface HandlerArgs {
@@ -30,7 +29,7 @@ interface HandlerArgs {
 export const processJobSubmission = inngest.createFunction(
   { id: 'process-job-submission' },
   { event: 'job/submitted' },
-  async (args): Promise<{ status: string; reason?: string; circleUrl?: string; firstApplicantReceived?: boolean }> => {
+  async (args): Promise<{ status: string; reason?: string; circleUrl?: string }> => {
     // Cast to get our middleware-injected convex context
     const { event, step, convex } = args as unknown as HandlerArgs;
     const submissionId = event.data.submissionId as Id<'jobSubmissions'>;
@@ -188,59 +187,12 @@ IMPORTANT RULES:
       });
     });
 
-    // Step 6: Wait for first applicant (no timeout - wait indefinitely until job is closed)
-    // This event is sent by processApplication workflow when isFirstApplicant=true
-    const firstApplicant = await step.waitForEvent<JobFirstApplicantEvent>(
-      'wait-first-applicant',
-      {
-        event: 'job/first-applicant',
-        if: `async.data.jobSubmissionId == "${submissionId}"`,
-        timeout: '90d', // Long timeout - job auto-closes after ~3 months if no applicants
-      }
-    );
-
-    // Step 7: Notify poster about first applicant
-    if (firstApplicant) {
-      await step.run('notify-poster', async (): Promise<void> => {
-        // Get sender phone for SMS
-        const submission = await convex.runQuery(internal.jobSubmissions.get, {
-          id: submissionId,
-        });
-        if (!submission) return;
-
-        const sender = await convex.runQuery(internal.senders.get, {
-          id: submission.senderId,
-        });
-        if (!sender?.phone) return;
-
-        // Generate magic link token for employer setup
-        // Token contains: submissionId, senderId, expiry (7d)
-        const token = Buffer.from(
-          JSON.stringify({
-            submissionId,
-            senderId: submission.senderId,
-            exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
-          })
-        ).toString('base64url');
-
-        const setupUrl = `${process.env.APP_BASE_URL || 'https://recoveryjobs.com'}/employer/setup?token=${token}`;
-
-        // Send SMS via Twilio
-        const smsBody = `Someone is interested in your ${parsedJob.title} job! Set up your account to view applicants: ${setupUrl}\n\nReply STOP to close this job posting.`;
-
-        const smsResult = await sendSms({
-          to: sender.phone,
-          body: smsBody,
-        });
-
-        console.log(`First applicant notification sent to ${sender.phone}, SID: ${smsResult.messageSid}`);
-      });
-    }
+    // Note: Poster notifications are now handled by processApplication workflow
+    // which notifies on EVERY application (first and subsequent)
 
     return {
       status: 'approved',
       circleUrl: circleResult.postUrl,
-      firstApplicantReceived: !!firstApplicant,
     };
   }
 );

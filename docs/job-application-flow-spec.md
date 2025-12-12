@@ -117,6 +117,8 @@ Frictionless job posting via SMS or web form. Account creation deferred until fi
 │                        POSTER NOTIFICATION                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
+│   EVERY application triggers a notification to the poster:                  │
+│                                                                             │
 │   On first application for a job:                                           │
 │                                                                             │
 │   SMS (or email if on file):                                                │
@@ -129,7 +131,10 @@ Frictionless job posting via SMS or web form. Account creation deferred until fi
 │   SMS: "Another applicant for your Cook position!                           │
 │         [X] people interested. View: [LINK]"                                │
 │                                                                             │
-│   (If account not yet approved, link goes to "pending review" page)         │
+│   Link behavior based on employer account status:                           │
+│   - No employer account: Links to /employer/setup (complete signup form)    │
+│   - Account pending review: Links to /employer/setup (shows pending status) │
+│   - Account approved: Links to /employer/candidates (view applicants)       │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -261,6 +266,14 @@ Application
   - status: pending | connected | passed
   - appliedAt
 ```
+
+---
+
+## Security TODOs
+
+| Priority | Item | Status |
+|----------|------|--------|
+| HIGH | **Magic link tokens need HMAC signing** - Currently tokens are just base64-encoded JSON with no cryptographic signature. Anyone who guesses the structure and obtains a submissionId could forge tokens. Must add HMAC-SHA256 signing with a server secret before production. | TODO |
 
 ---
 

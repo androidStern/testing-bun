@@ -228,6 +228,7 @@ interface PostEmployerVettingOptions {
     role?: string;
     website?: string;
   };
+  appBaseUrl: string;
 }
 
 /**
@@ -237,6 +238,7 @@ export async function postEmployerVetting({
   token,
   channel,
   employer,
+  appBaseUrl,
 }: PostEmployerVettingOptions): Promise<{ ts: string }> {
   const fields: Array<{ type: 'mrkdwn'; text: string }> = [
     { type: 'mrkdwn', text: `*Name:*\n${employer.name}` },
@@ -251,6 +253,8 @@ export async function postEmployerVetting({
   if (employer.website) {
     fields.push({ type: 'mrkdwn', text: `*Website:*\n${employer.website}` });
   }
+
+  const adminUrl = `${appBaseUrl}/admin?tab=pending-employers`;
 
   const blocks: Array<SlackBlock> = [
     {
@@ -268,7 +272,7 @@ export async function postEmployerVetting({
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `_Approve or reject from the admin dashboard._`,
+        text: `<${adminUrl}|View in Admin Dashboard>`,
       },
     },
   ];

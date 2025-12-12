@@ -1,5 +1,6 @@
 "use node";
 
+import nodemailer from "nodemailer";
 import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import { createInngestHandler } from "./inngest/handler";
@@ -124,6 +125,57 @@ export const sendEmployerApprovedEvent = internalAction({
   },
 });
 
+// Action to send email via AWS SES SMTP
+export const sendEmail = internalAction({
+  args: {
+    to: v.string(),
+    subject: v.string(),
+    body: v.string(),
+  },
+  handler: async (_ctx, args) => {
+    const smtpUser = process.env.AWS_SES_SMTP_USER;
+    const smtpPass = process.env.AWS_SES_SMTP_PASS;
+    const region = process.env.AWS_REGION;
+    const fromEmail = process.env.SES_FROM_EMAIL;
+
+    if (!smtpUser) {
+      throw new Error("AWS_SES_SMTP_USER environment variable is not configured");
+    }
+    if (!smtpPass) {
+      throw new Error("AWS_SES_SMTP_PASS environment variable is not configured");
+    }
+    if (!region) {
+      throw new Error("AWS_REGION environment variable is not configured");
+    }
+    if (!fromEmail) {
+      throw new Error("SES_FROM_EMAIL environment variable is not configured");
+    }
+
+    const smtpHost = `email-smtp.${region}.amazonaws.com`;
+
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: 587,
+      secure: false,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    });
+
+    const info = await transporter.sendMail({
+      from: `Recovery Jobs <${fromEmail}>`,
+      to: args.to,
+      subject: args.subject,
+      text: args.body,
+    });
+
+    console.log(`Email sent to ${args.to}, messageId: ${info.messageId}`);
+
+    return { messageId: info.messageId };
+  },
+});
+
 // Action to post employer vetting notification to Slack (Checkpoint 3)
 export const postEmployerVettingToSlack = internalAction({
   args: {
@@ -140,6 +192,7 @@ export const postEmployerVettingToSlack = internalAction({
 
     const token = process.env.SLACK_BOT_TOKEN;
     const channel = process.env.SLACK_APPROVAL_CHANNEL;
+    const appBaseUrl = process.env.APP_BASE_URL || "https://recovery-jobs.com";
 
     if (!token || !channel) {
       console.warn("Slack credentials not configured, skipping employer vetting notification");
@@ -158,6 +211,7 @@ export const postEmployerVettingToSlack = internalAction({
         role: args.role,
         website: args.website,
       },
+      appBaseUrl,
     });
   },
 });

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { useMutation, useQuery } from 'convex/react';
 import { getAuth, getSignInUrl } from '@workos/authkit-tanstack-react-start';
 import { api } from '../../../convex/_generated/api';
 import type { Id } from '../../../convex/_generated/dataModel';
+import { ProfileForm } from '@/components/ProfileForm';
 
 export const Route = createFileRoute('/apply/$jobId')({
   loader: async ({ params, location }) => {
@@ -13,21 +14,23 @@ export const Route = createFileRoute('/apply/$jobId')({
       const href = await getSignInUrl({ data: { returnPathname: path } });
       throw redirect({ href });
     }
-    return { jobId: params.jobId as Id<'jobSubmissions'> };
+    return { jobId: params.jobId as Id<'jobSubmissions'>, user };
   },
   component: ApplyPage,
 });
 
 function ApplyPage() {
-  const { jobId } = Route.useLoaderData();
+  const { jobId, user } = Route.useLoaderData();
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [profileJustCreated, setProfileJustCreated] = useState(false);
 
   const job = useQuery(api.jobSubmissions.getForApply, { id: jobId });
   const hasApplied = useQuery(api.applications.hasApplied, {
     jobSubmissionId: jobId,
   });
+  const profile = useQuery(api.profiles.getByWorkosUserId, { workosUserId: user.id });
   const applyMutation = useMutation(api.applications.apply);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,7 +70,7 @@ function ApplyPage() {
   }
 
   // Loading state
-  if (job === undefined || hasApplied === undefined) {
+  if (job === undefined || hasApplied === undefined || profile === undefined) {
     return (
       <div style={styles.container}>
         <div style={styles.card}>
@@ -87,6 +90,25 @@ function ApplyPage() {
             This job posting is no longer available or has been closed.
           </p>
         </div>
+      </div>
+    );
+  }
+
+  // No profile - show ProfileForm with job preview banner
+  if (profile === null && !profileJustCreated) {
+    return (
+      <div style={styles.profilePageContainer}>
+        <div style={styles.applyingForBanner}>
+          <p style={styles.applyingForText}>Applying for:</p>
+          <p style={styles.applyingForJob}>{job.title} at {job.company}</p>
+        </div>
+
+        <Suspense fallback={<div style={styles.loading}>Loading profile form...</div>}>
+          <ProfileForm
+            user={user}
+            onSuccess={() => setProfileJustCreated(true)}
+          />
+        </Suspense>
       </div>
     );
   }
@@ -274,6 +296,26 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.75rem',
     color: '#6b7280',
     margin: 0,
+  },
+  profilePageContainer: {
+    minHeight: '100vh',
+    background: '#f5f5f5',
+  },
+  applyingForBanner: {
+    background: '#3b82f6',
+    color: 'white',
+    padding: '0.75rem 1rem',
+    textAlign: 'center',
+  },
+  applyingForText: {
+    margin: 0,
+    fontSize: '0.75rem',
+    opacity: 0.9,
+  },
+  applyingForJob: {
+    margin: '0.25rem 0 0 0',
+    fontSize: '0.875rem',
+    fontWeight: 600,
   },
   error: {
     color: '#dc2626',
