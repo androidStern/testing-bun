@@ -130,7 +130,25 @@ export const apply = authMutation({
 
     if (!profile) throw new Error('Profile not found - please complete your profile first');
 
-    // Create application via internal mutation
+    // Check if job is still open
+    const job = await ctx.db.get(args.jobSubmissionId);
+    if (!job) throw new Error('Job not found');
+    if (job.status !== 'approved') throw new Error('This job is no longer accepting applications');
+
+    // Check for duplicate application BEFORE inserting
+    const existingApplications = await ctx.db
+      .query('applications')
+      .withIndex('by_job', (q) => q.eq('jobSubmissionId', args.jobSubmissionId))
+      .collect();
+
+    const alreadyApplied = existingApplications.some(
+      (a) => a.seekerProfileId === profile._id
+    );
+    if (alreadyApplied) {
+      throw new Error('You have already applied to this job');
+    }
+
+    // Create application
     const result = await ctx.db.insert('applications', {
       jobSubmissionId: args.jobSubmissionId,
       seekerProfileId: profile._id,
@@ -139,21 +157,22 @@ export const apply = authMutation({
       appliedAt: Date.now(),
     });
 
-    // Check if this is the first application
-    const applications = await ctx.db
-      .query('applications')
-      .withIndex('by_job', (q) => q.eq('jobSubmissionId', args.jobSubmissionId))
-      .collect();
-
-    const isFirstApplicant = applications.length === 1;
+    // Check if this is the first application (existingApplications was empty before our insert)
+    const isFirstApplicant = existingApplications.length === 0;
 
     // Trigger application workflow
-    await ctx.scheduler.runAfter(0, internal.inngestNode.sendApplicationSubmittedEvent, {
-      applicationId: result,
-      jobSubmissionId: args.jobSubmissionId,
-      seekerProfileId: profile._id,
-      isFirstApplicant,
-    });
+    // Note: If this fails, the application is still saved - workflow is fire-and-forget
+    try {
+      await ctx.scheduler.runAfter(0, internal.inngestNode.sendApplicationSubmittedEvent, {
+        applicationId: result,
+        jobSubmissionId: args.jobSubmissionId,
+        seekerProfileId: profile._id,
+        isFirstApplicant,
+      });
+    } catch (err) {
+      // Log but don't fail the mutation - application is saved
+      console.error('Failed to trigger application workflow:', err);
+    }
 
     return { applicationId: result };
   },

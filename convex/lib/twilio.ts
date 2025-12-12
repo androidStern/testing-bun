@@ -18,6 +18,7 @@ interface SendSmsResult {
 /**
  * Send an SMS via Twilio REST API
  * Uses env vars if credentials not provided
+ * Throws if credentials are missing - do not silently fail
  */
 export async function sendSms({
   to,
@@ -26,12 +27,14 @@ export async function sendSms({
   authToken = process.env.TWILIO_AUTH_TOKEN,
   fromNumber = process.env.TWILIO_PHONE_NUMBER,
 }: SendSmsOptions): Promise<SendSmsResult> {
-  if (!accountSid || !authToken || !fromNumber) {
-    console.warn('Twilio credentials not configured, skipping SMS');
-    return {
-      success: false,
-      error: 'Twilio credentials not configured',
-    };
+  if (!accountSid) {
+    throw new Error('TWILIO_ACCOUNT_SID environment variable is not configured');
+  }
+  if (!authToken) {
+    throw new Error('TWILIO_AUTH_TOKEN environment variable is not configured');
+  }
+  if (!fromNumber) {
+    throw new Error('TWILIO_PHONE_NUMBER environment variable is not configured');
   }
 
   const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;

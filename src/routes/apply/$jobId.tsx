@@ -45,6 +45,27 @@ function ApplyPage() {
     }
   };
 
+  // Successfully submitted (check this FIRST - local state takes precedence)
+  // This prevents the race condition where hasApplied becomes true before submitted is set
+  if (submitted && job) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.card}>
+          <div style={styles.successIcon}>&#10003;</div>
+          <h1 style={styles.successTitle}>Application Submitted!</h1>
+          <p style={styles.successText}>
+            Your application has been sent to the employer. They will reach out
+            if interested.
+          </p>
+          <div style={styles.jobPreview}>
+            <h2 style={styles.jobTitle}>{job.title}</h2>
+            <p style={styles.jobCompany}>{job.company}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Loading state
   if (job === undefined || hasApplied === undefined) {
     return (
@@ -70,7 +91,7 @@ function ApplyPage() {
     );
   }
 
-  // Already applied
+  // Already applied (from a previous session - hasApplied is true but submitted is false)
   if (hasApplied) {
     return (
       <div style={styles.container}>
@@ -79,26 +100,6 @@ function ApplyPage() {
           <h1 style={styles.successTitle}>Already Applied</h1>
           <p style={styles.successText}>
             You have already submitted an application for this position.
-          </p>
-          <div style={styles.jobPreview}>
-            <h2 style={styles.jobTitle}>{job.title}</h2>
-            <p style={styles.jobCompany}>{job.company}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Successfully submitted
-  if (submitted) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.card}>
-          <div style={styles.successIcon}>&#10003;</div>
-          <h1 style={styles.successTitle}>Application Submitted!</h1>
-          <p style={styles.successText}>
-            Your application has been sent to the employer. They will reach out
-            if interested.
           </p>
           <div style={styles.jobPreview}>
             <h2 style={styles.jobTitle}>{job.title}</h2>
