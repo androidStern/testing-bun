@@ -43,7 +43,25 @@ export const handle = internalAction({
   },
 });
 
-// Action to send approval events to Inngest
+// Action to send job/submitted event to Inngest (triggers the workflow)
+export const sendJobSubmittedEvent = internalAction({
+  args: {
+    submissionId: v.string(),
+    source: v.union(v.literal("sms"), v.literal("form")),
+  },
+  handler: async (_ctx, args) => {
+    const { inngest } = await import("./inngest");
+    await inngest.send({
+      name: "job/submitted",
+      data: {
+        submissionId: args.submissionId,
+        source: args.source,
+      },
+    });
+  },
+});
+
+// Action to send approval events to Inngest (resumes the waiting workflow)
 export const sendApprovalEvent = internalAction({
   args: {
     approvalId: v.string(),

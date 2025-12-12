@@ -7,7 +7,7 @@ import type { ActionCtx } from '../_generated/server';
 import { postSlackApproval, updateSlackApproval, verifySlackSignature } from '../lib/slack';
 import type { SlackBlock } from '../lib/slack';
 import { postToCircle } from '../lib/circle';
-import { ParsedJobSchema, type ParsedJob } from '../lib/jobSchema';
+import { AIExtractedJobSchema, type ParsedJob } from '../lib/jobSchema';
 import { inngest, type SlackApprovalClickedEvent } from './client';
 
 // Extended handler args type with our middleware-injected convex context
@@ -31,33 +31,71 @@ export const processJobSubmission = inngest.createFunction(
     const { event, step, convex } = args as unknown as HandlerArgs;
     const submissionId = event.data.submissionId as Id<'jobSubmissions'>;
 
-    // Step 1: Get submission and parse with AI
+    // Step 1: Get submission, fetch sender, parse with AI, and merge contact fallbacks
     const parsedJob = await step.run('parse-job', async (): Promise<ParsedJob> => {
       const submission = await convex.runQuery(internal.jobSubmissions.get, {
         id: submissionId,
       });
-
       if (!submission) throw new Error('Submission not found');
 
+      // Fetch sender for contact/company fallback
+      const sender = await convex.runQuery(internal.senders.get, {
+        id: submission.senderId,
+      });
+
+      // AI parsing with permissive schema - may return partial data
       const { object } = await generateObject({
         model: openai('gpt-4o-mini'),
-        schema: ParsedJobSchema,
-        prompt: `Parse this job submission into structured data. Extract all relevant information.
+        schema: AIExtractedJobSchema,
+        prompt: `Parse this job submission into structured data.
 
 Raw submission:
 ${submission.rawContent}
 
-If information is missing, make reasonable inferences or omit optional fields.
-For contact info, use any phone/email found in the text.`,
+IMPORTANT RULES:
+- title: ALWAYS extract a job title (e.g., "Cook", "Driver", "Warehouse Worker"). This is required.
+- description: Extract or summarize the job description from the text
+- workArrangement: ONLY include if text explicitly says "remote", "on-site", "hybrid", "work from home", etc. Most jobs (especially food service, retail, healthcare) are on-site but do NOT assume - just omit this field unless specified
+- salary: ONLY include if specific dollar amounts are mentioned
+- location: ONLY include if city/state/address are mentioned
+- contact: ONLY include if email/phone/name are explicitly in the text
+- NEVER use placeholder values like "Not specified", "Unknown", or "N/A"
+- For enum fields (workArrangement, employmentType), only use exact allowed values or omit`,
       });
 
-      // Save parsed job to database
+      // Title is required - fail if AI couldn't extract it
+      if (!object.title) {
+        throw new Error('Could not extract job title from submission');
+      }
+
+      // Merge AI result with sender fallbacks to produce complete ParsedJob
+      const mergedJob: ParsedJob = {
+        title: object.title,
+        description: object.description,
+        location: object.location,
+        workArrangement: object.workArrangement,
+        employmentType: object.employmentType,
+        salary: object.salary,
+        skills: object.skills,
+        requirements: object.requirements,
+        company: {
+          name: object.company?.name || sender?.company || 'Recovery-Friendly Employer',
+        },
+        contact: {
+          name: object.contact?.name || sender?.name,
+          method: object.contact?.method || (sender?.email ? 'email' : 'phone'),
+          email: object.contact?.email || sender?.email,
+          phone: object.contact?.phone || sender?.phone || '',
+        },
+      };
+
+      // Save merged job to database
       await convex.runMutation(internal.jobSubmissions.updateParsed, {
         id: submissionId,
-        parsedJob: object,
+        parsedJob: mergedJob,
       });
 
-      return object;
+      return mergedJob;
     });
 
     // Step 2: Post to Slack for approval

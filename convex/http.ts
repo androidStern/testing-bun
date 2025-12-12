@@ -75,7 +75,7 @@ http.route({
     const sender = await ctx.runQuery(api.senders.getByPhone, { phone });
 
     let messageStatus: string;
-    let senderId: Id<'senders'> | undefined;
+    let senderId: Id<'senders'>;
 
     if (!sender) {
       // New sender - create as pending
@@ -95,7 +95,7 @@ http.route({
       }
     }
 
-    // Save the message
+    // Save the inbound message (for tracking all SMS)
     await ctx.runMutation(api.inboundMessages.create, {
       phone,
       body,
@@ -103,6 +103,22 @@ http.route({
       senderId,
       status: messageStatus,
     });
+
+    // Create a job submission and trigger the Inngest workflow
+    // Only process if sender is not blocked
+    if (messageStatus !== 'rejected') {
+      const submissionId = await ctx.runMutation(internal.jobSubmissions.create, {
+        source: 'sms',
+        senderId,
+        rawContent: body,
+      });
+
+      // Trigger Inngest workflow (via Node.js action since inngest.send needs node:async_hooks)
+      await ctx.scheduler.runAfter(0, internal.inngestNode.sendJobSubmittedEvent, {
+        submissionId,
+        source: 'sms',
+      });
+    }
 
     return new Response('<Response></Response>', {
       headers: { 'Content-Type': 'text/xml' },

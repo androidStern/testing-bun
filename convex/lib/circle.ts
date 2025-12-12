@@ -15,7 +15,8 @@ export async function postToCircle({
     ? [job.location.city, job.location.state].filter(Boolean).join(', ')
     : '';
 
-  const name = `${job.title} at ${job.company.name}${locationStr ? ` — ${locationStr}` : ''}`;
+  const companyName = job.company?.name || 'Recovery-Friendly Employer';
+  const name = `${job.title} at ${companyName}${locationStr ? ` — ${locationStr}` : ''}`;
 
   // Build HTML content for the post
   const html = buildJobPostHtml(job);
@@ -56,6 +57,10 @@ export async function postToCircle({
 function buildJobPostHtml(
   job: NonNullable<Doc<'jobSubmissions'>['parsedJob']>
 ): string {
+  const companyName = job.company?.name || 'Recovery-Friendly Employer';
+  const contactEmail = job.contact?.email || '';
+  const contactPhone = job.contact?.phone || '';
+
   const salaryStr =
     job.salary?.min !== undefined && job.salary?.max !== undefined
       ? `$${job.salary.min} - $${job.salary.max} / ${job.salary.unit}`
@@ -65,7 +70,7 @@ function buildJobPostHtml(
 
   const locationStr = job.location
     ? [job.location.city, job.location.state].filter(Boolean).join(', ')
-    : 'Remote';
+    : null;
 
   const employmentType = job.employmentType
     ? job.employmentType
@@ -80,11 +85,11 @@ function buildJobPostHtml(
 
     <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
       <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">
-        ${job.company.name.charAt(0).toUpperCase()}
+        ${companyName.charAt(0).toUpperCase()}
       </div>
       <div>
         <h2 style="margin: 0; font-size: 20px; font-weight: 600;">${job.title}</h2>
-        <p style="margin: 4px 0 0 0; opacity: 0.8; font-size: 14px;">${job.company.name}</p>
+        <p style="margin: 4px 0 0 0; opacity: 0.8; font-size: 14px;">${companyName}</p>
       </div>
       <span style="margin-left: auto; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(74, 222, 128, 0.3); padding: 4px 12px; border-radius: 20px; font-size: 12px; color: #86efac;">
         ${employmentType}
@@ -93,10 +98,10 @@ function buildJobPostHtml(
 
     <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
       <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
+        ${(job.workArrangement || locationStr) ? `<div style="display: flex; align-items: center; gap: 8px;">
           <span style="color: #60a5fa;">📍</span>
-          <span style="font-size: 14px; opacity: 0.9;">${job.workArrangement === 'remote' ? 'Remote' : locationStr}</span>
-        </div>
+          <span style="font-size: 14px; opacity: 0.9;">${job.workArrangement === 'remote' ? 'Remote' : (locationStr || job.workArrangement?.replace('-', ' ').replace(/^\w/, c => c.toUpperCase()) || '')}</span>
+        </div>` : ''}
         ${salaryStr ? `<div style="display: flex; align-items: center; gap: 8px;"><span style="color: #60a5fa;">💰</span><span style="font-size: 14px; opacity: 0.9;">${salaryStr}</span></div>` : ''}
       </div>
     </div>
@@ -130,7 +135,7 @@ function buildJobPostHtml(
     }
 
     <div style="display: flex; gap: 12px; margin-top: 20px;">
-      <a href="mailto:${job.contact.email || ''}" style="flex: 1; background: #3b82f6; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; text-align: center; font-weight: 500; font-size: 14px;">
+      <a href="${contactEmail ? `mailto:${contactEmail}` : (contactPhone ? `tel:${contactPhone}` : '#')}" style="flex: 1; background: #3b82f6; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; text-align: center; font-weight: 500; font-size: 14px;">
         Apply Now
       </a>
     </div>

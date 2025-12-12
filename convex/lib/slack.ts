@@ -36,10 +36,13 @@ export async function postSlackApproval({
 
   // Build fields from job data
   allFields.push({ type: 'mrkdwn', text: `*Company:*\n${job.company.name}` });
-  allFields.push({
-    type: 'mrkdwn',
-    text: `*Work Arrangement:*\n${job.workArrangement}`,
-  });
+
+  if (job.workArrangement) {
+    allFields.push({
+      type: 'mrkdwn',
+      text: `*Work Arrangement:*\n${job.workArrangement}`,
+    });
+  }
 
   if (job.location) {
     const location = [job.location.city, job.location.state]
@@ -77,10 +80,16 @@ export async function postSlackApproval({
   }
 
   if (job.contact) {
-    allFields.push({
-      type: 'mrkdwn',
-      text: `*Contact:*\n${job.contact.name} (${job.contact.method}: ${job.contact.email || job.contact.phone})`,
-    });
+    const contactParts = [];
+    if (job.contact.name) contactParts.push(job.contact.name);
+    const contactValue = job.contact.email || job.contact.phone;
+    if (contactValue) contactParts.push(`${job.contact.method}: ${contactValue}`);
+    if (contactParts.length) {
+      allFields.push({
+        type: 'mrkdwn',
+        text: `*Contact:*\n${contactParts.join(' - ')}`,
+      });
+    }
   }
 
   allFields.push({

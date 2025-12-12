@@ -1,7 +1,15 @@
 import { v } from 'convex/values';
 
-import { mutation, query } from './_generated/server';
+import { internalQuery, mutation, query } from './_generated/server';
 import { adminMutation, adminQuery } from './functions';
+
+// Internal query for workflow to fetch sender by ID
+export const get = internalQuery({
+  args: { id: v.id('senders') },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
+  },
+});
 
 // Public query (used by HTTP webhook)
 export const getByPhone = query({
