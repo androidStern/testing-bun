@@ -243,6 +243,13 @@ export const createFromSignup = mutation({
       website: args.website,
     });
 
+    // Send employer/account-created event to resume waiting workflows
+    await ctx.scheduler.runAfter(0, internal.inngestNode.sendEmployerAccountCreatedEvent, {
+      employerId,
+      senderId,
+      jobSubmissionId: tokenData.submissionId,
+    });
+
     return { employerId, alreadyExisted: false };
   },
 });

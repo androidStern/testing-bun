@@ -9,9 +9,17 @@ import {
 
 import { internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
-import { mutation, query } from './_generated/server';
+import { internalQuery, mutation, query } from './_generated/server';
 
 const zodMutation = zCustomMutation(mutation, NoOp);
+
+// Internal query for workflow to fetch profile by ID
+export const get = internalQuery({
+  args: { id: v.id('profiles') },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
+  },
+});
 
 export const getByWorkosUserId = query({
   args: { workosUserId: v.string() },

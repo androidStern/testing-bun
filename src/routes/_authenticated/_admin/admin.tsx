@@ -1,6 +1,7 @@
 import { convexQuery } from '@convex-dev/react-query';
 import { useQuery } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useEffect, useRef } from 'react';
 
 import { api } from '../../../../convex/_generated/api';
 import { EmployerCard } from '../../../components/admin/EmployerCard';
@@ -16,16 +17,25 @@ import {
 
 export const Route = createFileRoute('/_authenticated/_admin/admin')({
   component: AdminDashboard,
-  // No loader - let queries run in components with loading states
-  // This avoids the SSR/hydration auth race condition
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: (search.tab as string) || 'pending-jobs',
+    job: (search.job as string) || undefined,
+  }),
 });
 
 function AdminDashboard() {
+  const { tab, job } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+
+  const setTab = (newTab: string) => {
+    navigate({ to: '.', search: (prev) => ({ ...prev, tab: newTab }) });
+  };
+
   return (
     <div className="mx-auto max-w-6xl p-6">
       <h1 className="mb-6 text-2xl font-bold">SMS Admin Dashboard</h1>
 
-      <Tabs defaultValue="pending-jobs">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="mb-6 flex-wrap">
           <TabsTrigger value="pending-jobs">Pending Jobs</TabsTrigger>
           <TabsTrigger value="all-jobs">All Jobs</TabsTrigger>
@@ -38,11 +48,11 @@ function AdminDashboard() {
         </TabsList>
 
         <TabsContent value="pending-jobs">
-          <PendingJobsTab />
+          <PendingJobsTab highlightedJobId={job ?? null} />
         </TabsContent>
 
         <TabsContent value="all-jobs">
-          <AllJobsTab />
+          <AllJobsTab highlightedJobId={job ?? null} />
         </TabsContent>
 
         <TabsContent value="pending-senders">
@@ -73,10 +83,20 @@ function AdminDashboard() {
   );
 }
 
-function PendingJobsTab() {
+function PendingJobsTab({ highlightedJobId }: { highlightedJobId: string | null }) {
   const { data: jobs, isLoading, error } = useQuery(
     convexQuery(api.jobSubmissions.list, { status: 'pending_approval' }),
   );
+  const highlightedRef = useRef<HTMLDivElement>(null);
+  const hasScrolled = useRef(false);
+
+  // Scroll to highlighted job when data loads
+  useEffect(() => {
+    if (highlightedJobId && jobs && !hasScrolled.current && highlightedRef.current) {
+      highlightedRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      hasScrolled.current = true;
+    }
+  }, [highlightedJobId, jobs]);
 
   if (isLoading) return <div className="text-gray-500">Loading...</div>;
   if (error) return <div className="text-red-500">Error loading jobs</div>;
@@ -85,16 +105,32 @@ function PendingJobsTab() {
   return (
     <div className="space-y-4">
       {jobs.map((job) => (
-        <JobSubmissionCard key={job._id} job={job} showActions />
+        <div
+          key={job._id}
+          ref={job._id === highlightedJobId ? highlightedRef : undefined}
+          className={job._id === highlightedJobId ? 'ring-2 ring-blue-500 rounded-lg' : undefined}
+        >
+          <JobSubmissionCard job={job} showActions />
+        </div>
       ))}
     </div>
   );
 }
 
-function AllJobsTab() {
+function AllJobsTab({ highlightedJobId }: { highlightedJobId: string | null }) {
   const { data: jobs, isLoading, error } = useQuery(
     convexQuery(api.jobSubmissions.list, {}),
   );
+  const highlightedRef = useRef<HTMLDivElement>(null);
+  const hasScrolled = useRef(false);
+
+  // Scroll to highlighted job when data loads
+  useEffect(() => {
+    if (highlightedJobId && jobs && !hasScrolled.current && highlightedRef.current) {
+      highlightedRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      hasScrolled.current = true;
+    }
+  }, [highlightedJobId, jobs]);
 
   if (isLoading) return <div className="text-gray-500">Loading...</div>;
   if (error) return <div className="text-red-500">Error loading jobs</div>;
@@ -103,11 +139,16 @@ function AllJobsTab() {
   return (
     <div className="space-y-4">
       {jobs.map((job) => (
-        <JobSubmissionCard
+        <div
           key={job._id}
-          job={job}
-          showActions={job.status === 'pending_approval'}
-        />
+          ref={job._id === highlightedJobId ? highlightedRef : undefined}
+          className={job._id === highlightedJobId ? 'ring-2 ring-blue-500 rounded-lg' : undefined}
+        >
+          <JobSubmissionCard
+            job={job}
+            showActions={job.status === 'pending_approval'}
+          />
+        </div>
       ))}
     </div>
   );

@@ -192,15 +192,41 @@ export const updateSlackJobMessage = internalAction({
       throw new Error("SLACK_BOT_TOKEN not configured");
     }
 
+    const appBaseUrl = process.env.APP_BASE_URL;
+    if (!appBaseUrl) {
+      throw new Error("APP_BASE_URL not configured");
+    }
+
     await updateMessage({
       token,
       channel: args.slackChannel,
       ts: args.slackMessageTs,
       submissionId: args.submissionId,
       job: args.parsedJob,
+      appBaseUrl,
     });
 
     console.log(`Updated Slack message for job ${args.submissionId}`);
+  },
+});
+
+// Action to send employer/account-created event (employer filled signup form)
+export const sendEmployerAccountCreatedEvent = internalAction({
+  args: {
+    employerId: v.string(),
+    senderId: v.string(),
+    jobSubmissionId: v.string(),
+  },
+  handler: async (_ctx, args) => {
+    const { inngest } = await import("./inngest");
+    await inngest.send({
+      name: "employer/account-created",
+      data: {
+        employerId: args.employerId,
+        senderId: args.senderId,
+        jobSubmissionId: args.jobSubmissionId,
+      },
+    });
   },
 });
 
@@ -220,10 +246,13 @@ export const postEmployerVettingToSlack = internalAction({
 
     const token = process.env.SLACK_BOT_TOKEN;
     const channel = process.env.SLACK_APPROVAL_CHANNEL;
-    const appBaseUrl = process.env.APP_BASE_URL || "https://recovery-jobs.com";
+    const appBaseUrl = process.env.APP_BASE_URL;
 
     if (!token || !channel) {
       throw new Error("Slack credentials not configured (SLACK_BOT_TOKEN or SLACK_APPROVAL_CHANNEL missing)");
+    }
+    if (!appBaseUrl) {
+      throw new Error("APP_BASE_URL not configured");
     }
 
     await postEmployerVetting({

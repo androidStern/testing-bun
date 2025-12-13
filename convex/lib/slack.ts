@@ -24,6 +24,7 @@ interface PostSlackApprovalOptions {
   channel: string;
   submissionId: string;
   job: NonNullable<Doc<'jobSubmissions'>['parsedJob']>;
+  appBaseUrl: string;
 }
 
 export async function postSlackApproval({
@@ -31,112 +32,9 @@ export async function postSlackApproval({
   channel,
   submissionId,
   job,
+  appBaseUrl,
 }: PostSlackApprovalOptions): Promise<{ blocks: Array<SlackBlock>; ts: string }> {
-  const allFields: Array<{ type: 'mrkdwn'; text: string }> = [];
-
-  // Build fields from job data
-  allFields.push({ type: 'mrkdwn', text: `*Company:*\n${job.company.name}` });
-
-  if (job.workArrangement) {
-    allFields.push({
-      type: 'mrkdwn',
-      text: `*Work Arrangement:*\n${job.workArrangement}`,
-    });
-  }
-
-  if (job.location) {
-    const location = [job.location.city, job.location.state]
-      .filter(Boolean)
-      .join(', ');
-    if (location) {
-      allFields.push({ type: 'mrkdwn', text: `*Location:*\n${location}` });
-    }
-  }
-
-  if (job.employmentType) {
-    allFields.push({
-      type: 'mrkdwn',
-      text: `*Employment Type:*\n${job.employmentType}`,
-    });
-  }
-
-  if (job.salary) {
-    const salaryStr =
-      job.salary.min !== undefined && job.salary.max !== undefined
-        ? `$${job.salary.min} - $${job.salary.max} / ${job.salary.unit}`
-        : job.salary.amount
-          ? `$${job.salary.amount} / ${job.salary.unit}`
-          : '';
-    if (salaryStr) {
-      allFields.push({ type: 'mrkdwn', text: `*Salary:*\n${salaryStr}` });
-    }
-  }
-
-  if (job.skills?.length) {
-    allFields.push({
-      type: 'mrkdwn',
-      text: `*Skills:*\n${job.skills.join(', ')}`,
-    });
-  }
-
-  const contactParts = [];
-  if (job.contact.name) contactParts.push(job.contact.name);
-  const contactValue = job.contact.email ?? job.contact.phone;
-  if (contactValue) contactParts.push(`${job.contact.method}: ${contactValue}`);
-  if (contactParts.length) {
-    allFields.push({
-      type: 'mrkdwn',
-      text: `*Contact:*\n${contactParts.join(' - ')}`,
-    });
-  }
-
-  allFields.push({
-    type: 'mrkdwn',
-    text: `*Submission ID:*\n${submissionId}`,
-  });
-
-  // Split fields into chunks of 10 (Slack's limit)
-  const fieldChunks: Array<typeof allFields> = [];
-  for (let i = 0; i < allFields.length; i += 10) {
-    fieldChunks.push(allFields.slice(i, i + 10));
-  }
-
-  // Build blocks
-  const blocks: Array<SlackBlock> = [
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: `*${job.title}* at *${job.company.name}*`,
-      },
-    },
-    ...fieldChunks.map(
-      (fields) =>
-        ({
-          type: 'section',
-          fields,
-        }) as SectionBlock
-    ),
-    {
-      type: 'actions',
-      elements: [
-        {
-          type: 'button',
-          action_id: 'approve',
-          style: 'primary',
-          text: { type: 'plain_text', text: 'Approve' },
-          value: submissionId,
-        },
-        {
-          type: 'button',
-          action_id: 'deny',
-          style: 'danger',
-          text: { type: 'plain_text', text: 'Deny' },
-          value: submissionId,
-        },
-      ],
-    },
-  ];
+  const blocks = buildJobApprovalBlocks(job, submissionId, appBaseUrl);
 
   const body = {
     channel,
@@ -175,11 +73,20 @@ export async function postSlackApproval({
 // Helper to build job fields (shared by postSlackApproval and updateSlackJobMessage)
 function buildJobFields(
   job: NonNullable<Doc<'jobSubmissions'>['parsedJob']>,
-  submissionId: string
+  submissionId: string,
+  appBaseUrl: string
 ): Array<{ type: 'mrkdwn'; text: string }> {
   const allFields: Array<{ type: 'mrkdwn'; text: string }> = [];
 
   allFields.push({ type: 'mrkdwn', text: `*Company:*\n${job.company.name}` });
+
+  if (job.description) {
+    // Truncate description if too long for Slack field (max ~2000 chars)
+    const desc = job.description.length > 500
+      ? job.description.slice(0, 497) + '...'
+      : job.description;
+    allFields.push({ type: 'mrkdwn', text: `*Description:*\n${desc}` });
+  }
 
   if (job.workArrangement) {
     allFields.push({
@@ -234,9 +141,10 @@ function buildJobFields(
     });
   }
 
+  const adminUrl = `${appBaseUrl}/admin?tab=pending-jobs&job=${submissionId}`;
   allFields.push({
     type: 'mrkdwn',
-    text: `*Submission ID:*\n${submissionId}`,
+    text: `*Admin:*\n<${adminUrl}|View/Edit in Admin>`,
   });
 
   return allFields;
@@ -245,9 +153,10 @@ function buildJobFields(
 // Build complete job approval blocks with approve/deny buttons
 function buildJobApprovalBlocks(
   job: NonNullable<Doc<'jobSubmissions'>['parsedJob']>,
-  submissionId: string
+  submissionId: string,
+  appBaseUrl: string
 ): Array<SlackBlock> {
-  const allFields = buildJobFields(job, submissionId);
+  const allFields = buildJobFields(job, submissionId, appBaseUrl);
 
   // Split fields into chunks of 10 (Slack's limit)
   const fieldChunks: Array<typeof allFields> = [];
@@ -298,6 +207,7 @@ interface UpdateSlackJobMessageOptions {
   ts: string;
   submissionId: string;
   job: NonNullable<Doc<'jobSubmissions'>['parsedJob']>;
+  appBaseUrl: string;
 }
 
 /**
@@ -310,8 +220,9 @@ export async function updateSlackJobMessage({
   ts,
   submissionId,
   job,
+  appBaseUrl,
 }: UpdateSlackJobMessageOptions): Promise<void> {
-  const blocks = buildJobApprovalBlocks(job, submissionId);
+  const blocks = buildJobApprovalBlocks(job, submissionId, appBaseUrl);
 
   const res = await fetch('https://slack.com/api/chat.update', {
     method: 'POST',

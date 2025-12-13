@@ -28,8 +28,7 @@ export const sendProfileWebhook = internalAction({
     const webhookUrl = process.env.INNGEST_WEBHOOK_URL;
 
     if (!webhookUrl) {
-      console.warn('INNGEST_WEBHOOK_URL not configured, skipping webhook');
-      return { success: false, reason: 'no_webhook_url' };
+      throw new Error('INNGEST_WEBHOOK_URL environment variable is not configured');
     }
 
     // Map platform goals to expected format
@@ -59,26 +58,20 @@ export const sendProfileWebhook = internalAction({
       },
     };
 
-    try {
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
 
-      if (!response.ok) {
-        const text = await response.text();
-        console.error('Inngest webhook failed:', response.status, text);
-        return { success: false, reason: 'webhook_failed', status: response.status };
-      }
-
-      console.log('Inngest webhook sent successfully');
-      return { success: true };
-    } catch (error) {
-      console.error('Inngest webhook error:', error);
-      return { success: false, reason: 'fetch_error' };
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Inngest webhook failed: ${response.status} ${text}`);
     }
+
+    console.log('Inngest webhook sent successfully');
+    return { success: true };
   },
 });

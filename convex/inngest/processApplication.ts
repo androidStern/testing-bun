@@ -17,8 +17,31 @@ interface HandlerArgs {
   };
   step: {
     run: <T>(name: string, fn: () => Promise<T>) => Promise<T>;
+    waitForEvent: <T>(
+      name: string,
+      opts: {
+        event: string;
+        if?: string;
+        timeout: string;
+      }
+    ) => Promise<T | null>;
   };
   convex: ActionCtx;
+}
+
+type EmployerStatus = 'pending_review' | 'approved' | 'rejected' | undefined;
+
+interface Details {
+  jobTitle: string;
+  companyName: string;
+  senderId: string;
+  senderEmail: string | undefined;
+  senderPhone: string | undefined;
+  employerId: string | undefined;
+  employerStatus: EmployerStatus;
+  applicationCount: number;
+  seekerName: string;
+  seekerEmail: string;
 }
 
 export const processApplication = inngest.createFunction(
@@ -34,8 +57,8 @@ export const processApplication = inngest.createFunction(
       isFirstApplicant,
     } = event.data;
 
-    // Step 1: Get job, sender, employer, and application count
-    const details = await step.run('get-details', async () => {
+    // Step 1: Get job, sender, employer, seeker, and application count
+    const details = await step.run('get-details', async (): Promise<Details> => {
       const job = await convex.runQuery(internal.jobSubmissions.get, {
         id: jobSubmissionId as Id<'jobSubmissions'>,
       });
@@ -54,23 +77,38 @@ export const processApplication = inngest.createFunction(
         jobSubmissionId: jobSubmissionId as Id<'jobSubmissions'>,
       });
 
+      // Get seeker profile for candidate info
+      const seekerProfile = await convex.runQuery(internal.profiles.get, {
+        id: seekerProfileId as Id<'profiles'>,
+      });
+
+      const seekerName = seekerProfile?.firstName
+        ? `${seekerProfile.firstName} ${seekerProfile.lastName || ''}`.trim()
+        : 'A candidate';
+
       return {
         jobTitle: job.parsedJob?.title ?? 'Unknown',
         companyName: job.parsedJob?.company.name ?? 'Unknown',
         senderId: job.senderId,
         senderEmail: sender?.email,
         senderPhone: sender?.phone,
-        employerStatus: employer?.status as 'pending_review' | 'approved' | 'rejected' | undefined,
+        employerId: employer?._id,
+        employerStatus: employer?.status as EmployerStatus,
         applicationCount,
+        seekerName,
+        seekerEmail: seekerProfile?.email ?? '',
       };
     });
 
-    // Step 2: Notify poster about this application
+    // Step 2: Send initial notification
     let notifiedPoster = false;
     if (details.senderEmail) {
-      await step.run('notify-poster', async () => {
+      await step.run('send-initial-email', async () => {
         const token = createToken(jobSubmissionId, details.senderId);
-        const appBaseUrl = process.env.APP_BASE_URL || 'https://recovery-jobs.com';
+        const appBaseUrl = process.env.APP_BASE_URL;
+        if (!appBaseUrl) {
+          throw new Error('APP_BASE_URL not configured');
+        }
 
         // Determine which page to link to based on employer status
         const linkPath = details.employerStatus === 'approved'
@@ -126,9 +164,74 @@ Recovery Jobs`;
       });
       notifiedPoster = true;
     } else {
-      console.warn(
+      throw new Error(
         `Cannot notify poster for job ${details.jobTitle}: no email on file for sender ${details.senderId}`
       );
+    }
+
+    // Step 3: If employer not approved, wait for events and send approval notification
+    // Note: rejected employers can be re-approved, so we wait for them too
+    if (details.employerStatus !== 'approved') {
+      let employerId = details.employerId;
+
+      // If employer doesn't exist, wait for signup
+      if (!employerId) {
+        const signupEvent = await step.waitForEvent<{
+          data: { employerId: string; senderId: string; jobSubmissionId: string };
+        }>('wait-for-signup', {
+          event: 'employer/account-created',
+          if: `async.data.senderId == '${details.senderId}'`,
+          timeout: '30d',
+        });
+
+        if (!signupEvent) {
+          return { status: 'timeout-waiting-for-signup', notifiedPoster };
+        }
+        employerId = signupEvent.data.employerId;
+      }
+
+      // Wait for approval
+      const approvalEvent = await step.waitForEvent<{
+        data: { employerId: string; approvedBy: string };
+      }>('wait-for-approval', {
+        event: 'employer/approved',
+        if: `async.data.employerId == '${employerId}'`,
+        timeout: '30d',
+      });
+
+      if (!approvalEvent) {
+        return { status: 'timeout-waiting-for-approval', notifiedPoster };
+      }
+
+      // Step 4: Send approval notification with candidate info
+      await step.run('send-approval-notification', async () => {
+        const token = createToken(jobSubmissionId, details.senderId);
+        const appBaseUrl = process.env.APP_BASE_URL;
+        if (!appBaseUrl) {
+          throw new Error('APP_BASE_URL not configured');
+        }
+
+        const url = `${appBaseUrl}/employer/candidates?token=${token}`;
+
+        await convex.runAction(internal.inngestNode.sendEmail, {
+          to: details.senderEmail!,
+          subject: 'Your employer account is approved!',
+          body: `Great news!
+
+Your Recovery Jobs employer account has been approved.
+
+${details.seekerName} applied to your ${details.jobTitle} position.
+
+View candidate: ${url}
+
+--
+Recovery Jobs`,
+        });
+
+        console.log(
+          `Sent approval notification to ${details.senderEmail} about candidate ${details.seekerName}`
+        );
+      });
     }
 
     return {

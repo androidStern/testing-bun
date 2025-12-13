@@ -104,11 +104,16 @@ IMPORTANT RULES:
     // Step 2: Post to Slack for approval and store message reference
     const blocks = await step.run('post-slack-message', async (): Promise<Array<SlackBlock>> => {
       const channel = process.env.SLACK_APPROVAL_CHANNEL!;
+      const appBaseUrl = process.env.APP_BASE_URL;
+      if (!appBaseUrl) {
+        throw new Error('APP_BASE_URL not configured');
+      }
       const result = await postSlackApproval({
         token: process.env.SLACK_BOT_TOKEN!,
         channel,
         submissionId,
         job: parsedJob,
+        appBaseUrl,
       });
 
       // Store Slack message reference for later updates (e.g., when job is edited)
@@ -213,12 +218,16 @@ IMPORTANT RULES:
 
     // Step 4: Post to Circle
     const circleResult = await step.run('post-to-circle', async (): Promise<{ postUrl: string }> => {
+      const circleAppBaseUrl = process.env.APP_BASE_URL;
+      if (!circleAppBaseUrl) {
+        throw new Error('APP_BASE_URL not configured');
+      }
       return await postToCircle({
         job: parsedJob,
         jobSubmissionId: submissionId,
         spaceId: process.env.CIRCLE_SPACE_ID!,
         apiToken: process.env.CIRCLE_API_TOKEN!,
-        appBaseUrl: process.env.APP_BASE_URL || 'https://recoveryjobs.com',
+        appBaseUrl: circleAppBaseUrl,
       });
     });
 
