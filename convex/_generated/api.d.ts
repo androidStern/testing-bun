@@ -22,6 +22,8 @@ import type * as inngest_processJob from "../inngest/processJob.js";
 import type * as inngestNode from "../inngestNode.js";
 import type * as jobSubmissions from "../jobSubmissions.js";
 import type * as lib_circle from "../lib/circle.js";
+import type * as lib_crypto from "../lib/crypto.js";
+import type * as lib_env from "../lib/env.js";
 import type * as lib_jobSchema from "../lib/jobSchema.js";
 import type * as lib_slack from "../lib/slack.js";
 import type * as lib_token from "../lib/token.js";
@@ -57,6 +59,8 @@ declare const fullApi: ApiFromModules<{
   inngestNode: typeof inngestNode;
   jobSubmissions: typeof jobSubmissions;
   "lib/circle": typeof lib_circle;
+  "lib/crypto": typeof lib_crypto;
+  "lib/env": typeof lib_env;
   "lib/jobSchema": typeof lib_jobSchema;
   "lib/slack": typeof lib_slack;
   "lib/token": typeof lib_token;

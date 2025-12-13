@@ -2,8 +2,13 @@ import { httpRouter } from 'convex/server';
 
 import { api, internal } from './_generated/api';
 import { httpAction } from './_generated/server';
+import { env } from './lib/env';
+import { verifyTwilioSignature } from './lib/twilio';
 
 import type { Id } from './_generated/dataModel';
+
+// Validate all env vars on first HTTP request
+void env.TOKEN_SIGNING_SECRET;
 
 const http = httpRouter();
 
@@ -62,10 +67,32 @@ http.route({
       return new Response('Invalid content type', { status: 400 });
     }
 
-    const formData = await request.formData();
-    const phone = formData.get('From') as string | null;
-    const body = formData.get('Body') as string | null;
-    const twilioMessageSid = formData.get('MessageSid') as string | null;
+    // Read body as text to verify signature, then parse as form data
+    const bodyText = await request.text();
+    const formParams = new URLSearchParams(bodyText);
+
+    // Convert to plain object for signature verification
+    const params: Record<string, string> = {};
+    formParams.forEach((value, key) => {
+      params[key] = value;
+    });
+
+    // Verify Twilio signature
+    const signature = request.headers.get('X-Twilio-Signature') || '';
+    const isValid = await verifyTwilioSignature({
+      webhookUrl: env.TWILIO_WEBHOOK_URL,
+      params,
+      signature,
+    });
+
+    if (!isValid) {
+      console.error('Invalid Twilio signature');
+      return new Response('Invalid signature', { status: 403 });
+    }
+
+    const phone = params.From || null;
+    const body = params.Body || null;
+    const twilioMessageSid = params.MessageSid || null;
 
     if (!phone || !body || !twilioMessageSid) {
       console.error('Missing required Twilio fields:', { phone, body, twilioMessageSid });

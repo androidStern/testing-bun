@@ -8,8 +8,8 @@ import {
 } from '../src/lib/schemas/profile';
 
 import { internal } from './_generated/api';
-import type { Id } from './_generated/dataModel';
 import { internalQuery, mutation, query } from './_generated/server';
+import type { Id } from './_generated/dataModel';
 
 const zodMutation = zCustomMutation(mutation, NoOp);
 
@@ -46,6 +46,12 @@ export const getByEmail = query({
 export const create = zodMutation({
   args: profileMutationSchema,
   handler: async (ctx, args) => {
+    // Verify the authenticated user matches the workosUserId being created/updated
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity || identity.subject !== args.workosUserId) {
+      throw new Error('Unauthorized: workosUserId does not match authenticated user');
+    }
+
     // Schema transforms handle empty string -> undefined conversion
     const { referredByCode, ...profileData } = args;
 
@@ -120,6 +126,12 @@ export const update = zodMutation({
       workosUserId: profileMutationSchema.shape.workosUserId,
     }),
   handler: async (ctx, args) => {
+    // Verify the authenticated user matches the workosUserId being updated
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity || identity.subject !== args.workosUserId) {
+      throw new Error('Unauthorized: workosUserId does not match authenticated user');
+    }
+
     // Schema transforms handle empty string -> undefined conversion
     const { workosUserId, ...updates } = args;
 

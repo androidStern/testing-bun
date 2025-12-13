@@ -43,8 +43,13 @@ export const Route = createFileRoute('/oauth/complete')({
         // Generate authorization code
         const code = generateAuthorizationCode();
         const convex = getConvexClient();
+        const internalSecret = process.env.CONVEX_INTERNAL_SECRET;
+        if (!internalSecret) {
+          return new Response('Server configuration error', { status: 500 });
+        }
 
         await convex.mutation(api.oauth.createAuthorizationCode, {
+          internalSecret,
           code,
           clientId: oauthSession.clientId,
           workosUserId: auth.user.id,

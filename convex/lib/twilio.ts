@@ -1,47 +1,62 @@
-// Twilio SMS sending via REST API
-// Requires env vars: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER
+import { timingSafeEqual } from './crypto';
+import { env } from './env';
 
-interface SendSmsOptions {
-  to: string;
-  body: string;
-  accountSid?: string;
-  authToken?: string;
-  fromNumber?: string;
+// Twilio SMS sending and webhook verification via REST API
+
+/**
+ * Verify Twilio webhook signature (X-Twilio-Signature header)
+ * https://www.twilio.com/docs/usage/security#validating-requests
+ */
+export async function verifyTwilioSignature({
+  webhookUrl,
+  params,
+  signature,
+}: {
+  webhookUrl: string;
+  params: Record<string, string>;
+  signature: string;
+}): Promise<boolean> {
+  if (!signature) {
+    return false;
+  }
+
+  // Build the data string: URL + sorted params (key + value)
+  const sortedKeys = Object.keys(params).sort();
+  let dataString = webhookUrl;
+  for (const key of sortedKeys) {
+    dataString += key + params[key];
+  }
+
+  // Compute HMAC-SHA1
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(env.TWILIO_AUTH_TOKEN),
+    { name: 'HMAC', hash: 'SHA-1' },
+    false,
+    ['sign']
+  );
+
+  const signatureBytes = await crypto.subtle.sign('HMAC', key, encoder.encode(dataString));
+  const computedSignature = btoa(String.fromCharCode(...new Uint8Array(signatureBytes)));
+
+  return timingSafeEqual(computedSignature, signature);
 }
 
 interface SendSmsResult {
   success: boolean;
   messageSid?: string;
-  error?: string;
 }
 
 /**
  * Send an SMS via Twilio REST API
- * Uses env vars if credentials not provided
- * Throws if credentials are missing - do not silently fail
  */
-export async function sendSms({
-  to,
-  body,
-  accountSid = process.env.TWILIO_ACCOUNT_SID,
-  authToken = process.env.TWILIO_AUTH_TOKEN,
-  fromNumber = process.env.TWILIO_PHONE_NUMBER,
-}: SendSmsOptions): Promise<SendSmsResult> {
-  if (!accountSid) {
-    throw new Error('TWILIO_ACCOUNT_SID environment variable is not configured');
-  }
-  if (!authToken) {
-    throw new Error('TWILIO_AUTH_TOKEN environment variable is not configured');
-  }
-  if (!fromNumber) {
-    throw new Error('TWILIO_PHONE_NUMBER environment variable is not configured');
-  }
-
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+export async function sendSms(to: string, body: string): Promise<SendSmsResult> {
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_ACCOUNT_SID}/Messages.json`;
 
   const formData = new URLSearchParams({
     To: to,
-    From: fromNumber,
+    From: env.TWILIO_PHONE_NUMBER,
     Body: body,
   });
 
@@ -49,7 +64,7 @@ export async function sendSms({
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+      Authorization: `Basic ${Buffer.from(`${env.TWILIO_ACCOUNT_SID}:${env.TWILIO_AUTH_TOKEN}`).toString('base64')}`,
     },
     body: formData.toString(),
   });

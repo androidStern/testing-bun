@@ -73,8 +73,13 @@ export const Route = createFileRoute('/oauth/callback')({
 
         // User has profile - generate authorization code and redirect to Circle
         const code = generateAuthorizationCode();
+        const internalSecret = process.env.CONVEX_INTERNAL_SECRET;
+        if (!internalSecret) {
+          return new Response('Server configuration error', { status: 500 });
+        }
 
         await convex.mutation(api.oauth.createAuthorizationCode, {
+          internalSecret,
           code,
           clientId: oauthSession.clientId,
           workosUserId: auth.user.id,

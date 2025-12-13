@@ -2,17 +2,9 @@ import { v } from 'convex/values';
 import { zodOutputToConvex } from 'convex-helpers/server/zod4';
 
 import { internal } from './_generated/api';
-import { internalMutation, internalQuery, mutation, query } from './_generated/server';
+import { internalMutation, internalQuery, query } from './_generated/server';
 import { adminMutation, adminQuery } from './functions';
 import { ParsedJobSchema } from './lib/jobSchema';
-
-// Auth helper - verifies internal API secret
-function verifyInternalAuth(secret: string | undefined) {
-  const expected = process.env.INTERNAL_API_SECRET;
-  if (!expected || secret !== expected) {
-    throw new Error('Unauthorized');
-  }
-}
 
 export const get = internalQuery({
   args: { id: v.id('jobSubmissions') },
@@ -109,15 +101,12 @@ export const deny = internalMutation({
   },
 });
 
-// Public mutations for in-app approval (called from admin UI)
+// Admin mutations for in-app approval (called from admin UI)
 // These schedule the Inngest event to resume the waiting workflow
 
-export const approveFromUI = mutation({
+export const approveFromUI = adminMutation({
   args: { submissionId: v.id('jobSubmissions') },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error('Not authenticated');
-
     const submission = await ctx.db.get(args.submissionId);
     if (!submission) throw new Error('Submission not found');
     if (submission.status !== 'pending_approval') {
@@ -128,20 +117,17 @@ export const approveFromUI = mutation({
     await ctx.scheduler.runAfter(0, internal.inngestNode.sendApprovalEvent, {
       approvalId: args.submissionId,
       decision: 'approved',
-      approvedBy: identity.name ?? identity.email ?? 'Admin',
+      approvedBy: ctx.user.email,
     });
   },
 });
 
-export const denyFromUI = mutation({
+export const denyFromUI = adminMutation({
   args: {
     submissionId: v.id('jobSubmissions'),
     reason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error('Not authenticated');
-
     const submission = await ctx.db.get(args.submissionId);
     if (!submission) throw new Error('Submission not found');
     if (submission.status !== 'pending_approval') {

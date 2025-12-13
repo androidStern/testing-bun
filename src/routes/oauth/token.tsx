@@ -31,6 +31,12 @@ export const Route = createFileRoute('/oauth/token')({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // Get internal secret within server handler - NEVER at module scope
+        const internalSecret = process.env.CONVEX_INTERNAL_SECRET;
+        if (!internalSecret) {
+          return errorResponse('server_error', 'Server configuration error');
+        }
+
         const contentType = request.headers.get('content-type');
 
         let body: URLSearchParams;
@@ -46,9 +52,9 @@ export const Route = createFileRoute('/oauth/token')({
         const grantType = body.get('grant_type');
 
         if (grantType === 'authorization_code') {
-          return handleAuthorizationCodeGrant(request, body);
+          return handleAuthorizationCodeGrant(request, body, internalSecret);
         } else if (grantType === 'refresh_token') {
-          return handleRefreshTokenGrant(body);
+          return handleRefreshTokenGrant(body, internalSecret);
         } else {
           return errorResponse(
             'unsupported_grant_type',
@@ -63,6 +69,7 @@ export const Route = createFileRoute('/oauth/token')({
 async function handleAuthorizationCodeGrant(
   request: Request,
   body: URLSearchParams,
+  internalSecret: string,
 ): Promise<Response> {
   const code = body.get('code');
   const redirectUri = body.get('redirect_uri');
@@ -153,7 +160,7 @@ async function handleAuthorizationCodeGrant(
   }
 
   // Mark code as used
-  await convex.mutation(api.oauth.markCodeAsUsed, { code });
+  await convex.mutation(api.oauth.markCodeAsUsed, { internalSecret, code });
 
   // Generate tokens
   const accessToken = generateAccessToken();
@@ -164,6 +171,7 @@ async function handleAuthorizationCodeGrant(
 
   // Store tokens
   await convex.mutation(api.oauth.createAccessToken, {
+    internalSecret,
     token: accessToken,
     workosUserId: authCode.workosUserId,
     clientId: authCode.clientId,
@@ -172,6 +180,7 @@ async function handleAuthorizationCodeGrant(
   });
 
   await convex.mutation(api.oauth.createRefreshToken, {
+    internalSecret,
     token: refreshToken,
     workosUserId: authCode.workosUserId,
     clientId: authCode.clientId,
@@ -200,6 +209,7 @@ async function handleAuthorizationCodeGrant(
 
 async function handleRefreshTokenGrant(
   body: URLSearchParams,
+  internalSecret: string,
 ): Promise<Response> {
   const refreshToken = body.get('refresh_token');
   const clientId = body.get('client_id');
@@ -227,6 +237,7 @@ async function handleRefreshTokenGrant(
   const accessTokenExpiry = Date.now() + 3600000;
 
   await convex.mutation(api.oauth.createAccessToken, {
+    internalSecret,
     token: accessToken,
     workosUserId: storedToken.workosUserId,
     clientId: storedToken.clientId,

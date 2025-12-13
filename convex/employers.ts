@@ -152,7 +152,7 @@ export const linkWorkosUser = internalMutation({
 export const getSenderForSetup = query({
   args: { token: v.string() },
   handler: async (ctx, args) => {
-    const tokenData = parseToken(args.token);
+    const tokenData = await parseToken(args.token);
     if (!tokenData) return null;
 
     // Check expiry
@@ -196,7 +196,7 @@ export const createFromSignup = mutation({
     website: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const tokenData = parseToken(args.token);
+    const tokenData = await parseToken(args.token);
     if (!tokenData) throw new Error('Invalid token');
 
     // Check expiry

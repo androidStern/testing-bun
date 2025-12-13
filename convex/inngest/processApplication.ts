@@ -104,7 +104,7 @@ export const processApplication = inngest.createFunction(
     let notifiedPoster = false;
     if (details.senderEmail) {
       await step.run('send-initial-email', async () => {
-        const token = createToken(jobSubmissionId, details.senderId);
+        const token = await createToken(jobSubmissionId, details.senderId);
         const appBaseUrl = process.env.APP_BASE_URL;
         if (!appBaseUrl) {
           throw new Error('APP_BASE_URL not configured');
@@ -243,7 +243,7 @@ Recovery Jobs`;
 
       // Step 4: Send approval notification with candidate info
       await step.run('send-approval-notification', async () => {
-        const token = createToken(jobSubmissionId, details.senderId);
+        const token = await createToken(jobSubmissionId, details.senderId);
         const appBaseUrl = process.env.APP_BASE_URL;
         if (!appBaseUrl) {
           throw new Error('APP_BASE_URL not configured');

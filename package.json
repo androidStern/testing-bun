@@ -13,14 +13,16 @@
     "url": "https://github.com/workos/template-convex-tanstack-start-authkit/issues"
   },
   "scripts": {
-    "dev": "npm-run-all --parallel dev:frontend dev:backend",
+    "dev": "npm-run-all --parallel dev:frontend dev:backend dev:inngest",
     "dev:frontend": "npx @react-grab/claude-code@latest && bun --bun vite dev",
     "dev:backend": "convex dev",
+    "dev:inngest": "inngest dev -u https://efficient-dove-571.convex.site/api/inngest",
     "predev": "convex dev --until-success && convex dashboard",
     "build": "bun --bun vite build",
     "start": "bun --bun vite start",
     "format": "prettier --write .",
-    "lint": "tsc && eslint .  --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "tsc && eslint .  --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "tunnel": "cloudflared tunnel run inngest-dev"
   },
   "dependencies": {
     "@ai-sdk/groq": "^2.0.32",
@@ -76,14 +78,17 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.0.4",
     "dotenv": "^17.2.3",
+    "inngest-cli": "^1.15.0",
     "npm-run-all2": "^8.0.4",
     "prettier": "^3.5.3",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^7.1.8",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "wait-on": "^9.0.3"
   },
   "trustedDependencies": [
+    "inngest-cli",
     "unrs-resolver"
   ]
 }

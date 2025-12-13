@@ -226,7 +226,7 @@ export const markPassed = internalMutation({
 export const getJobWithApplications = query({
   args: { token: v.string() },
   handler: async (ctx, args) => {
-    const tokenData = parseToken(args.token);
+    const tokenData = await parseToken(args.token);
     if (!tokenData) return { error: 'invalid_token' as const };
 
     // Check expiry
@@ -328,7 +328,7 @@ export const connectApplication = mutation({
     applicationId: v.id('applications'),
   },
   handler: async (ctx, args) => {
-    const tokenData = parseToken(args.token);
+    const tokenData = await parseToken(args.token);
     if (!tokenData) throw new Error('Invalid token');
     if (Date.now() > tokenData.exp) throw new Error('Token expired');
 
@@ -375,7 +375,7 @@ export const passApplication = mutation({
     applicationId: v.id('applications'),
   },
   handler: async (ctx, args) => {
-    const tokenData = parseToken(args.token);
+    const tokenData = await parseToken(args.token);
     if (!tokenData) throw new Error('Invalid token');
     if (Date.now() > tokenData.exp) throw new Error('Token expired');
 

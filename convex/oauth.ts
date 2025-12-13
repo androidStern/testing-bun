@@ -1,9 +1,20 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
+import { timingSafeEqual } from './lib/crypto';
+import { env } from './lib/env';
+
+// Verify internal secret for OAuth operations
+// Uses constant-time comparison to prevent timing attacks
+function verifyInternalSecret(secret: string | undefined) {
+  if (!secret || !timingSafeEqual(secret, env.CONVEX_INTERNAL_SECRET)) {
+    throw new Error('Invalid internal secret');
+  }
+}
 
 // Authorization Codes
 export const createAuthorizationCode = mutation({
   args: {
+    internalSecret: v.string(),
     code: v.string(),
     clientId: v.string(),
     workosUserId: v.string(),
@@ -14,8 +25,10 @@ export const createAuthorizationCode = mutation({
     expiresAt: v.number(),
   },
   handler: async (ctx, args) => {
+    verifyInternalSecret(args.internalSecret);
+    const { internalSecret: _, ...data } = args;
     return await ctx.db.insert('oauthAuthorizationCodes', {
-      ...args,
+      ...data,
       used: false,
       createdAt: Date.now(),
     });
@@ -33,8 +46,12 @@ export const getAuthorizationCode = query({
 });
 
 export const markCodeAsUsed = mutation({
-  args: { code: v.string() },
+  args: {
+    internalSecret: v.string(),
+    code: v.string(),
+  },
   handler: async (ctx, args) => {
+    verifyInternalSecret(args.internalSecret);
     const authCode = await ctx.db
       .query('oauthAuthorizationCodes')
       .withIndex('by_code', (q) => q.eq('code', args.code))
@@ -49,6 +66,7 @@ export const markCodeAsUsed = mutation({
 // Access Tokens
 export const createAccessToken = mutation({
   args: {
+    internalSecret: v.string(),
     token: v.string(),
     workosUserId: v.string(),
     clientId: v.string(),
@@ -56,8 +74,10 @@ export const createAccessToken = mutation({
     expiresAt: v.number(),
   },
   handler: async (ctx, args) => {
+    verifyInternalSecret(args.internalSecret);
+    const { internalSecret: _, ...data } = args;
     return await ctx.db.insert('oauthAccessTokens', {
-      ...args,
+      ...data,
       createdAt: Date.now(),
     });
   },
@@ -76,6 +96,7 @@ export const getAccessToken = query({
 // Refresh Tokens
 export const createRefreshToken = mutation({
   args: {
+    internalSecret: v.string(),
     token: v.string(),
     workosUserId: v.string(),
     clientId: v.string(),
@@ -83,8 +104,10 @@ export const createRefreshToken = mutation({
     expiresAt: v.number(),
   },
   handler: async (ctx, args) => {
+    verifyInternalSecret(args.internalSecret);
+    const { internalSecret: _, ...data } = args;
     return await ctx.db.insert('oauthRefreshTokens', {
-      ...args,
+      ...data,
       createdAt: Date.now(),
     });
   },
@@ -113,15 +136,18 @@ export const getClient = query({
 
 export const createClient = mutation({
   args: {
+    internalSecret: v.string(),
     clientId: v.string(),
     clientSecret: v.string(),
     name: v.string(),
     redirectUris: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    verifyInternalSecret(args.internalSecret);
+    const { internalSecret: _, ...data } = args;
     const existing = await ctx.db
       .query('oauthClients')
-      .withIndex('by_client_id', (q) => q.eq('clientId', args.clientId))
+      .withIndex('by_client_id', (q) => q.eq('clientId', data.clientId))
       .first();
 
     if (existing) {
@@ -129,7 +155,7 @@ export const createClient = mutation({
     }
 
     return await ctx.db.insert('oauthClients', {
-      ...args,
+      ...data,
       createdAt: Date.now(),
     });
   },
