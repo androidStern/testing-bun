@@ -122,34 +122,72 @@ export const processApplication = inngest.createFunction(
 
         if (isFirstApplicant) {
           subject = `Someone is interested in your ${details.jobTitle} position!`;
-          body = `Great news! A candidate has applied to your job posting.
+
+          if (details.employerStatus === 'approved') {
+            body = `Great news! A candidate has expressed interest in your job posting.
 
 Position: ${details.jobTitle}
 Company: ${details.companyName}
 
-${details.employerStatus === 'approved'
-  ? `View your applicants:\n${url}`
-  : `Complete your account to connect with candidates:\n${url}`
-}
+You can view their profile and connect with them now:
+${url}
 
 --
 Recovery Jobs`;
-        } else {
-          subject = `Another applicant for your ${details.jobTitle} position!`;
-          body = `You have a new applicant!
+          } else {
+            body = `Great news! A candidate has expressed interest in your job posting.
 
 Position: ${details.jobTitle}
-Total applicants: ${details.applicationCount}
+Company: ${details.companyName}
 
-${details.employerStatus === 'approved'
-  ? `View all applicants:\n${url}`
-  : details.employerStatus === 'pending_review'
-    ? `Your account is under review. Once approved, you can view applicants:\n${url}`
-    : `Complete your account to view applicants:\n${url}`
-}
+Here's what happens next:
+
+1. Complete your employer profile (takes 2 minutes)
+2. Our team will review your account within 24 hours
+3. Once approved, we'll email you a link to view and connect with candidates
+
+Get started now:
+${url}
 
 --
 Recovery Jobs`;
+          }
+        } else {
+          subject = `Another candidate is interested in your ${details.jobTitle} position!`;
+
+          if (details.employerStatus === 'approved') {
+            body = `You have another interested candidate!
+
+Position: ${details.jobTitle}
+Total interested: ${details.applicationCount}
+
+View all candidates:
+${url}
+
+--
+Recovery Jobs`;
+          } else if (details.employerStatus === 'pending_review') {
+            body = `You have another interested candidate!
+
+Position: ${details.jobTitle}
+Total interested: ${details.applicationCount}
+
+Your account is currently under review. Once approved, we'll send you a link to view and connect with all your candidates.
+
+--
+Recovery Jobs`;
+          } else {
+            body = `You have another interested candidate!
+
+Position: ${details.jobTitle}
+Total interested: ${details.applicationCount}
+
+Complete your employer profile to connect with them:
+${url}
+
+--
+Recovery Jobs`;
+          }
         }
 
         await convex.runAction(internal.inngestNode.sendEmail, {
@@ -215,14 +253,13 @@ Recovery Jobs`;
 
         await convex.runAction(internal.inngestNode.sendEmail, {
           to: details.senderEmail!,
-          subject: 'Your employer account is approved!',
-          body: `Great news!
+          subject: `You're approved! View your candidate for ${details.jobTitle}`,
+          body: `Great news — your Recovery Jobs employer account has been approved!
 
-Your Recovery Jobs employer account has been approved.
+${details.seekerName} is interested in your ${details.jobTitle} position and is waiting to hear from you.
 
-${details.seekerName} applied to your ${details.jobTitle} position.
-
-View candidate: ${url}
+View their profile and connect:
+${url}
 
 --
 Recovery Jobs`,

@@ -1,10 +1,54 @@
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { useMutation, useQuery } from 'convex/react';
 import { getAuth, getSignInUrl } from '@workos/authkit-tanstack-react-start';
 import { api } from '../../../convex/_generated/api';
 import type { Id } from '../../../convex/_generated/dataModel';
 import { ProfileForm } from '@/components/ProfileForm';
+
+const REDIRECT_DELAY_SECONDS = 5;
+
+function SuccessScreen({ job }: { job: { title: string; company: string } }) {
+  const [countdown, setCountdown] = useState(REDIRECT_DELAY_SECONDS);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          // Go back to where they came from
+          if (window.history.length > 1) {
+            window.history.back();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <div style={styles.successIcon}>&#10003;</div>
+        <h1 style={styles.successTitle}>You're all set!</h1>
+        <p style={styles.successText}>
+          The employer has been notified of your interest. If they'd like to
+          connect, they'll reach out to you directly.
+        </p>
+        <div style={styles.jobPreview}>
+          <h2 style={styles.jobTitle}>{job.title}</h2>
+          <p style={styles.jobCompany}>{job.company}</p>
+        </div>
+        <p style={styles.redirectNote}>
+          Returning in {countdown} second{countdown !== 1 ? 's' : ''}...
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export const Route = createFileRoute('/apply/$jobId')({
   loader: async ({ params, location }) => {
@@ -51,22 +95,7 @@ function ApplyPage() {
   // Successfully submitted (check this FIRST - local state takes precedence)
   // This prevents the race condition where hasApplied becomes true before submitted is set
   if (submitted && job) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.card}>
-          <div style={styles.successIcon}>&#10003;</div>
-          <h1 style={styles.successTitle}>Application Submitted!</h1>
-          <p style={styles.successText}>
-            Your application has been sent to the employer. They will reach out
-            if interested.
-          </p>
-          <div style={styles.jobPreview}>
-            <h2 style={styles.jobTitle}>{job.title}</h2>
-            <p style={styles.jobCompany}>{job.company}</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <SuccessScreen job={job} />;
   }
 
   // Loading state
@@ -119,9 +148,10 @@ function ApplyPage() {
       <div style={styles.container}>
         <div style={styles.card}>
           <div style={styles.successIcon}>&#10003;</div>
-          <h1 style={styles.successTitle}>Already Applied</h1>
+          <h1 style={styles.successTitle}>Already Connected</h1>
           <p style={styles.successText}>
-            You have already submitted an application for this position.
+            You've already expressed interest in this position. The employer has
+            been notified and will reach out if they'd like to connect.
           </p>
           <div style={styles.jobPreview}>
             <h2 style={styles.jobTitle}>{job.title}</h2>
@@ -136,7 +166,7 @@ function ApplyPage() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Apply for Position</h1>
+        <h1 style={styles.title}>Express Interest</h1>
 
         <div style={styles.jobPreview}>
           <h2 style={styles.jobTitle}>{job.title}</h2>
@@ -151,11 +181,11 @@ function ApplyPage() {
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <label style={styles.label}>
-            Include a message (optional)
+            Add a note (optional)
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Tell the employer why you're interested in this role..."
+              placeholder="Share why you're interested in this opportunity..."
               style={styles.textarea}
               rows={4}
               maxLength={1000}
@@ -165,11 +195,11 @@ function ApplyPage() {
           {error && <p style={styles.error}>{error}</p>}
 
           <p style={styles.note}>
-            Your profile and resume will be shared with the employer.
+            Your profile will be shared with the employer.
           </p>
 
           <button type="submit" style={styles.submitButton}>
-            Submit Application
+            I'm Interested
           </button>
         </form>
       </div>
@@ -334,5 +364,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '1rem',
     fontWeight: 500,
     cursor: 'pointer',
+  },
+  redirectNote: {
+    fontSize: '0.875rem',
+    color: '#9ca3af',
+    margin: '1.5rem 0 0 0',
+    textAlign: 'center',
   },
 };

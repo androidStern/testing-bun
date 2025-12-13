@@ -140,7 +140,7 @@ function buildJobPostHtml(
 
     <div style="display: flex; gap: 12px; margin-top: 20px;">
       <a href="${applyUrl}" style="flex: 1; background: #3b82f6; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; text-align: center; font-weight: 500; font-size: 14px;">
-        Apply Now
+        I'm Interested
       </a>
     </div>
   </div>

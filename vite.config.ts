@@ -23,6 +23,9 @@ export default defineConfig({
   optimizeDeps: {
     // Prebundle cookie so named exports (parse/serialize) are available in the browser
     include: ['cookie'],
+    // Exclude TanStack Start server packages - they use virtual modules that only exist at runtime
+    // See: https://github.com/TanStack/router/issues/5795
+    exclude: ['@tanstack/react-start-server', '@tanstack/start-server-core'],
   },
   plugins: [
     tsConfigPaths({
