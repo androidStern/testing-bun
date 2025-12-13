@@ -36,8 +36,9 @@ export const sendProfileWebhook = internalAction({
       .map((goal) => PLATFORM_GOALS_MAP[goal] || goal)
       .filter(Boolean);
 
-    // Build the payload in the format Inngest transform expects
+    // Build the payload in the format Inngest expects
     const payload = {
+      name: 'auth0/profile-form.submitted',
       data: {
         fields: {
           first_name: args.firstName || undefined,
