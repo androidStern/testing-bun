@@ -1,4 +1,5 @@
 import { useMutation } from 'convex/react';
+import { useState } from 'react';
 
 import { api } from '../../../convex/_generated/api';
 import type { Id } from '../../../convex/_generated/dataModel';
@@ -23,9 +24,21 @@ interface EmployerCardProps {
 }
 
 export function EmployerCard({ employer, showActions }: EmployerCardProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValues, setEditValues] = useState({
+    name: employer.name,
+    email: employer.email,
+    phone: employer.phone,
+    company: employer.company,
+    role: employer.role || '',
+    website: employer.website || '',
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
   const approveMutation = useMutation(api.employers.approve);
   const rejectMutation = useMutation(api.employers.reject);
   const deleteMutation = useMutation(api.employers.deleteEmployer);
+  const adminUpdateMutation = useMutation(api.employers.adminUpdate);
 
   const statusColors: Record<string, string> = {
     pending_review: 'bg-yellow-100 text-yellow-800',
@@ -50,6 +63,139 @@ export function EmployerCard({ employer, showActions }: EmployerCardProps) {
       await deleteMutation({ employerId: employer._id });
     }
   };
+
+  const handleEdit = () => {
+    setEditValues({
+      name: employer.name,
+      email: employer.email,
+      phone: employer.phone,
+      company: employer.company,
+      role: employer.role || '',
+      website: employer.website || '',
+    });
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await adminUpdateMutation({
+        id: employer._id,
+        patch: {
+          name: editValues.name,
+          email: editValues.email,
+          phone: editValues.phone,
+          company: editValues.company,
+          role: editValues.role || undefined,
+          website: editValues.website || undefined,
+        },
+      });
+      setIsEditing(false);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="mb-3 flex items-center justify-between">
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-medium ${
+              statusColors[employer.status] || 'bg-gray-100 text-gray-800'
+            }`}
+          >
+            {employer.status.replace('_', ' ')}
+          </span>
+          <span className="text-xs text-gray-500">Editing</span>
+        </div>
+
+        <div className="mb-4 grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-medium text-gray-500">Name</label>
+            <input
+              type="text"
+              value={editValues.name}
+              onChange={(e) => setEditValues({ ...editValues, name: e.target.value })}
+              className="mt-1 w-full rounded border px-2 py-1.5 text-sm"
+              placeholder="Name"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500">Email</label>
+            <input
+              type="email"
+              value={editValues.email}
+              onChange={(e) => setEditValues({ ...editValues, email: e.target.value })}
+              className="mt-1 w-full rounded border px-2 py-1.5 text-sm"
+              placeholder="Email"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500">Phone</label>
+            <input
+              type="tel"
+              value={editValues.phone}
+              onChange={(e) => setEditValues({ ...editValues, phone: e.target.value })}
+              className="mt-1 w-full rounded border px-2 py-1.5 text-sm"
+              placeholder="Phone"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500">Company</label>
+            <input
+              type="text"
+              value={editValues.company}
+              onChange={(e) => setEditValues({ ...editValues, company: e.target.value })}
+              className="mt-1 w-full rounded border px-2 py-1.5 text-sm"
+              placeholder="Company"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500">Role</label>
+            <input
+              type="text"
+              value={editValues.role}
+              onChange={(e) => setEditValues({ ...editValues, role: e.target.value })}
+              className="mt-1 w-full rounded border px-2 py-1.5 text-sm"
+              placeholder="Role"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500">Website</label>
+            <input
+              type="url"
+              value={editValues.website}
+              onChange={(e) => setEditValues({ ...editValues, website: e.target.value })}
+              className="mt-1 w-full rounded border px-2 py-1.5 text-sm"
+              placeholder="https://..."
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={handleCancel}
+            disabled={isSaving}
+            className="rounded border px-3 py-1.5 text-sm font-medium hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            {isSaving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-lg border bg-white p-4 shadow-sm">
@@ -124,6 +270,12 @@ export function EmployerCard({ employer, showActions }: EmployerCardProps) {
             </button>
           </>
         )}
+        <button
+          onClick={handleEdit}
+          className="rounded border px-3 py-1.5 text-sm font-medium hover:bg-gray-50"
+        >
+          Edit
+        </button>
         <button
           onClick={handleDelete}
           className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"

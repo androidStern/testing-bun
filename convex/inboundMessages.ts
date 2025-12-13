@@ -1,7 +1,14 @@
+import { crud } from 'convex-helpers/server/crud';
 import { v } from 'convex/values';
 
 import { mutation } from './_generated/server';
 import { adminMutation, adminQuery } from './functions';
+import schema from './schema';
+
+// Admin CRUD operations (coexists with custom mutations)
+const messagesCrud = crud(schema, 'inboundMessages', adminQuery, adminMutation);
+export const { read: adminRead, update: adminUpdate } = messagesCrud;
+// Note: We keep our custom deleteMessage
 
 // Admin-only: get single message with sender info
 export const get = adminQuery({

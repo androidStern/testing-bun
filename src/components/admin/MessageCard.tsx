@@ -1,5 +1,6 @@
 import { useConvexMutation } from '@convex-dev/react-query';
 import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
 
 import { api } from '../../../convex/_generated/api';
 import type { Id } from '../../../convex/_generated/dataModel';
@@ -26,12 +27,19 @@ interface MessageCardProps {
 }
 
 export function MessageCard({ message, showActions = false }: MessageCardProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editBody, setEditBody] = useState(message.body);
+
   const updateStatus = useMutation({
     mutationFn: useConvexMutation(api.inboundMessages.updateStatus),
   });
 
   const deleteMessage = useMutation({
     mutationFn: useConvexMutation(api.inboundMessages.deleteMessage),
+  });
+
+  const adminUpdate = useMutation({
+    mutationFn: useConvexMutation(api.inboundMessages.adminUpdate),
   });
 
   const handleApprove = () => {
@@ -52,7 +60,59 @@ export function MessageCard({ message, showActions = false }: MessageCardProps) 
     }
   };
 
-  const isPending = updateStatus.isPending || deleteMessage.isPending;
+  const handleEdit = () => {
+    setEditBody(message.body);
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
+  const handleSave = () => {
+    adminUpdate.mutate(
+      {
+        id: message._id,
+        patch: { body: editBody },
+      },
+      {
+        onSuccess: () => setIsEditing(false),
+      }
+    );
+  };
+
+  const isPending = updateStatus.isPending || deleteMessage.isPending || adminUpdate.isPending;
+
+  if (isEditing) {
+    return (
+      <Card>
+        <CardContent className="pt-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-sm">{message.phone}</span>
+              <StatusBadge status={message.status} />
+              <span className="text-xs text-gray-500">Editing</span>
+            </div>
+            <textarea
+              value={editBody}
+              onChange={(e) => setEditBody(e.target.value)}
+              className="w-full rounded border px-3 py-2 text-sm"
+              rows={4}
+              placeholder="Message body"
+            />
+            <div className="flex justify-end gap-2">
+              <Button size="sm" variant="outline" onClick={handleCancel} disabled={isPending}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={isPending}>
+                {adminUpdate.isPending ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -76,7 +136,7 @@ export function MessageCard({ message, showActions = false }: MessageCardProps) 
             </div>
           </div>
 
-          <div className="ml-4 flex gap-2">
+          <div className="ml-4 flex flex-wrap gap-2">
             {showActions && message.status === 'pending_review' && (
               <>
                 <Button
@@ -110,6 +170,14 @@ export function MessageCard({ message, showActions = false }: MessageCardProps) 
               </Button>
             )}
 
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleEdit}
+              disabled={isPending}
+            >
+              Edit
+            </Button>
             <Button
               size="sm"
               variant="outline"

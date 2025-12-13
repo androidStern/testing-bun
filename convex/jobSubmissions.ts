@@ -3,6 +3,7 @@ import { zodOutputToConvex } from 'convex-helpers/server/zod4';
 
 import { internal } from './_generated/api';
 import { internalMutation, internalQuery, mutation, query } from './_generated/server';
+import { adminMutation, adminQuery } from './functions';
 import { ParsedJobSchema } from './lib/jobSchema';
 
 // Auth helper - verifies internal API secret
@@ -225,5 +226,103 @@ export const getOpenBySender = internalQuery({
       .take(1);
 
     return jobs[0] || null;
+  },
+});
+
+// Internal mutation to store Slack message reference after posting
+export const updateSlackRef = internalMutation({
+  args: {
+    id: v.id('jobSubmissions'),
+    slackChannel: v.string(),
+    slackMessageTs: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      slackChannel: args.slackChannel,
+      slackMessageTs: args.slackMessageTs,
+    });
+  },
+});
+
+// ============ Admin Operations ============
+
+// Admin query - list all submissions with sender info
+export const list = adminQuery({
+  args: {
+    status: v.optional(
+      v.union(
+        v.literal('pending_parse'),
+        v.literal('pending_approval'),
+        v.literal('approved'),
+        v.literal('denied'),
+        v.literal('closed')
+      )
+    ),
+  },
+  handler: async (ctx, args) => {
+    const submissions = args.status
+      ? await ctx.db
+          .query('jobSubmissions')
+          .withIndex('by_status', (q) => q.eq('status', args.status!))
+          .collect()
+      : await ctx.db.query('jobSubmissions').collect();
+
+    // Sort by createdAt desc
+    submissions.sort((a, b) => b.createdAt - a.createdAt);
+
+    // Join sender info
+    const submissionsWithSenders = await Promise.all(
+      submissions.map(async (sub) => {
+        const sender = await ctx.db.get(sub.senderId);
+        return {
+          ...sub,
+          sender: sender
+            ? {
+                _id: sender._id,
+                phone: sender.phone,
+                email: sender.email,
+                name: sender.name,
+                company: sender.company,
+                status: sender.status,
+              }
+            : null,
+        };
+      })
+    );
+
+    return submissionsWithSenders;
+  },
+});
+
+// Admin mutation - update parsedJob fields (only for pending_approval jobs)
+export const adminUpdateParsedJob = adminMutation({
+  args: {
+    id: v.id('jobSubmissions'),
+    parsedJob: zodOutputToConvex(ParsedJobSchema),
+  },
+  handler: async (ctx, args) => {
+    const submission = await ctx.db.get(args.id);
+    if (!submission) throw new Error('Submission not found');
+
+    // Only allow editing pending_approval jobs
+    if (submission.status !== 'pending_approval') {
+      throw new Error(
+        `Cannot edit job: status is ${submission.status}. Only pending_approval jobs can be edited.`
+      );
+    }
+
+    await ctx.db.patch(args.id, {
+      parsedJob: args.parsedJob,
+    });
+
+    // Schedule action to update Slack message if we have a reference
+    if (submission.slackChannel && submission.slackMessageTs) {
+      await ctx.scheduler.runAfter(0, internal.inngestNode.updateSlackJobMessage, {
+        submissionId: args.id,
+        slackChannel: submission.slackChannel,
+        slackMessageTs: submission.slackMessageTs,
+        parsedJob: args.parsedJob,
+      });
+    }
   },
 });

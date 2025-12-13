@@ -1,11 +1,18 @@
+import { crud } from 'convex-helpers/server/crud';
 import { v } from 'convex/values';
 
 import { internal } from './_generated/api';
 import { internalMutation, internalQuery, mutation, query } from './_generated/server';
 import { adminMutation, adminQuery } from './functions';
 import { parseToken } from './lib/token';
+import schema from './schema';
 
 import type { Id } from './_generated/dataModel';
+
+// Admin CRUD operations (coexists with custom mutations)
+const employersCrud = crud(schema, 'employers', adminQuery, adminMutation);
+export const { read: adminRead, update: adminUpdate } = employersCrud;
+// Note: We keep our custom deleteEmployer
 
 // Internal query for workflow to fetch employer by ID
 export const get = internalQuery({

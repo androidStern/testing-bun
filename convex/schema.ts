@@ -181,6 +181,10 @@ export default defineSchema({
     closedAt: v.optional(v.number()),
     closedReason: v.optional(v.string()), // "employer_request" | "auto_expired"
 
+    // Slack message reference (for updating message after edit)
+    slackChannel: v.optional(v.string()),
+    slackMessageTs: v.optional(v.string()),
+
     // External links (set after approval)
     circlePostUrl: v.optional(v.string()),
   })

@@ -1,7 +1,14 @@
+import { crud } from 'convex-helpers/server/crud';
 import { v } from 'convex/values';
 
 import { internalQuery, mutation, query } from './_generated/server';
 import { adminMutation, adminQuery } from './functions';
+import schema from './schema';
+
+// Admin CRUD operations (coexists with custom mutations)
+const sendersCrud = crud(schema, 'senders', adminQuery, adminMutation);
+export const { read: adminRead, update: adminUpdate } = sendersCrud;
+// Note: We keep our custom deleteSender which has cascade logic
 
 // Internal query for workflow to fetch sender by ID
 export const get = internalQuery({

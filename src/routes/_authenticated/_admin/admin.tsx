@@ -4,6 +4,7 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { api } from '../../../../convex/_generated/api';
 import { EmployerCard } from '../../../components/admin/EmployerCard';
+import { JobSubmissionCard } from '../../../components/admin/JobSubmissionCard';
 import { MessageCard } from '../../../components/admin/MessageCard';
 import { SenderCard } from '../../../components/admin/SenderCard';
 import {
@@ -24,8 +25,10 @@ function AdminDashboard() {
     <div className="mx-auto max-w-6xl p-6">
       <h1 className="mb-6 text-2xl font-bold">SMS Admin Dashboard</h1>
 
-      <Tabs defaultValue="pending-senders">
+      <Tabs defaultValue="pending-jobs">
         <TabsList className="mb-6 flex-wrap">
+          <TabsTrigger value="pending-jobs">Pending Jobs</TabsTrigger>
+          <TabsTrigger value="all-jobs">All Jobs</TabsTrigger>
           <TabsTrigger value="pending-senders">Pending Senders</TabsTrigger>
           <TabsTrigger value="all-senders">All Senders</TabsTrigger>
           <TabsTrigger value="pending-messages">Pending Messages</TabsTrigger>
@@ -33,6 +36,14 @@ function AdminDashboard() {
           <TabsTrigger value="pending-employers">Pending Employers</TabsTrigger>
           <TabsTrigger value="all-employers">All Employers</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="pending-jobs">
+          <PendingJobsTab />
+        </TabsContent>
+
+        <TabsContent value="all-jobs">
+          <AllJobsTab />
+        </TabsContent>
 
         <TabsContent value="pending-senders">
           <PendingSendersTab />
@@ -58,6 +69,46 @@ function AdminDashboard() {
           <AllEmployersTab />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function PendingJobsTab() {
+  const { data: jobs, isLoading, error } = useQuery(
+    convexQuery(api.jobSubmissions.list, { status: 'pending_approval' }),
+  );
+
+  if (isLoading) return <div className="text-gray-500">Loading...</div>;
+  if (error) return <div className="text-red-500">Error loading jobs</div>;
+  if (!jobs?.length) return <div className="text-gray-500">No pending jobs</div>;
+
+  return (
+    <div className="space-y-4">
+      {jobs.map((job) => (
+        <JobSubmissionCard key={job._id} job={job} showActions />
+      ))}
+    </div>
+  );
+}
+
+function AllJobsTab() {
+  const { data: jobs, isLoading, error } = useQuery(
+    convexQuery(api.jobSubmissions.list, {}),
+  );
+
+  if (isLoading) return <div className="text-gray-500">Loading...</div>;
+  if (error) return <div className="text-red-500">Error loading jobs</div>;
+  if (!jobs?.length) return <div className="text-gray-500">No jobs yet</div>;
+
+  return (
+    <div className="space-y-4">
+      {jobs.map((job) => (
+        <JobSubmissionCard
+          key={job._id}
+          job={job}
+          showActions={job.status === 'pending_approval'}
+        />
+      ))}
     </div>
   );
 }

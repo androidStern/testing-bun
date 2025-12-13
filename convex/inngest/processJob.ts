@@ -4,7 +4,7 @@ import { generateObject } from 'ai';
 import { internal } from '../_generated/api';
 import { postToCircle } from '../lib/circle';
 import { AIExtractedJobSchema } from '../lib/jobSchema';
-import { postSlackApproval, updateSlackApproval, verifySlackSignature } from '../lib/slack';
+import { postSlackApproval, verifySlackSignature } from '../lib/slack';
 import { inngest } from './client';
 
 import type { ActionCtx } from '../_generated/server';
@@ -101,14 +101,23 @@ IMPORTANT RULES:
       return mergedJob;
     });
 
-    // Step 2: Post to Slack for approval
+    // Step 2: Post to Slack for approval and store message reference
     const blocks = await step.run('post-slack-message', async (): Promise<Array<SlackBlock>> => {
+      const channel = process.env.SLACK_APPROVAL_CHANNEL!;
       const result = await postSlackApproval({
         token: process.env.SLACK_BOT_TOKEN!,
-        channel: process.env.SLACK_APPROVAL_CHANNEL!,
+        channel,
         submissionId,
         job: parsedJob,
       });
+
+      // Store Slack message reference for later updates (e.g., when job is edited)
+      await convex.runMutation(internal.jobSubmissions.updateSlackRef, {
+        id: submissionId,
+        slackChannel: channel,
+        slackMessageTs: result.ts,
+      });
+
       return result.blocks;
     });
 
@@ -135,7 +144,7 @@ IMPORTANT RULES:
       return { status: 'denied', reason: 'timeout' };
     }
 
-    // If Slack approval, verify signature and update message
+    // Verify Slack signature if approval came from Slack (security check)
     if (approval.data.slack) {
       const valid = await verifySlackSignature({
         body: approval.data._raw!,
@@ -143,18 +152,53 @@ IMPORTANT RULES:
         requestTimestamp: Number(approval.data._ts),
         signingSecret: process.env.SLACK_SIGNING_SECRET!,
       });
-
       if (!valid) throw new Error('Invalid Slack signature');
-
-      await step.run('update-slack-message', async (): Promise<void> => {
-        await updateSlackApproval({
-          responseUrl: approval.data.slack!.responseUrl,
-          decision,
-          userName: approval.data.slack!.userName,
-          originalBlocks: blocks,
-        });
-      });
     }
+
+    // Update Slack message - works for BOTH Slack and Admin UI approvals
+    const approverName = approval.data.slack?.userName ?? approval.data.approvedBy ?? 'Admin';
+    await step.run('update-slack-message', async (): Promise<void> => {
+      const submission = await convex.runQuery(internal.jobSubmissions.get, { id: submissionId });
+      if (submission?.slackChannel && submission?.slackMessageTs) {
+        // Build updated blocks without action buttons, with approval status
+        const updatedBlocks = blocks.filter((b) => b.type !== 'actions');
+        updatedBlocks.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: decision === 'approved'
+              ? `*Approved* by ${approverName}`
+              : `*Denied* by ${approverName}`,
+          },
+        });
+
+        // Use chat.update API with stored channel/ts
+        const token = process.env.SLACK_BOT_TOKEN;
+        if (!token) {
+          throw new Error('SLACK_BOT_TOKEN not configured');
+        }
+        const res = await fetch('https://slack.com/api/chat.update', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+          body: JSON.stringify({
+            channel: submission.slackChannel,
+            ts: submission.slackMessageTs,
+            text: `Job ${decision}: ${parsedJob.title}`,
+            blocks: updatedBlocks,
+          }),
+        });
+        if (!res.ok) {
+          throw new Error(`Slack chat.update failed: ${res.status} ${await res.text()}`);
+        }
+        const responseBody = (await res.json()) as { ok: boolean; error?: string };
+        if (!responseBody.ok) {
+          throw new Error(`Slack API error: ${responseBody.error}`);
+        }
+      }
+    });
 
     // Handle denial
     if (decision === 'denied') {

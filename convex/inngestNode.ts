@@ -176,6 +176,34 @@ export const sendEmail = internalAction({
   },
 });
 
+// Action to update Slack job message when job is edited
+export const updateSlackJobMessage = internalAction({
+  args: {
+    submissionId: v.string(),
+    slackChannel: v.string(),
+    slackMessageTs: v.string(),
+    parsedJob: v.any(), // ParsedJob type from jobSchema
+  },
+  handler: async (_ctx, args) => {
+    const { updateSlackJobMessage: updateMessage } = await import("./lib/slack");
+
+    const token = process.env.SLACK_BOT_TOKEN;
+    if (!token) {
+      throw new Error("SLACK_BOT_TOKEN not configured");
+    }
+
+    await updateMessage({
+      token,
+      channel: args.slackChannel,
+      ts: args.slackMessageTs,
+      submissionId: args.submissionId,
+      job: args.parsedJob,
+    });
+
+    console.log(`Updated Slack message for job ${args.submissionId}`);
+  },
+});
+
 // Action to post employer vetting notification to Slack (Checkpoint 3)
 export const postEmployerVettingToSlack = internalAction({
   args: {
@@ -195,8 +223,7 @@ export const postEmployerVettingToSlack = internalAction({
     const appBaseUrl = process.env.APP_BASE_URL || "https://recovery-jobs.com";
 
     if (!token || !channel) {
-      console.warn("Slack credentials not configured, skipping employer vetting notification");
-      return;
+      throw new Error("Slack credentials not configured (SLACK_BOT_TOKEN or SLACK_APPROVAL_CHANNEL missing)");
     }
 
     await postEmployerVetting({
