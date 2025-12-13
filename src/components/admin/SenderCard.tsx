@@ -33,12 +33,29 @@ export function SenderCard({
     mutationFn: useConvexMutation(api.senders.updateStatus),
   });
 
+  const deleteSender = useMutation({
+    mutationFn: useConvexMutation(api.senders.deleteSender),
+  });
+
   const handleApprove = () => {
     updateStatus.mutate({ senderId: sender._id, status: 'approved' });
   };
 
   const handleBlock = () => {
     updateStatus.mutate({ senderId: sender._id, status: 'blocked' });
+  };
+
+  const handleDelete = () => {
+    const messageInfo = sender.messageCount
+      ? `${sender.messageCount} message(s)`
+      : 'messages';
+    if (
+      confirm(
+        `Delete sender ${sender.phone}?\n\nThis will also delete:\n- All ${messageInfo}\n- Any job postings\n- Any applications\n- Employer account (if exists)\n\nThis cannot be undone.`
+      )
+    ) {
+      deleteSender.mutate({ senderId: sender._id });
+    }
   };
 
   return (
@@ -72,27 +89,38 @@ export function SenderCard({
             </div>
           </div>
 
-          {showActions && sender.status === 'pending' && (
-            <div className="ml-4 flex gap-2">
-              <Button
-                size="sm"
-                variant="default"
-                onClick={handleApprove}
-                disabled={updateStatus.isPending}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                Approve
-              </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={handleBlock}
-                disabled={updateStatus.isPending}
-              >
-                Block
-              </Button>
-            </div>
-          )}
+          <div className="ml-4 flex gap-2">
+            {showActions && sender.status === 'pending' && (
+              <>
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={handleApprove}
+                  disabled={updateStatus.isPending || deleteSender.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleBlock}
+                  disabled={updateStatus.isPending || deleteSender.isPending}
+                >
+                  Block
+                </Button>
+              </>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleDelete}
+              disabled={deleteSender.isPending}
+              className="text-red-600 hover:bg-red-50 hover:text-red-700"
+            >
+              Delete
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

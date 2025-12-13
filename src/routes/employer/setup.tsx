@@ -20,7 +20,7 @@ function EmployerSetupPage() {
     role: '',
     website: '',
   });
-  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const setupData = useQuery(api.employers.getSenderForSetup, { token });
@@ -61,6 +61,7 @@ function EmployerSetupPage() {
       return;
     }
 
+    setSubmitting(true);
     try {
       await createEmployerMutation({
         token,
@@ -71,11 +72,12 @@ function EmployerSetupPage() {
         role: formData.role.trim() || undefined,
         website: formData.website.trim() || undefined,
       });
-      setSubmitted(true);
+      // Don't set local state - let the reactive query update the UI
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Failed to create account'
       );
+      setSubmitting(false);
     }
   };
 
@@ -105,12 +107,13 @@ function EmployerSetupPage() {
     );
   }
 
-  // Already set up - show status
+  // Already set up - show status (this also handles the "just submitted" case via reactive query)
   if (setupData.alreadySetup) {
-    const statusMessages: Record<string, { title: string; text: string }> = {
+    const statusMessages: Record<string, { title: string; text: string; subtext?: string }> = {
       pending_review: {
         title: 'Account Under Review',
         text: "We're reviewing your information. You'll receive an email when your account is approved.",
+        subtext: 'You have candidates waiting! Once approved, you can view and connect with them.',
       },
       approved: {
         title: 'Account Ready',
@@ -145,6 +148,9 @@ function EmployerSetupPage() {
           </div>
           <h1 style={styles.successTitle}>{status.title}</h1>
           <p style={styles.successText}>{status.text}</p>
+          {status.subtext && (
+            <p style={styles.subtextNote}>{status.subtext}</p>
+          )}
           {setupData.employerStatus === 'approved' && (
             <a
               href={`/employer/candidates?token=${token}`}
@@ -153,24 +159,6 @@ function EmployerSetupPage() {
               View Candidates
             </a>
           )}
-        </div>
-      </div>
-    );
-  }
-
-  // Successfully submitted
-  if (submitted) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.card}>
-          <div style={{ ...styles.successIcon, background: '#f59e0b' }}>
-            {'\u23F3'}
-          </div>
-          <h1 style={styles.successTitle}>Account Created!</h1>
-          <p style={styles.successText}>
-            We're reviewing your information. You'll receive an SMS when your
-            account is approved and you can view candidates.
-          </p>
         </div>
       </div>
     );
@@ -271,8 +259,8 @@ function EmployerSetupPage() {
 
           {error && <p style={styles.error}>{error}</p>}
 
-          <button type="submit" style={styles.submitButton}>
-            Create Account
+          <button type="submit" style={styles.submitButton} disabled={submitting}>
+            {submitting ? 'Creating Account...' : 'Create Account'}
           </button>
 
           <p style={styles.note}>
@@ -350,6 +338,13 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#666',
     margin: 0,
     textAlign: 'center',
+  },
+  subtextNote: {
+    color: '#059669',
+    fontSize: '0.875rem',
+    margin: '1rem 0 0 0',
+    textAlign: 'center',
+    fontWeight: 500,
   },
   form: {
     display: 'flex',

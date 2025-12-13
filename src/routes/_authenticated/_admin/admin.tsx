@@ -1,5 +1,5 @@
 import { convexQuery } from '@convex-dev/react-query';
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 
 import { api } from '../../../../convex/_generated/api';
@@ -15,48 +15,8 @@ import {
 
 export const Route = createFileRoute('/_authenticated/_admin/admin')({
   component: AdminDashboard,
-  loader: async ({ context }) => {
-    const isServer = typeof window === 'undefined';
-    const hasServerHttpClient = !!context.convexQueryClient.serverHttpClient;
-    console.log('[admin loader]', {
-      isServer,
-      hasServerHttpClient,
-      timestamp: Date.now(),
-    });
-
-    // Preload ALL tab data in parallel - useSuspenseQuery won't suspend since data is cached
-    const startTime = Date.now();
-    try {
-      await Promise.all([
-        context.queryClient.ensureQueryData(
-          convexQuery(api.senders.list, { status: 'pending' }),
-        ),
-        context.queryClient.ensureQueryData(convexQuery(api.senders.list, {})),
-        context.queryClient.ensureQueryData(
-          convexQuery(api.inboundMessages.list, { status: 'pending_review' }),
-        ),
-        context.queryClient.ensureQueryData(
-          convexQuery(api.inboundMessages.list, {}),
-        ),
-        context.queryClient.ensureQueryData(
-          convexQuery(api.employers.list, { status: 'pending_review' as const }),
-        ),
-        context.queryClient.ensureQueryData(convexQuery(api.employers.list, {})),
-      ]);
-      console.log('[admin loader] queries succeeded', {
-        isServer,
-        duration: Date.now() - startTime,
-      });
-    } catch (err) {
-      console.error('[admin loader] queries FAILED', {
-        isServer,
-        hasServerHttpClient,
-        duration: Date.now() - startTime,
-        error: err instanceof Error ? err.message : err,
-      });
-      throw err;
-    }
-  },
+  // No loader - let queries run in components with loading states
+  // This avoids the SSR/hydration auth race condition
 });
 
 function AdminDashboard() {
@@ -103,13 +63,13 @@ function AdminDashboard() {
 }
 
 function PendingSendersTab() {
-  const { data: senders } = useSuspenseQuery(
+  const { data: senders, isLoading, error } = useQuery(
     convexQuery(api.senders.list, { status: 'pending' }),
   );
 
-  if (!senders?.length) {
-    return <div className="text-gray-500">No pending senders</div>;
-  }
+  if (isLoading) return <div className="text-gray-500">Loading...</div>;
+  if (error) return <div className="text-red-500">Error loading senders</div>;
+  if (!senders?.length) return <div className="text-gray-500">No pending senders</div>;
 
   return (
     <div className="space-y-4">
@@ -126,13 +86,13 @@ function PendingSendersTab() {
 }
 
 function AllSendersTab() {
-  const { data: senders } = useSuspenseQuery(
+  const { data: senders, isLoading, error } = useQuery(
     convexQuery(api.senders.list, {}),
   );
 
-  if (!senders?.length) {
-    return <div className="text-gray-500">No senders yet</div>;
-  }
+  if (isLoading) return <div className="text-gray-500">Loading...</div>;
+  if (error) return <div className="text-red-500">Error loading senders</div>;
+  if (!senders?.length) return <div className="text-gray-500">No senders yet</div>;
 
   return (
     <div className="space-y-4">
@@ -149,13 +109,13 @@ function AllSendersTab() {
 }
 
 function PendingMessagesTab() {
-  const { data: messages } = useSuspenseQuery(
+  const { data: messages, isLoading, error } = useQuery(
     convexQuery(api.inboundMessages.list, { status: 'pending_review' }),
   );
 
-  if (!messages?.length) {
-    return <div className="text-gray-500">No pending messages</div>;
-  }
+  if (isLoading) return <div className="text-gray-500">Loading...</div>;
+  if (error) return <div className="text-red-500">Error loading messages</div>;
+  if (!messages?.length) return <div className="text-gray-500">No pending messages</div>;
 
   return (
     <div className="space-y-4">
@@ -167,13 +127,13 @@ function PendingMessagesTab() {
 }
 
 function AllMessagesTab() {
-  const { data: messages } = useSuspenseQuery(
+  const { data: messages, isLoading, error } = useQuery(
     convexQuery(api.inboundMessages.list, {}),
   );
 
-  if (!messages?.length) {
-    return <div className="text-gray-500">No messages yet</div>;
-  }
+  if (isLoading) return <div className="text-gray-500">Loading...</div>;
+  if (error) return <div className="text-red-500">Error loading messages</div>;
+  if (!messages?.length) return <div className="text-gray-500">No messages yet</div>;
 
   return (
     <div className="space-y-4">
@@ -191,13 +151,13 @@ function AllMessagesTab() {
 }
 
 function PendingEmployersTab() {
-  const { data: employers } = useSuspenseQuery(
+  const { data: employers, isLoading, error } = useQuery(
     convexQuery(api.employers.list, { status: 'pending_review' as const }),
   );
 
-  if (!employers?.length) {
-    return <div className="text-gray-500">No pending employer accounts</div>;
-  }
+  if (isLoading) return <div className="text-gray-500">Loading...</div>;
+  if (error) return <div className="text-red-500">Error loading employers</div>;
+  if (!employers?.length) return <div className="text-gray-500">No pending employer accounts</div>;
 
   return (
     <div className="space-y-4">
@@ -213,13 +173,13 @@ function PendingEmployersTab() {
 }
 
 function AllEmployersTab() {
-  const { data: employers } = useSuspenseQuery(
+  const { data: employers, isLoading, error } = useQuery(
     convexQuery(api.employers.list, {}),
   );
 
-  if (!employers?.length) {
-    return <div className="text-gray-500">No employer accounts yet</div>;
-  }
+  if (isLoading) return <div className="text-gray-500">Loading...</div>;
+  if (error) return <div className="text-red-500">Error loading employers</div>;
+  if (!employers?.length) return <div className="text-gray-500">No employer accounts yet</div>;
 
   return (
     <div className="space-y-4">

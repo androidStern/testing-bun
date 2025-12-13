@@ -94,3 +94,14 @@ export const updateStatus = adminMutation({
   },
 });
 
+// Admin-only: delete message
+export const deleteMessage = adminMutation({
+  args: { messageId: v.id('inboundMessages') },
+  handler: async (ctx, args) => {
+    const message = await ctx.db.get(args.messageId);
+    if (!message) throw new Error('Message not found');
+
+    await ctx.db.delete(args.messageId);
+  },
+});
+

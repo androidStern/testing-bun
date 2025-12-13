@@ -143,3 +143,64 @@ export const updateStatus = adminMutation({
     }
   },
 });
+
+// Admin-only: delete sender with full cascade
+// Deletes: applications -> jobSubmissions -> employers -> inboundMessages -> sender
+export const deleteSender = adminMutation({
+  args: { senderId: v.id('senders') },
+  handler: async (ctx, args) => {
+    const sender = await ctx.db.get(args.senderId);
+    if (!sender) {
+      throw new Error('Sender not found');
+    }
+
+    // 1. Find all job submissions from this sender
+    const jobSubmissions = await ctx.db
+      .query('jobSubmissions')
+      .withIndex('by_sender', (q) => q.eq('senderId', args.senderId))
+      .collect();
+
+    // 2. Delete all applications for each job
+    for (const job of jobSubmissions) {
+      const applications = await ctx.db
+        .query('applications')
+        .withIndex('by_job', (q) => q.eq('jobSubmissionId', job._id))
+        .collect();
+      for (const app of applications) {
+        await ctx.db.delete(app._id);
+      }
+    }
+
+    // 3. Delete all job submissions
+    for (const job of jobSubmissions) {
+      await ctx.db.delete(job._id);
+    }
+
+    // 4. Delete any employer linked to this sender
+    const employer = await ctx.db
+      .query('employers')
+      .withIndex('by_sender', (q) => q.eq('senderId', args.senderId))
+      .first();
+    if (employer) {
+      await ctx.db.delete(employer._id);
+    }
+
+    // 5. Delete all inbound messages from this sender
+    const messages = await ctx.db
+      .query('inboundMessages')
+      .withIndex('by_senderId', (q) => q.eq('senderId', args.senderId))
+      .collect();
+    for (const msg of messages) {
+      await ctx.db.delete(msg._id);
+    }
+
+    // 6. Delete the sender
+    await ctx.db.delete(args.senderId);
+
+    return {
+      deletedJobs: jobSubmissions.length,
+      deletedMessages: messages.length,
+      deletedEmployer: !!employer,
+    };
+  },
+});

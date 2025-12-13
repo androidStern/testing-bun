@@ -116,6 +116,17 @@ export const reject = adminMutation({
   },
 });
 
+// Admin-only: delete employer
+export const deleteEmployer = adminMutation({
+  args: { employerId: v.id('employers') },
+  handler: async (ctx, args) => {
+    const employer = await ctx.db.get(args.employerId);
+    if (!employer) throw new Error('Employer not found');
+
+    await ctx.db.delete(args.employerId);
+  },
+});
+
 // Internal mutation to link WorkOS user ID after account creation
 export const linkWorkosUser = internalMutation({
   args: {

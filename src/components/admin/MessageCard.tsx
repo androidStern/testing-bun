@@ -30,6 +30,10 @@ export function MessageCard({ message, showActions = false }: MessageCardProps) 
     mutationFn: useConvexMutation(api.inboundMessages.updateStatus),
   });
 
+  const deleteMessage = useMutation({
+    mutationFn: useConvexMutation(api.inboundMessages.deleteMessage),
+  });
+
   const handleApprove = () => {
     updateStatus.mutate({ messageId: message._id, status: 'approved' });
   };
@@ -41,6 +45,14 @@ export function MessageCard({ message, showActions = false }: MessageCardProps) 
   const handleMarkProcessed = () => {
     updateStatus.mutate({ messageId: message._id, status: 'processed' });
   };
+
+  const handleDelete = () => {
+    if (confirm('Delete this message?\n\nThis cannot be undone.')) {
+      deleteMessage.mutate({ messageId: message._id });
+    }
+  };
+
+  const isPending = updateStatus.isPending || deleteMessage.isPending;
 
   return (
     <Card>
@@ -64,40 +76,50 @@ export function MessageCard({ message, showActions = false }: MessageCardProps) 
             </div>
           </div>
 
-          {showActions && message.status === 'pending_review' && (
-            <div className="ml-4 flex gap-2">
-              <Button
-                size="sm"
-                variant="default"
-                onClick={handleApprove}
-                disabled={updateStatus.isPending}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                Approve
-              </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={handleReject}
-                disabled={updateStatus.isPending}
-              >
-                Reject
-              </Button>
-            </div>
-          )}
+          <div className="ml-4 flex gap-2">
+            {showActions && message.status === 'pending_review' && (
+              <>
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={handleApprove}
+                  disabled={isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleReject}
+                  disabled={isPending}
+                >
+                  Reject
+                </Button>
+              </>
+            )}
 
-          {showActions && message.status === 'approved' && (
-            <div className="ml-4">
+            {showActions && message.status === 'approved' && (
               <Button
                 size="sm"
                 variant="outline"
                 onClick={handleMarkProcessed}
-                disabled={updateStatus.isPending}
+                disabled={isPending}
               >
                 Mark Processed
               </Button>
-            </div>
-          )}
+            )}
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleDelete}
+              disabled={isPending}
+              className="text-red-600 hover:bg-red-50 hover:text-red-700"
+            >
+              Delete
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

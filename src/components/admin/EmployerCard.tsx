@@ -25,6 +25,7 @@ interface EmployerCardProps {
 export function EmployerCard({ employer, showActions }: EmployerCardProps) {
   const approveMutation = useMutation(api.employers.approve);
   const rejectMutation = useMutation(api.employers.reject);
+  const deleteMutation = useMutation(api.employers.deleteEmployer);
 
   const statusColors: Record<string, string> = {
     pending_review: 'bg-yellow-100 text-yellow-800',
@@ -41,6 +42,12 @@ export function EmployerCard({ employer, showActions }: EmployerCardProps) {
   const handleReject = async () => {
     if (confirm('Reject this employer account?')) {
       await rejectMutation({ employerId: employer._id });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (confirm(`Delete employer account for ${employer.name}?\n\nThis cannot be undone.`)) {
+      await deleteMutation({ employerId: employer._id });
     }
   };
 
@@ -100,22 +107,30 @@ export function EmployerCard({ employer, showActions }: EmployerCardProps) {
         )}
       </div>
 
-      {showActions && employer.status === 'pending_review' && (
-        <div className="flex gap-2">
-          <button
-            onClick={handleApprove}
-            className="rounded bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700"
-          >
-            Approve
-          </button>
-          <button
-            onClick={handleReject}
-            className="rounded bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
-          >
-            Reject
-          </button>
-        </div>
-      )}
+      <div className="flex gap-2">
+        {showActions && employer.status === 'pending_review' && (
+          <>
+            <button
+              onClick={handleApprove}
+              className="rounded bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700"
+            >
+              Approve
+            </button>
+            <button
+              onClick={handleReject}
+              className="rounded bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+            >
+              Reject
+            </button>
+          </>
+        )}
+        <button
+          onClick={handleDelete}
+          className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
+        >
+          Delete
+        </button>
+      </div>
     </div>
   );
 }
