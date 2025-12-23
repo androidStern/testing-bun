@@ -5,6 +5,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
   hashClientSecret,
+  timingSafeEqual,
   verifyCodeChallenge,
 } from '../../lib/oauth-tokens';
 
@@ -106,6 +107,7 @@ async function handleAuthorizationCodeGrant(
   // Verify client credentials (if provided)
   if (authenticatedClientSecret) {
     const client = await convex.query(api.oauth.getClient, {
+      internalSecret,
       clientId: authenticatedClientId,
     });
 
@@ -114,26 +116,34 @@ async function handleAuthorizationCodeGrant(
     }
 
     const secretHash = await hashClientSecret(authenticatedClientSecret);
-    if (client.clientSecret !== secretHash) {
+    if (!timingSafeEqual(client.clientSecret, secretHash)) {
       return errorResponse('invalid_client', 'Invalid client credentials');
     }
   }
 
-  // Retrieve and validate authorization code
-  const authCode = await convex.query(api.oauth.getAuthorizationCode, { code });
+  // Atomically validate and mark authorization code as used (prevents race condition)
+  const exchangeResult = await convex.mutation(api.oauth.exchangeAuthorizationCode, {
+    internalSecret,
+    code,
+  });
 
-  if (!authCode) {
+  if (!exchangeResult.success) {
+    // Token revocation on auth code reuse is handled atomically inside the mutation
+    if (exchangeResult.error === 'already_used') {
+      return errorResponse('invalid_grant', 'Authorization code already used');
+    }
+    if (exchangeResult.error === 'not_found') {
+      return errorResponse('invalid_grant', 'Invalid authorization code');
+    }
+    if (exchangeResult.error === 'expired') {
+      return errorResponse('invalid_grant', 'Authorization code expired');
+    }
     return errorResponse('invalid_grant', 'Invalid authorization code');
   }
 
-  if (authCode.used) {
-    return errorResponse('invalid_grant', 'Authorization code already used');
-  }
+  const authCode = exchangeResult.authCode;
 
-  if (Date.now() > authCode.expiresAt) {
-    return errorResponse('invalid_grant', 'Authorization code expired');
-  }
-
+  // Validate client ID and redirect URI match
   if (authCode.clientId !== clientId) {
     return errorResponse('invalid_grant', 'Client ID mismatch');
   }
@@ -158,9 +168,6 @@ async function handleAuthorizationCodeGrant(
       return errorResponse('invalid_grant', 'Invalid code verifier');
     }
   }
-
-  // Mark code as used
-  await convex.mutation(api.oauth.markCodeAsUsed, { internalSecret, code });
 
   // Generate tokens
   const accessToken = generateAccessToken();
@@ -218,39 +225,38 @@ async function handleRefreshTokenGrant(
     return errorResponse('invalid_request', 'Missing required parameters');
   }
 
-  const convex = getConvexClient();
+  // Generate new tokens
+  const newAccessToken = generateAccessToken();
+  const newRefreshToken = generateRefreshToken();
+  const accessTokenExpiry = Date.now() + 3600000; // 1 hour
+  const refreshTokenExpiry = Date.now() + 2592000000; // 30 days
 
-  const storedToken = await convex.query(api.oauth.getRefreshToken, {
-    token: refreshToken,
+  // Atomic rotation: validate old token, create new tokens, delete old - all in one transaction
+  const convex = getConvexClient();
+  const result = await convex.mutation(api.oauth.rotateRefreshToken, {
+    internalSecret,
+    oldRefreshToken: refreshToken,
+    clientId,
+    newAccessToken,
+    newRefreshToken,
+    accessTokenExpiresAt: accessTokenExpiry,
+    refreshTokenExpiresAt: refreshTokenExpiry,
   });
 
-  if (!storedToken || storedToken.clientId !== clientId) {
+  if (!result.success) {
+    if (result.error === 'token_expired') {
+      return errorResponse('invalid_grant', 'Refresh token expired');
+    }
     return errorResponse('invalid_grant', 'Invalid refresh token');
   }
 
-  if (Date.now() > storedToken.expiresAt) {
-    return errorResponse('invalid_grant', 'Refresh token expired');
-  }
-
-  // Generate new access token
-  const accessToken = generateAccessToken();
-  const accessTokenExpiry = Date.now() + 3600000;
-
-  await convex.mutation(api.oauth.createAccessToken, {
-    internalSecret,
-    token: accessToken,
-    workosUserId: storedToken.workosUserId,
-    clientId: storedToken.clientId,
-    scope: storedToken.scope,
-    expiresAt: accessTokenExpiry,
-  });
-
   return new Response(
     JSON.stringify({
-      access_token: accessToken,
+      access_token: newAccessToken,
       token_type: 'Bearer',
       expires_in: 3600,
-      scope: storedToken.scope || '',
+      refresh_token: newRefreshToken,
+      scope: result.scope || '',
     }),
     {
       status: 200,

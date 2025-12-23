@@ -1,7 +1,7 @@
 import { crud } from 'convex-helpers/server/crud';
 import { v } from 'convex/values';
 
-import { internalQuery, mutation, query } from './_generated/server';
+import { internalMutation, internalQuery, mutation, query } from './_generated/server';
 import { adminMutation, adminQuery } from './functions';
 import schema from './schema';
 
@@ -13,14 +13,44 @@ export const { read: adminRead, update: adminUpdate } = sendersCrud;
 // Internal query for workflow to fetch sender by ID
 export const get = internalQuery({
   args: { id: v.id('senders') },
+  returns: v.union(
+    v.null(),
+    v.object({
+      _id: v.id('senders'),
+      _creationTime: v.number(),
+      phone: v.optional(v.string()),
+      email: v.optional(v.string()),
+      status: v.string(),
+      name: v.optional(v.string()),
+      company: v.optional(v.string()),
+      notes: v.optional(v.string()),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    })
+  ),
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
 });
 
-// Public query (used by HTTP webhook)
-export const getByPhone = query({
+// Internal query (used by HTTP webhook - not exposed to clients)
+export const getByPhone = internalQuery({
   args: { phone: v.string() },
+  returns: v.union(
+    v.null(),
+    v.object({
+      _id: v.id('senders'),
+      _creationTime: v.number(),
+      phone: v.optional(v.string()),
+      email: v.optional(v.string()),
+      status: v.string(),
+      name: v.optional(v.string()),
+      company: v.optional(v.string()),
+      notes: v.optional(v.string()),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    })
+  ),
   handler: async (ctx, args) => {
     return await ctx.db
       .query('senders')
@@ -29,15 +59,18 @@ export const getByPhone = query({
   },
 });
 
-// Public mutation (used by HTTP webhook)
-export const create = mutation({
+// Internal mutation (used by HTTP webhook - not exposed to clients)
+export const create = internalMutation({
   args: {
     phone: v.string(),
-    status: v.optional(v.string()),
+    status: v.optional(
+      v.union(v.literal('pending'), v.literal('approved'), v.literal('blocked'))
+    ),
     name: v.optional(v.string()),
     company: v.optional(v.string()),
     notes: v.optional(v.string()),
   },
+  returns: v.id('senders'),
   handler: async (ctx, args) => {
     const now = Date.now();
     const id = await ctx.db.insert('senders', {
@@ -53,9 +86,78 @@ export const create = mutation({
   },
 });
 
+// Atomic get-or-create to prevent race conditions (used by HTTP webhook - not exposed to clients)
+export const getOrCreate = internalMutation({
+  args: {
+    phone: v.string(),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('approved'),
+      v.literal('blocked')
+    ),
+  },
+  returns: v.object({
+    sender: v.object({
+      _id: v.id('senders'),
+      _creationTime: v.number(),
+      phone: v.optional(v.string()),
+      email: v.optional(v.string()),
+      status: v.string(),
+      name: v.optional(v.string()),
+      company: v.optional(v.string()),
+      notes: v.optional(v.string()),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    }),
+    created: v.boolean(),
+  }),
+  handler: async (ctx, args) => {
+    // Check if sender already exists (atomic within this mutation)
+    const existing = await ctx.db
+      .query('senders')
+      .withIndex('by_phone', (q) => q.eq('phone', args.phone))
+      .first();
+
+    if (existing) {
+      return { sender: existing, created: false };
+    }
+
+    // Create new sender
+    const now = Date.now();
+    const id = await ctx.db.insert('senders', {
+      phone: args.phone,
+      status: args.status,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const sender = await ctx.db.get(id);
+    if (!sender) {
+      throw new Error('Failed to retrieve newly created sender');
+    }
+    return { sender, created: true };
+  },
+});
+
 // Admin-only: list senders with message counts and first message preview
 export const list = adminQuery({
   args: { status: v.optional(v.string()) },
+  returns: v.array(
+    v.object({
+      _id: v.id('senders'),
+      _creationTime: v.number(),
+      phone: v.optional(v.string()),
+      email: v.optional(v.string()),
+      status: v.string(),
+      name: v.optional(v.string()),
+      company: v.optional(v.string()),
+      notes: v.optional(v.string()),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+      messageCount: v.number(),
+      firstMessagePreview: v.union(v.null(), v.string()),
+    })
+  ),
   handler: async (ctx, args) => {
     const senders = args.status
       ? await ctx.db
@@ -102,6 +204,7 @@ export const update = adminMutation({
     company: v.optional(v.string()),
     notes: v.optional(v.string()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { senderId, ...updates } = args;
     await ctx.db.patch(senderId, {
@@ -121,6 +224,7 @@ export const updateStatus = adminMutation({
       v.literal('blocked'),
     ),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const sender = await ctx.db.get(args.senderId);
     if (!sender) {
@@ -155,6 +259,11 @@ export const updateStatus = adminMutation({
 // Deletes: applications -> jobSubmissions -> employers -> inboundMessages -> sender
 export const deleteSender = adminMutation({
   args: { senderId: v.id('senders') },
+  returns: v.object({
+    deletedJobs: v.number(),
+    deletedMessages: v.number(),
+    deletedEmployer: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     const sender = await ctx.db.get(args.senderId);
     if (!sender) {

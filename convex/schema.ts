@@ -65,7 +65,9 @@ export default defineSchema({
     scope: v.optional(v.string()),
     expiresAt: v.number(),
     createdAt: v.number(),
-  }).index('by_token', ['token']),
+  })
+    .index('by_token', ['token'])
+    .index('by_user_client', ['workosUserId', 'clientId']),
 
   // OAuth refresh tokens
   oauthRefreshTokens: defineTable({
@@ -75,7 +77,9 @@ export default defineSchema({
     scope: v.optional(v.string()),
     expiresAt: v.number(),
     createdAt: v.number(),
-  }).index('by_token', ['token']),
+  })
+    .index('by_token', ['token'])
+    .index('by_user_client', ['workosUserId', 'clientId']),
 
   // OAuth clients (Circle.so credentials)
   oauthClients: defineTable({

@@ -10,6 +10,24 @@ import type { Id } from './_generated/dataModel';
 // Internal query for workflow to fetch application by ID
 export const get = internalQuery({
   args: { id: v.id('applications') },
+  returns: v.union(
+    v.null(),
+    v.object({
+      _id: v.id('applications'),
+      _creationTime: v.number(),
+      jobSubmissionId: v.id('jobSubmissions'),
+      seekerProfileId: v.id('profiles'),
+      message: v.optional(v.string()),
+      status: v.union(
+        v.literal('pending'),
+        v.literal('connected'),
+        v.literal('passed')
+      ),
+      appliedAt: v.number(),
+      connectedAt: v.optional(v.number()),
+      passedAt: v.optional(v.number()),
+    })
+  ),
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -18,6 +36,7 @@ export const get = internalQuery({
 // Internal query to count applications for a job
 export const countByJob = internalQuery({
   args: { jobSubmissionId: v.id('jobSubmissions') },
+  returns: v.number(),
   handler: async (ctx, args) => {
     const applications = await ctx.db
       .query('applications')
@@ -88,6 +107,10 @@ export const create = internalMutation({
     seekerProfileId: v.id('profiles'),
     message: v.optional(v.string()),
   },
+  returns: v.object({
+    id: v.id('applications'),
+    isFirstApplicant: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     // Check if job is still open
     const job = await ctx.db.get(args.jobSubmissionId);
@@ -121,6 +144,9 @@ export const apply = authMutation({
     jobSubmissionId: v.id('jobSubmissions'),
     message: v.optional(v.string()),
   },
+  returns: v.object({
+    applicationId: v.id('applications'),
+  }),
   handler: async (ctx, args) => {
     // Get seeker's profile
     const profile = await ctx.db
@@ -175,6 +201,7 @@ export const apply = authMutation({
 // Public query for seeker to check if they've applied to a job
 export const hasApplied = authQuery({
   args: { jobSubmissionId: v.id('jobSubmissions') },
+  returns: v.boolean(),
   handler: async (ctx, args) => {
     const profile = await ctx.db
       .query('profiles')
@@ -195,36 +222,117 @@ export const hasApplied = authQuery({
 // Internal mutation to mark application as connected (employer sent DM)
 export const markConnected = internalMutation({
   args: { applicationId: v.id('applications') },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const app = await ctx.db.get(args.applicationId);
     if (!app) throw new Error('Application not found');
-    if (app.status === 'connected') return; // Idempotent
+    if (app.status === 'connected') return null; // Idempotent
 
     await ctx.db.patch(args.applicationId, {
       status: 'connected',
       connectedAt: Date.now(),
     });
+    return null;
   },
 });
 
 // Internal mutation to mark application as passed
 export const markPassed = internalMutation({
   args: { applicationId: v.id('applications') },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const app = await ctx.db.get(args.applicationId);
     if (!app) throw new Error('Application not found');
-    if (app.status === 'passed') return; // Idempotent
+    if (app.status === 'passed') return null; // Idempotent
 
     await ctx.db.patch(args.applicationId, {
       status: 'passed',
       passedAt: Date.now(),
     });
+    return null;
   },
+});
+
+// Shared validators for getJobWithApplications return type
+const seekerValidator = v.object({
+  firstName: v.optional(v.string()),
+  lastName: v.optional(v.string()),
+  email: v.string(),
+  headline: v.optional(v.string()),
+  bio: v.optional(v.string()),
+  resumeLink: v.optional(v.string()),
+  linkedinUrl: v.optional(v.string()),
+});
+
+const resumeValidator = v.object({
+  summary: v.optional(v.string()),
+  workExperience: v.array(
+    v.object({
+      id: v.string(),
+      company: v.optional(v.string()),
+      position: v.optional(v.string()),
+      startDate: v.optional(v.string()),
+      endDate: v.optional(v.string()),
+      description: v.optional(v.string()),
+      achievements: v.optional(v.string()),
+    })
+  ),
+  education: v.array(
+    v.object({
+      id: v.string(),
+      institution: v.optional(v.string()),
+      degree: v.optional(v.string()),
+      field: v.optional(v.string()),
+      graduationDate: v.optional(v.string()),
+      description: v.optional(v.string()),
+    })
+  ),
+  skills: v.optional(v.string()),
+});
+
+const applicationWithDetailsValidator = v.object({
+  _id: v.id('applications'),
+  message: v.optional(v.string()),
+  status: v.union(
+    v.literal('pending'),
+    v.literal('connected'),
+    v.literal('passed')
+  ),
+  appliedAt: v.number(),
+  connectedAt: v.optional(v.number()),
+  passedAt: v.optional(v.number()),
+  seeker: v.union(v.null(), seekerValidator),
+  resume: v.union(v.null(), resumeValidator),
 });
 
 // Public query: Get job with applications for employer (token-based auth)
 export const getJobWithApplications = query({
   args: { token: v.string() },
+  returns: v.union(
+    v.object({ error: v.literal('invalid_token') }),
+    v.object({ error: v.literal('token_expired') }),
+    v.object({ error: v.literal('unauthorized') }),
+    v.object({
+      job: v.object({
+        _id: v.id('jobSubmissions'),
+        title: v.optional(v.string()),
+        company: v.optional(v.string()),
+        status: v.union(
+          v.literal('pending_parse'),
+          v.literal('pending_approval'),
+          v.literal('approved'),
+          v.literal('denied'),
+          v.literal('closed')
+        ),
+        circlePostUrl: v.optional(v.string()),
+      }),
+      applications: v.array(applicationWithDetailsValidator),
+      employer: v.object({
+        name: v.string(),
+        company: v.string(),
+      }),
+    })
+  ),
   handler: async (ctx, args) => {
     const tokenData = await parseToken(args.token);
     if (!tokenData) return { error: 'invalid_token' as const };
@@ -243,15 +351,27 @@ export const getJobWithApplications = query({
       .withIndex('by_sender', (q) => q.eq('senderId', senderId))
       .first();
 
-    if (!employer) return { error: 'employer_not_found' as const };
-    if (employer.status === 'pending_review') return { error: 'employer_pending' as const };
-    if (employer.status === 'rejected') return { error: 'employer_rejected' as const };
+    if (!employer || employer.status !== 'approved') {
+      console.error('getJobWithApplications: employer check failed', {
+        senderId,
+        employerFound: !!employer,
+        employerStatus: employer?.status,
+      });
+      return { error: 'unauthorized' as const };
+    }
 
     // Get job submission
     const jobId = tokenData.submissionId as Id<'jobSubmissions'>;
     const job = await ctx.db.get(jobId);
-    if (!job) return { error: 'job_not_found' as const };
-    if (job.senderId !== senderId) return { error: 'unauthorized' as const };
+    if (!job || job.senderId !== senderId) {
+      console.error('getJobWithApplications: job check failed', {
+        jobId,
+        jobFound: !!job,
+        jobSenderId: job?.senderId,
+        expectedSenderId: senderId,
+      });
+      return { error: 'unauthorized' as const };
+    }
 
     // Get applications with seeker data
     const applications = await ctx.db
@@ -327,6 +447,10 @@ export const connectApplication = mutation({
     token: v.string(),
     applicationId: v.id('applications'),
   },
+  returns: v.object({
+    seekerEmail: v.optional(v.string()),
+    seekerName: v.union(v.null(), v.string()),
+  }),
   handler: async (ctx, args) => {
     const tokenData = await parseToken(args.token);
     if (!tokenData) throw new Error('Invalid token');
@@ -339,13 +463,23 @@ export const connectApplication = mutation({
       .withIndex('by_sender', (q) => q.eq('senderId', senderId))
       .first();
     if (!employer || employer.status !== 'approved') {
-      throw new Error('Employer not approved');
+      console.error('connectApplication: employer check failed', {
+        senderId,
+        employerFound: !!employer,
+        employerStatus: employer?.status,
+      });
+      throw new Error('Unauthorized');
     }
 
     // Verify application belongs to this job
     const app = await ctx.db.get(args.applicationId);
-    if (!app) throw new Error('Application not found');
-    if (app.jobSubmissionId !== (tokenData.submissionId as Id<'jobSubmissions'>)) {
+    if (!app || app.jobSubmissionId !== (tokenData.submissionId as Id<'jobSubmissions'>)) {
+      console.error('connectApplication: application check failed', {
+        applicationId: args.applicationId,
+        appFound: !!app,
+        appJobId: app?.jobSubmissionId,
+        expectedJobId: tokenData.submissionId,
+      });
       throw new Error('Unauthorized');
     }
 
@@ -374,6 +508,7 @@ export const passApplication = mutation({
     token: v.string(),
     applicationId: v.id('applications'),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const tokenData = await parseToken(args.token);
     if (!tokenData) throw new Error('Invalid token');
@@ -386,13 +521,23 @@ export const passApplication = mutation({
       .withIndex('by_sender', (q) => q.eq('senderId', senderId))
       .first();
     if (!employer || employer.status !== 'approved') {
-      throw new Error('Employer not approved');
+      console.error('passApplication: employer check failed', {
+        senderId,
+        employerFound: !!employer,
+        employerStatus: employer?.status,
+      });
+      throw new Error('Unauthorized');
     }
 
     // Verify application belongs to this job
     const app = await ctx.db.get(args.applicationId);
-    if (!app) throw new Error('Application not found');
-    if (app.jobSubmissionId !== (tokenData.submissionId as Id<'jobSubmissions'>)) {
+    if (!app || app.jobSubmissionId !== (tokenData.submissionId as Id<'jobSubmissions'>)) {
+      console.error('passApplication: application check failed', {
+        applicationId: args.applicationId,
+        appFound: !!app,
+        appJobId: app?.jobSubmissionId,
+        expectedJobId: tokenData.submissionId,
+      });
       throw new Error('Unauthorized');
     }
 
@@ -403,5 +548,6 @@ export const passApplication = mutation({
         passedAt: Date.now(),
       });
     }
+    return null;
   },
 });

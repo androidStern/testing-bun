@@ -1,7 +1,7 @@
 import { crud } from 'convex-helpers/server/crud';
 import { v } from 'convex/values';
 
-import { mutation } from './_generated/server';
+import { internalMutation } from './_generated/server';
 import { adminMutation, adminQuery } from './functions';
 import schema from './schema';
 
@@ -63,8 +63,8 @@ export const list = adminQuery({
   },
 });
 
-// Public mutation (used by HTTP webhook)
-export const create = mutation({
+// Internal mutation (used by HTTP webhook - not exposed to clients)
+export const create = internalMutation({
   args: {
     phone: v.string(),
     body: v.string(),

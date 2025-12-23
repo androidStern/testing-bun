@@ -77,10 +77,23 @@ http.route({
       params[key] = value;
     });
 
-    // Verify Twilio signature
+    // Extract canonical URL from request (without query params)
+    const requestUrl = new URL(request.url);
+    const actualUrl = `${requestUrl.origin}${requestUrl.pathname}`;
+
+    // Validate request URL matches expected webhook URL
+    const expectedUrl = new URL(env.TWILIO_WEBHOOK_URL);
+    const expectedCanonicalUrl = `${expectedUrl.origin}${expectedUrl.pathname}`;
+
+    if (actualUrl !== expectedCanonicalUrl) {
+      console.error('Webhook URL mismatch', { actual: actualUrl, expected: expectedCanonicalUrl });
+      return new Response('Invalid webhook URL', { status: 403 });
+    }
+
+    // Verify Twilio signature using the actual request URL
     const signature = request.headers.get('X-Twilio-Signature') || '';
     const isValid = await verifyTwilioSignature({
-      webhookUrl: env.TWILIO_WEBHOOK_URL,
+      webhookUrl: actualUrl,
       params,
       signature,
     });
@@ -103,7 +116,7 @@ http.route({
     const normalizedBody = body.trim().toUpperCase();
     if (normalizedBody === 'STOP' || normalizedBody === 'CLOSE') {
       // Look up sender
-      const sender = await ctx.runQuery(api.senders.getByPhone, { phone });
+      const sender = await ctx.runQuery(internal.senders.getByPhone, { phone });
       if (sender) {
         // Find their most recent open job
         const openJob = await ctx.runQuery(internal.jobSubmissions.getOpenBySender, {
@@ -124,32 +137,27 @@ http.route({
       });
     }
 
-    // Look up sender
-    const sender = await ctx.runQuery(api.senders.getByPhone, { phone });
+    // Atomically get or create sender (prevents race condition with concurrent SMS)
+    const { sender, created } = await ctx.runMutation(internal.senders.getOrCreate, {
+      phone,
+      status: 'pending',
+    });
 
+    const senderId = sender._id;
     let messageStatus: string;
-    let senderId: Id<'senders'>;
 
-    if (!sender) {
-      // New sender - create as pending
-      senderId = await ctx.runMutation(api.senders.create, {
-        phone,
-        status: 'pending',
-      });
+    if (created) {
       messageStatus = 'pending_review';
+    } else if (sender.status === 'approved') {
+      messageStatus = 'approved';
+    } else if (sender.status === 'blocked') {
+      messageStatus = 'rejected';
     } else {
-      senderId = sender._id;
-      if (sender.status === 'approved') {
-        messageStatus = 'approved';
-      } else if (sender.status === 'blocked') {
-        messageStatus = 'rejected';
-      } else {
-        messageStatus = 'pending_review';
-      }
+      messageStatus = 'pending_review';
     }
 
     // Save the inbound message (for tracking all SMS)
-    await ctx.runMutation(api.inboundMessages.create, {
+    await ctx.runMutation(internal.inboundMessages.create, {
       phone,
       body,
       twilioMessageSid,

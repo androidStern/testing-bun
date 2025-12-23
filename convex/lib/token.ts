@@ -95,6 +95,11 @@ export async function parseToken(token: string): Promise<MagicToken | null> {
 
     if (!data.submissionId || !data.senderId || !data.exp) return null;
 
+    // Check expiration (defense in depth)
+    if (Date.now() > data.exp) {
+      return null;
+    }
+
     return data;
   } catch {
     return null;

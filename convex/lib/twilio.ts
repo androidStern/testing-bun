@@ -72,10 +72,19 @@ export async function sendSms(to: string, body: string): Promise<SendSmsResult> 
   const data = (await response.json()) as { sid?: string; message?: string; code?: number };
 
   if (!response.ok) {
-    throw new Error(`Twilio API error: ${data.message || `HTTP ${response.status}`} (code: ${data.code})`);
+    // Log full details server-side for debugging
+    console.error('Twilio API error', {
+      status: response.status,
+      message: data.message,
+      code: data.code,
+    });
+    // Throw generic error to caller (don't expose Twilio internals)
+    throw new Error('Failed to send SMS');
   }
 
-  console.log(`SMS sent to ${to}, SID: ${data.sid}`);
+  // Redact phone number in logs (PII protection)
+  const redactedPhone = `***${to.slice(-4)}`;
+  console.log(`SMS sent to ${redactedPhone}, SID: ${data.sid}`);
   return {
     success: true,
     messageSid: data.sid,
