@@ -22,6 +22,21 @@ export const Route = createFileRoute('/_authenticated/_admin/admin')({
   validateSearch: (search: Record<string, unknown>) => ({
     tab: (search.tab as string) || 'pending-jobs',
     job: (search.job as string) || undefined,
+    // Scraped jobs filters (only relevant when tab === 'scraped-jobs')
+    q: (search.q as string) || '',
+    page: Number(search.page) || 1,
+    // Boolean filters - handle both boolean (from navigate) and string (from URL)
+    second_chance: search.second_chance === true || search.second_chance === 'true' ? true : undefined,
+    no_background_check: search.no_background_check === true || search.no_background_check === 'true' ? true : undefined,
+    bus_accessible: search.bus_accessible === true || search.bus_accessible === 'true' ? true : undefined,
+    rail_accessible: search.rail_accessible === true || search.rail_accessible === 'true' ? true : undefined,
+    shift_morning: search.shift_morning === true || search.shift_morning === 'true' ? true : undefined,
+    shift_afternoon: search.shift_afternoon === true || search.shift_afternoon === 'true' ? true : undefined,
+    shift_evening: search.shift_evening === true || search.shift_evening === 'true' ? true : undefined,
+    shift_overnight: search.shift_overnight === true || search.shift_overnight === 'true' ? true : undefined,
+    shift_flexible: search.shift_flexible === true || search.shift_flexible === 'true' ? true : undefined,
+    is_urgent: search.is_urgent === true || search.is_urgent === 'true' ? true : undefined,
+    is_easy_apply: search.is_easy_apply === true || search.is_easy_apply === 'true' ? true : undefined,
   }),
 });
 

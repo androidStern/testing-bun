@@ -1,11 +1,13 @@
 /**
  * Scraped Jobs Table - Admin view for Typesense-indexed jobs
- * Simple search + facet filters + table view
- * Searches Typesense directly using search-only API key
+ * Search-as-you-type with URL-persisted filters using TanStack Query + Router
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAction } from 'convex/react';
+import { useQuery } from '@tanstack/react-query';
+import { getRouteApi } from '@tanstack/react-router';
+import { useDebouncedCallback } from 'use-debounce';
 import { api } from '../../../convex/_generated/api';
 import { Trash2 } from 'lucide-react';
 
@@ -27,22 +29,25 @@ import { useToast } from '../../hooks/use-toast';
 const TYPESENSE_URL = import.meta.env.VITE_TYPESENSE_URL || 'http://localhost:8108';
 const TYPESENSE_SEARCH_KEY = import.meta.env.VITE_TYPESENSE_SEARCH_KEY || '';
 
-interface SearchFilters {
-  source?: string;
-  city?: string;
-  state?: string;
-  second_chance?: boolean;
-  no_background_check?: boolean;
-  bus_accessible?: boolean;
-  rail_accessible?: boolean;
-  shift_morning?: boolean;
-  shift_afternoon?: boolean;
-  shift_evening?: boolean;
-  shift_overnight?: boolean;
-  shift_flexible?: boolean;
-  is_urgent?: boolean;
-  is_easy_apply?: boolean;
-}
+// Route API for accessing search params
+const routeApi = getRouteApi('/_authenticated/_admin/admin');
+
+// Filter keys that map to boolean Typesense fields
+const FILTER_KEYS = [
+  'second_chance',
+  'no_background_check',
+  'bus_accessible',
+  'rail_accessible',
+  'shift_morning',
+  'shift_afternoon',
+  'shift_evening',
+  'shift_overnight',
+  'shift_flexible',
+  'is_urgent',
+  'is_easy_apply',
+] as const;
+
+type FilterKey = (typeof FILTER_KEYS)[number];
 
 interface SearchResult {
   found: number;
@@ -70,15 +75,62 @@ interface SearchResult {
   }>;
 }
 
-export function ScrapedJobsTable() {
-  const [query, setQuery] = useState('');
-  const [filters, setFilters] = useState<SearchFilters>({});
-  const [results, setResults] = useState<SearchResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+interface SearchParams {
+  q: string;
+  page: number;
+  filters: Partial<Record<FilterKey, boolean>>;
+}
 
-  // Selection state
+async function searchTypesense(params: SearchParams): Promise<SearchResult> {
+  if (!TYPESENSE_SEARCH_KEY) {
+    throw new Error('Typesense search key not configured');
+  }
+
+  // Build filter string from active filters
+  const filterParts: string[] = [];
+  for (const [key, value] of Object.entries(params.filters)) {
+    if (value === true) {
+      filterParts.push(`${key}:=true`);
+    }
+  }
+
+  const searchParams = new URLSearchParams({
+    q: params.q || '*',
+    query_by: 'title,company,description',
+    page: String(params.page),
+    per_page: '25',
+    facet_by: 'source,city,state,second_chance,no_background_check,bus_accessible,rail_accessible,shift_morning,shift_afternoon,shift_evening,shift_overnight,shift_flexible,is_urgent,is_easy_apply',
+  });
+
+  if (filterParts.length > 0) {
+    searchParams.set('filter_by', filterParts.join(' && '));
+  }
+
+  const response = await fetch(
+    `${TYPESENSE_URL}/collections/jobs/documents/search?${searchParams}`,
+    {
+      headers: {
+        'X-TYPESENSE-API-KEY': TYPESENSE_SEARCH_KEY,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Search failed: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export function ScrapedJobsTable() {
+  // Read search params from URL
+  const search = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
+
+  // Local state for controlled input (synced with URL)
+  const [inputQuery, setInputQuery] = useState(search.q);
+
+  // Selection state (local only - not URL-worthy)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<'single' | 'bulk' | null>(null);
@@ -87,71 +139,65 @@ export function ScrapedJobsTable() {
 
   const { toast } = useToast();
   const deleteJob = useAction(api.scrapedJobs.adminDeleteJob);
-  const deleteJobs = useAction(api.scrapedJobs.adminDeleteJobs);
 
-  const doSearch = async (newPage = 1) => {
-    if (!TYPESENSE_SEARCH_KEY) {
-      setError('Typesense search key not configured');
-      return;
-    }
+  // Sync input when URL changes externally (back/forward navigation)
+  useEffect(() => {
+    setInputQuery(search.q);
+  }, [search.q]);
 
-    setLoading(true);
-    setError(null);
+  // Debounced URL update (300ms delay)
+  const debouncedUpdateUrl = useDebouncedCallback((newQuery: string) => {
+    navigate({
+      to: '.',
+      search: (prev) => ({ ...prev, q: newQuery, page: 1 }),
+      replace: true, // Don't spam history
+    });
+  }, 300);
 
-    try {
-      // Build filter string from facets
-      const filterParts: string[] = [];
-      for (const [key, value] of Object.entries(filters)) {
-        if (value !== undefined && value !== null && value !== '') {
-          filterParts.push(`${key}:=${value}`);
-        }
-      }
-
-      // Build search params
-      const params = new URLSearchParams({
-        q: query || '*',
-        query_by: 'title,company,description',
-        page: String(newPage),
-        per_page: '25',
-        facet_by: 'source,city,state,second_chance,no_background_check,bus_accessible,rail_accessible,shift_morning,shift_afternoon,shift_evening,shift_overnight,shift_flexible,is_urgent,is_easy_apply',
-      });
-
-      if (filterParts.length > 0) {
-        params.set('filter_by', filterParts.join(' && '));
-      }
-
-      const response = await fetch(
-        `${TYPESENSE_URL}/collections/jobs/documents/search?${params}`,
-        {
-          headers: {
-            'X-TYPESENSE-API-KEY': TYPESENSE_SEARCH_KEY,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Search failed: ${response.status} ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      setResults(result as SearchResult);
-      setPage(newPage);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Search failed');
-    } finally {
-      setLoading(false);
-    }
+  // Handle input change: update local state immediately, debounce URL update
+  const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newQuery = e.target.value;
+    setInputQuery(newQuery);
+    debouncedUpdateUrl(newQuery);
   };
 
-  const toggleFilter = (key: keyof SearchFilters) => {
-    setFilters((prev) => {
-      const newFilters = { ...prev };
-      if (newFilters[key] === true) {
-        delete newFilters[key];
-      } else {
-        (newFilters[key] as boolean) = true;
-      }
-      return newFilters;
+  // Derive filters from search params
+  const filters: Partial<Record<FilterKey, boolean>> = {};
+  for (const key of FILTER_KEYS) {
+    if (search[key] === true) {
+      filters[key] = true;
+    }
+  }
+
+  // Use TanStack Query for search - keys off URL params
+  const {
+    data: results,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['typesense-jobs', search.q, search.page, filters],
+    queryFn: () => searchTypesense({ q: search.q, page: search.page, filters }),
+    staleTime: 30_000, // Consider data fresh for 30s
+  });
+
+  // Toggle filter updates URL immediately (no debounce needed)
+  const toggleFilter = (key: FilterKey) => {
+    navigate({
+      to: '.',
+      search: (prev) => ({
+        ...prev,
+        [key]: prev[key] ? undefined : true,
+        page: 1, // Reset to page 1 when filter changes
+      }),
+    });
+  };
+
+  // Pagination updates URL
+  const goToPage = (newPage: number) => {
+    navigate({
+      to: '.',
+      search: (prev) => ({ ...prev, page: newPage }),
     });
   };
 
@@ -223,8 +269,6 @@ export function ScrapedJobsTable() {
           description: 'The job has been removed from all systems.',
         });
       } else if (deleteTarget === 'bulk') {
-        // For bulk delete, we need to delete by typesenseId
-        // The adminDeleteJobs expects Convex IDs, so we need to delete one by one
         const typesenseIds = Array.from(selectedIds);
         let deleted = 0;
         let failed = 0;
@@ -243,8 +287,8 @@ export function ScrapedJobsTable() {
         });
         setSelectedIds(new Set());
       }
-      // Refresh search results
-      await doSearch(page);
+      // Refetch search results
+      await refetch();
     } catch (err) {
       toast({
         title: 'Delete failed',
@@ -259,20 +303,22 @@ export function ScrapedJobsTable() {
     }
   };
 
+  // Check if search is pending (either loading or debounce pending)
+  const isPending = isLoading || debouncedUpdateUrl.isPending();
+
   return (
     <div className="space-y-4">
-      {/* Search Bar */}
+      {/* Search Bar - search-as-you-type */}
       <div className="flex gap-2">
         <Input
           placeholder="Search jobs..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && doSearch(1)}
+          value={inputQuery}
+          onChange={handleQueryChange}
           className="flex-1"
         />
-        <Button onClick={() => doSearch(1)} disabled={loading}>
-          {loading ? 'Searching...' : 'Search'}
-        </Button>
+        {isPending && (
+          <span className="text-sm text-gray-400 self-center">Searching...</span>
+        )}
         {selectedIds.size > 0 && (
           <Button
             variant="destructive"
@@ -349,7 +395,9 @@ export function ScrapedJobsTable() {
 
       {/* Error */}
       {error && (
-        <div className="p-4 bg-red-50 text-red-700 rounded-lg">{error}</div>
+        <div className="p-4 bg-red-50 text-red-700 rounded-lg">
+          {error instanceof Error ? error.message : 'Search failed'}
+        </div>
       )}
 
       {/* Results */}
@@ -443,22 +491,22 @@ export function ScrapedJobsTable() {
           {results.found > 25 && (
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">
-                Page {page} of {Math.ceil(results.found / 25)}
+                Page {search.page} of {Math.ceil(results.found / 25)}
               </span>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => doSearch(page - 1)}
-                  disabled={page <= 1 || loading}
+                  onClick={() => goToPage(search.page - 1)}
+                  disabled={search.page <= 1 || isLoading}
                 >
                   Previous
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => doSearch(page + 1)}
-                  disabled={page >= Math.ceil(results.found / 25) || loading}
+                  onClick={() => goToPage(search.page + 1)}
+                  disabled={search.page >= Math.ceil(results.found / 25) || isLoading}
                 >
                   Next
                 </Button>
@@ -468,11 +516,9 @@ export function ScrapedJobsTable() {
         </>
       )}
 
-      {/* Empty State */}
-      {!results && !loading && !error && (
-        <div className="text-center text-gray-500 py-8">
-          Click &quot;Search&quot; to load jobs from Typesense
-        </div>
+      {/* Loading State */}
+      {isLoading && !results && (
+        <div className="text-center text-gray-500 py-8">Loading jobs...</div>
       )}
 
       {/* Delete Confirmation Dialog */}
