@@ -13,9 +13,31 @@ import type { Id } from './_generated/dataModel';
 
 const zodMutation = zCustomMutation(mutation, NoOp);
 
+// Profile document validator for return types
+const profileDocValidator = v.object({
+  _id: v.id('profiles'),
+  _creationTime: v.number(),
+  workosUserId: v.string(),
+  email: v.string(),
+  firstName: v.optional(v.string()),
+  lastName: v.optional(v.string()),
+  thingsICanOffer: v.array(v.string()),
+  headline: v.optional(v.string()),
+  bio: v.optional(v.string()),
+  resumeLink: v.optional(v.string()),
+  location: v.optional(v.string()),
+  website: v.optional(v.string()),
+  instagramUrl: v.optional(v.string()),
+  linkedinUrl: v.optional(v.string()),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+  referralCode: v.optional(v.string()),
+});
+
 // Internal query for workflow to fetch profile by ID
 export const get = internalQuery({
   args: { id: v.id('profiles') },
+  returns: v.union(profileDocValidator, v.null()),
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -23,6 +45,7 @@ export const get = internalQuery({
 
 export const getByWorkosUserId = query({
   args: { workosUserId: v.string() },
+  returns: v.union(profileDocValidator, v.null()),
   handler: async (ctx, args) => {
     return await ctx.db
       .query('profiles')
@@ -35,6 +58,7 @@ export const getByWorkosUserId = query({
 
 export const getByEmail = query({
   args: { email: v.string() },
+  returns: v.union(profileDocValidator, v.null()),
   handler: async (ctx, args) => {
     return await ctx.db
       .query('profiles')

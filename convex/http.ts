@@ -1,4 +1,5 @@
 import { httpRouter } from 'convex/server';
+import { z } from 'zod';
 
 import { api, internal } from './_generated/api';
 import { httpAction } from './_generated/server';
@@ -6,6 +7,59 @@ import { env } from './lib/env';
 import { verifyTwilioSignature } from './lib/twilio';
 
 import type { Id } from './_generated/dataModel';
+
+// Input validation schemas for HTTP endpoints
+const insertJobSchema = z.object({
+  externalId: z.string(),
+  source: z.string(),
+  company: z.string(),
+  title: z.string(),
+  description: z.string().optional(),
+  url: z.string(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+  payMin: z.number().optional(),
+  payMax: z.number().optional(),
+  payType: z.string().optional(),
+  isUrgent: z.boolean().optional(),
+  isEasyApply: z.boolean().optional(),
+  postedAt: z.number().optional(),
+});
+
+const enrichJobSchema = z.object({
+  id: z.string(),
+  transitScore: z.string().optional(),
+  transitDistance: z.number().optional(),
+  busAccessible: z.boolean().optional(),
+  railAccessible: z.boolean().optional(),
+  shiftMorning: z.boolean().optional(),
+  shiftAfternoon: z.boolean().optional(),
+  shiftEvening: z.boolean().optional(),
+  shiftOvernight: z.boolean().optional(),
+  shiftFlexible: z.boolean().optional(),
+  shiftSource: z.string().optional(),
+  secondChance: z.boolean().optional(),
+  noBackgroundCheck: z.boolean().optional(),
+});
+
+const markIndexedSchema = z.object({
+  id: z.string(),
+  typesenseId: z.string(),
+});
+
+const updateStatusSchema = z.object({
+  id: z.string(),
+  status: z.enum(['scraped', 'enriching', 'enriched', 'indexed', 'failed']),
+  failureReason: z.string().optional(),
+  failureStage: z.string().optional(),
+});
+
+const existsSchema = z.object({
+  externalId: z.string(),
+  source: z.string(),
+});
 
 // Validate all env vars on first HTTP request
 void env.TOKEN_SIGNING_SECRET;
@@ -184,6 +238,119 @@ http.route({
     return new Response('<Response></Response>', {
       headers: { 'Content-Type': 'text/xml' },
     });
+  }),
+});
+
+// ============================================================================
+// Scraped Jobs API - for scrape-jobs pipeline
+// ============================================================================
+
+// Verify pipeline secret
+function verifyPipelineSecret(request: Request): boolean {
+  const secret = request.headers.get('X-Pipeline-Secret');
+  return secret === env.SCRAPE_PIPELINE_SECRET;
+}
+
+// Insert a new scraped job
+http.route({
+  path: '/api/scraped-jobs/insert',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!verifyPipelineSecret(request)) {
+      return new Response('Unauthorized', { status: 401 });
+    }
+    const rawBody = await request.json();
+    const parseResult = insertJobSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      return Response.json({ error: 'Invalid input', details: parseResult.error.flatten() }, { status: 400 });
+    }
+    const id = await ctx.runMutation(internal.scrapedJobs.insert, parseResult.data);
+    return Response.json({ id });
+  }),
+});
+
+// Add enrichment data
+http.route({
+  path: '/api/scraped-jobs/enrich',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!verifyPipelineSecret(request)) {
+      return new Response('Unauthorized', { status: 401 });
+    }
+    const rawBody = await request.json();
+    const parseResult = enrichJobSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      return Response.json({ error: 'Invalid input', details: parseResult.error.flatten() }, { status: 400 });
+    }
+    await ctx.runMutation(internal.scrapedJobs.enrich, {
+      ...parseResult.data,
+      id: parseResult.data.id as Id<'scrapedJobs'>,
+    });
+    return Response.json({ success: true });
+  }),
+});
+
+// Mark as indexed
+http.route({
+  path: '/api/scraped-jobs/indexed',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!verifyPipelineSecret(request)) {
+      return new Response('Unauthorized', { status: 401 });
+    }
+    const rawBody = await request.json();
+    const parseResult = markIndexedSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      return Response.json({ error: 'Invalid input', details: parseResult.error.flatten() }, { status: 400 });
+    }
+    await ctx.runMutation(internal.scrapedJobs.markIndexed, {
+      ...parseResult.data,
+      id: parseResult.data.id as Id<'scrapedJobs'>,
+    });
+    return Response.json({ success: true });
+  }),
+});
+
+// Update status (for errors)
+http.route({
+  path: '/api/scraped-jobs/status',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!verifyPipelineSecret(request)) {
+      return new Response('Unauthorized', { status: 401 });
+    }
+    const rawBody = await request.json();
+    const parseResult = updateStatusSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      return Response.json({ error: 'Invalid input', details: parseResult.error.flatten() }, { status: 400 });
+    }
+    await ctx.runMutation(internal.scrapedJobs.updateStatus, {
+      ...parseResult.data,
+      id: parseResult.data.id as Id<'scrapedJobs'>,
+    });
+    return Response.json({ success: true });
+  }),
+});
+
+// Check if job exists (dedup fallback)
+http.route({
+  path: '/api/scraped-jobs/exists',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!verifyPipelineSecret(request)) {
+      return new Response('Unauthorized', { status: 401 });
+    }
+    const rawBody = await request.json();
+    const parseResult = existsSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      return Response.json({ error: 'Invalid input', details: parseResult.error.flatten() }, { status: 400 });
+    }
+    const { externalId, source } = parseResult.data;
+    const job = await ctx.runQuery(internal.scrapedJobs.getByExternalId, {
+      externalId,
+      source,
+    });
+    return Response.json({ exists: !!job, job });
   }),
 });
 

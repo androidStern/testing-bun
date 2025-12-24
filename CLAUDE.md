@@ -37,6 +37,7 @@ bun run format         # Prettier
 ### Backend (Convex + Inngest)
 
 **Core Domain Tables:**
+
 - `profiles` - User profiles linked to WorkOS user IDs, includes referral codes
 - `senders` - Phone/email records with approval status (pending/approved/blocked)
 - `jobSubmissions` - Unified job posts from SMS or form, processed through AI parsing workflow
@@ -45,14 +46,17 @@ bun run format         # Prettier
 - `resumes` - Structured resume data per user
 
 **OAuth Tables** (for Circle.so SSO):
+
 - `oauthAuthorizationCodes`, `oauthAccessTokens`, `oauthRefreshTokens`, `oauthClients`
 
 **Workflow Processing:**
+
 - Inngest handles async workflows (job parsing, application processing)
 - HTTP endpoints in `convex/http.ts` bridge to Node.js actions for Inngest
 - Twilio webhook at `/webhooks/twilio-sms` processes inbound SMS
 
 **Key Patterns:**
+
 - Use `internal.*` for private functions, `api.*` for public
 - HTTP actions bridge to Node.js actions when `node:async_hooks` is needed
 - Slack integration for admin approval workflows
@@ -60,11 +64,13 @@ bun run format         # Prettier
 ### Frontend (TanStack Start)
 
 **Authentication Flow:**
+
 - WorkOS AuthKit with redirect-based auth
 - SSR token extraction workaround in `src/router.tsx` for hydration
 - Protected routes use `_authenticated` layout
 
 **Key Routes:**
+
 - `/` - Landing page
 - `/_authenticated/*` - Protected user routes (resumes, invite)
 - `/_authenticated/_admin/*` - Admin dashboard
@@ -73,11 +79,13 @@ bun run format         # Prettier
 - `/employer/*` - Employer portal
 
 **Route Generation:**
+
 - Do NOT manually generate route files with TanStack Router CLI
 - The TanStack Start dev server auto-compiles routes on change
 - If routes seem stale, verify the dev server is running
 
 **Integrations:**
+
 - Circle.so - Community platform (job posts, SSO)
 - Twilio - SMS handling
 - OpenAI/Groq - AI job parsing
@@ -85,6 +93,7 @@ bun run format         # Prettier
 ## Convex Conventions
 
 Follow the rules in `.cursor/rules/convex_rules.mdc`:
+
 - Always include `args` and `returns` validators on all functions
 - Use `v.null()` for functions that don't return a value
 - Use `withIndex()` instead of `filter()` for queries
@@ -96,23 +105,24 @@ Follow the rules in `.cursor/rules/convex_rules.mdc`:
 Avoid schema duplication between Convex tables and forms. Use `convex-helpers` to define schemas once with Zod:
 
 ```typescript
-import { zodToConvex, zodOutputToConvex, zid } from "convex-helpers/server/zod";
+import { zodToConvex, zodOutputToConvex, zid } from 'convex-helpers/server/zod';
 
 // Define schema once with Zod
 const profileSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
-  userId: zid("users"), // Type-safe Convex ID
+  userId: zid('users'), // Type-safe Convex ID
 });
 
 // For table definitions (validates output after Zod parsing):
-defineTable(zodOutputToConvex(profileSchema))
+defineTable(zodOutputToConvex(profileSchema));
 
 // For function args (validates input before Zod parsing):
-args: zodToConvex(profileSchema)
+args: zodToConvex(profileSchema);
 ```
 
 **Key functions:**
+
 - `zodToConvex` - Converts Zod schema to Convex validator (use for args, validates input)
 - `zodOutputToConvex` - For table definitions (validates Zod's output)
 - `zid("tableName")` - Type-safe ID validator for Convex tables
@@ -124,23 +134,27 @@ args: zodToConvex(profileSchema)
 Use TanStack Form with Zod validation—never raw `useState` with manual handlers.
 
 **Pattern:**
+
 ```typescript
-import { useForm } from "@tanstack/react-form";
-import { z } from "zod";
+import { useForm } from '@tanstack/react-form';
+import { z } from 'zod';
 
 const schema = z.object({
   email: z.string().email(),
-  age: z.number().gte(13, "Must be 13+"),
+  age: z.number().gte(13, 'Must be 13+'),
 });
 
 const form = useForm({
-  defaultValues: { email: "", age: 0 },
+  defaultValues: { email: '', age: 0 },
   validators: { onChange: schema },
-  onSubmit: async ({ value }) => { /* handle submit */ },
+  onSubmit: async ({ value }) => {
+    /* handle submit */
+  },
 });
 ```
 
 **Shadcn Integration:**
+
 - Use shadcn form components (`Input`, `Select`, `Checkbox`, etc.) inside `<form.Field>`
 - See [shadcn TanStack Form guide](https://ui.shadcn.com/docs/forms/tanstack-form) for component patterns
 - Field errors accessible via `field.state.meta.errors`
@@ -157,7 +171,7 @@ const form = useForm({
 
 - **No `any`**—use `unknown` and narrow with type guards
 - **No type casting** (`as Type`)—fix the actual types
-- **Catch errors only at boundaries** (UI handlers, API routes) where user feedback is needed
+- **Catch errors only at boundaries** (UI handlers, API routes) where user feedback is needed. Don't swallow errors unnecessarily.
 - Let TypeScript infer types when possible; explicit annotations for public APIs
 
 ## Error Handling
@@ -173,18 +187,19 @@ const form = useForm({
 // BAD: Swallowing errors
 const apiKey = process.env.API_KEY;
 if (!apiKey) {
-  console.error("Missing API_KEY");
+  console.error('Missing API_KEY');
   return; // Silent failure, problem discovered later
 }
 
 // GOOD: Crash fast
 const apiKey = process.env.API_KEY;
-if (!apiKey) throw new Error("API_KEY env var is required");
+if (!apiKey) throw new Error('API_KEY env var is required');
 ```
 
 ## Design Documentation
 
 Design documents live in `/docs`. When making architectural decisions:
+
 1. Review existing docs for relevance
 2. Update outdated sections to reflect current state
 3. Add new content to existing docs where logical

@@ -1,10 +1,11 @@
 import {
+  customAction,
   customCtx,
   customMutation,
   customQuery,
 } from 'convex-helpers/server/customFunctions';
 
-import { mutation, query } from './_generated/server';
+import { action, mutation, query } from './_generated/server';
 
 // Helper to check admin status
 function isAdminEmail(email: string): boolean {
@@ -66,6 +67,26 @@ export const adminMutation = customMutation(
       .query('profiles')
       .withIndex('by_workos_user_id', (q) => q.eq('workosUserId', identity.subject))
       .first();
+
+    if (!profile?.email) throw new Error('Profile not found');
+    if (!isAdminEmail(profile.email)) throw new Error('Admin access required');
+
+    return { user: { subject: identity.subject, email: profile.email } };
+  }),
+);
+
+// Admin-only action - checks auth via runQuery
+export const adminAction = customAction(
+  action,
+  customCtx(async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity?.subject) throw new Error('Authentication required');
+
+    // Actions don't have direct db access, use public query
+    const { api } = require('./_generated/api');
+    const profile = await ctx.runQuery(api.profiles.getByWorkosUserId, {
+      workosUserId: identity.subject,
+    });
 
     if (!profile?.email) throw new Error('Profile not found');
     if (!isAdminEmail(profile.email)) throw new Error('Admin access required');

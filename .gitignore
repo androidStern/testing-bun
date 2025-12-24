@@ -21,6 +21,7 @@
 /build
 /dist/
 /dist-ssr/
+/data/gtfs/*
 
 # misc
 .DS_Store

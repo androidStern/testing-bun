@@ -248,4 +248,78 @@ export default defineSchema({
     .index('by_job', ['jobSubmissionId'])
     .index('by_seeker', ['seekerProfileId'])
     .index('by_job_and_status', ['jobSubmissionId', 'status']),
+
+  // Scraped Jobs - from external job boards (Snagajob, Indeed, etc.)
+  // Separate from jobSubmissions which are employer-submitted
+  scrapedJobs: defineTable({
+    // External identification
+    externalId: v.string(),
+    source: v.string(),
+
+    // Core job data
+    company: v.string(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    url: v.string(),
+
+    // Location
+    city: v.optional(v.string()),
+    state: v.optional(v.string()),
+    lat: v.optional(v.float64()),
+    lng: v.optional(v.float64()),
+
+    // Salary
+    payMin: v.optional(v.float64()),
+    payMax: v.optional(v.float64()),
+    payType: v.optional(v.string()),
+
+    // Job metadata
+    isUrgent: v.optional(v.boolean()),
+    isEasyApply: v.optional(v.boolean()),
+    postedAt: v.optional(v.number()),
+
+    // Enrichment: Transit
+    transitScore: v.optional(v.string()),
+    transitDistance: v.optional(v.float64()),
+    busAccessible: v.optional(v.boolean()),
+    railAccessible: v.optional(v.boolean()),
+
+    // Enrichment: Shifts
+    shiftMorning: v.optional(v.boolean()),
+    shiftAfternoon: v.optional(v.boolean()),
+    shiftEvening: v.optional(v.boolean()),
+    shiftOvernight: v.optional(v.boolean()),
+    shiftFlexible: v.optional(v.boolean()),
+    shiftSource: v.optional(v.string()),
+
+    // Enrichment: Second-chance
+    secondChance: v.optional(v.boolean()),
+    noBackgroundCheck: v.optional(v.boolean()),
+
+    // Pipeline status tracking
+    status: v.union(
+      v.literal('scraped'),
+      v.literal('enriching'),
+      v.literal('enriched'),
+      v.literal('indexed'),
+      v.literal('failed')
+    ),
+
+    // Pipeline timestamps
+    scrapedAt: v.number(),
+    enrichedAt: v.optional(v.number()),
+    indexedAt: v.optional(v.number()),
+
+    // Error tracking
+    failureReason: v.optional(v.string()),
+    failureStage: v.optional(v.string()),
+
+    // Typesense reference
+    typesenseId: v.optional(v.string()),
+  })
+    .index('by_external_id_source', ['externalId', 'source'])
+    .index('by_status', ['status'])
+    .index('by_source', ['source'])
+    .index('by_scraped_at', ['scrapedAt'])
+    .index('by_typesense_id', ['typesenseId']),
 });

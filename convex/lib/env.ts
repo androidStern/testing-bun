@@ -4,6 +4,10 @@ const schema = z.object({
   // Token/Auth
   TOKEN_SIGNING_SECRET: z.string().min(32),
   CONVEX_INTERNAL_SECRET: z.string().min(32),
+
+  // Scrape Pipeline
+  SCRAPE_PIPELINE_URL: z.string().url(),
+  SCRAPE_PIPELINE_SECRET: z.string().min(32),
   WORKOS_CLIENT_ID: z.string().startsWith('client_'),
   ADMIN_EMAILS: z.string().optional(),
 

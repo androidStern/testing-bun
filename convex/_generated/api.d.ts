@@ -36,6 +36,8 @@ import type * as profileWebhook from "../profileWebhook.js";
 import type * as profiles from "../profiles.js";
 import type * as referrals from "../referrals.js";
 import type * as resumes from "../resumes.js";
+import type * as scrapedJobs from "../scrapedJobs.js";
+import type * as scrapedJobsSearch from "../scrapedJobsSearch.js";
 import type * as senders from "../senders.js";
 
 import type {
@@ -73,6 +75,8 @@ declare const fullApi: ApiFromModules<{
   profiles: typeof profiles;
   referrals: typeof referrals;
   resumes: typeof resumes;
+  scrapedJobs: typeof scrapedJobs;
+  scrapedJobsSearch: typeof scrapedJobsSearch;
   senders: typeof senders;
 }>;
 

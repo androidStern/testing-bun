@@ -4,9 +4,11 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useRef } from 'react';
 
 import { api } from '../../../../convex/_generated/api';
+import { CacheManagement } from '../../../components/admin/CacheManagement';
 import { EmployerCard } from '../../../components/admin/EmployerCard';
 import { JobSubmissionCard } from '../../../components/admin/JobSubmissionCard';
 import { MessageCard } from '../../../components/admin/MessageCard';
+import { ScrapedJobsTable } from '../../../components/admin/ScrapedJobsTable';
 import { SenderCard } from '../../../components/admin/SenderCard';
 import {
   Tabs,
@@ -45,6 +47,8 @@ function AdminDashboard() {
           <TabsTrigger value="all-messages">All Messages</TabsTrigger>
           <TabsTrigger value="pending-employers">Pending Employers</TabsTrigger>
           <TabsTrigger value="all-employers">All Employers</TabsTrigger>
+          <TabsTrigger value="scraped-jobs">Scraped Jobs</TabsTrigger>
+          <TabsTrigger value="cache">Cache</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending-jobs">
@@ -77,6 +81,14 @@ function AdminDashboard() {
 
         <TabsContent value="all-employers">
           <AllEmployersTab />
+        </TabsContent>
+
+        <TabsContent value="scraped-jobs">
+          <ScrapedJobsTable />
+        </TabsContent>
+
+        <TabsContent value="cache">
+          <CacheManagement />
         </TabsContent>
       </Tabs>
     </div>
