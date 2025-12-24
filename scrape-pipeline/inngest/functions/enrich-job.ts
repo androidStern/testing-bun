@@ -15,7 +15,7 @@ import { indexJob, type EnrichedJob } from "../../lib/typesense";
 export const enrichJobFn = inngest.createFunction(
   {
     id: "enrich-job",
-    concurrency: { limit: 20 }, // Process up to 20 jobs in parallel
+    concurrency: { limit: 5 },
     retries: 3,
   },
   { event: "job/needs-enrichment" },

@@ -76,7 +76,7 @@ function toConvexEnrichment(
 export const processBatch = inngest.createFunction(
   {
     id: "process-batch",
-    concurrency: { limit: 10 }, // Process up to 10 batches in parallel
+    concurrency: { limit: 5 },
     retries: 3,
   },
   { event: "batch/process" },
@@ -87,12 +87,10 @@ export const processBatch = inngest.createFunction(
     // Initialize services
     await step.run("init", async () => {
       const redis = getRedis();
-      if (process.env.MAPBOX_API_KEY) {
-        await geocoder.initialize({ apiKey: process.env.MAPBOX_API_KEY });
-        await dedup.initialize({ redis, geocoder: geocoder.geocode });
-      } else {
-        await dedup.initialize({ redis });
-      }
+      const mapboxKey = process.env.MAPBOX_API_KEY;
+      if (!mapboxKey) throw new Error("MAPBOX_API_KEY env var is required");
+      await geocoder.initialize({ apiKey: mapboxKey });
+      await dedup.initialize({ redis, geocoder: geocoder.geocode });
       await loadTransitData();
     });
 
