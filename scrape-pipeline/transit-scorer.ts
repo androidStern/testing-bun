@@ -16,6 +16,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as AdmZip from 'adm-zip';
 
 // Simple CSV parser (GTFS files are well-formed, don't need full parser)
 function parseCSV(content: string): Record<string, string>[] {
@@ -207,14 +208,9 @@ async function downloadGTFS(feed: typeof GTFS_FEEDS[0]): Promise<string | null> 
       fs.mkdirSync(extractDir, { recursive: true });
     }
     
-    // Use unzip command
-    const { execSync } = require('child_process');
-    try {
-      execSync(`unzip -o -q "${zipPath}" -d "${extractDir}"`, { stdio: 'pipe' });
-    } catch (e) {
-      console.log(`   ⚠️ Failed to extract ${feed.shortName}`);
-      return null;
-    }
+    // Extract using adm-zip (no system dependency)
+    const zip = new AdmZip.default(zipPath);
+    zip.extractAllTo(extractDir, true);
     
     console.log(`   ✓ ${feed.name} ready`);
     return extractDir;

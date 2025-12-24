@@ -65,30 +65,54 @@ async function initialize() {
 
 // Health check response
 async function healthCheck(): Promise<Response> {
-  const health: Record<string, any> = {
-    status: "ok",
-    timestamp: new Date().toISOString(),
-  };
+  const FLARESOLVERR_URL = process.env.FLARESOLVERR_URL || "http://localhost:8191/v1";
 
-  // Check Redis
+  const services: Record<string, { status: "healthy" | "unhealthy"; error?: string }> = {};
+  let allHealthy = true;
+
+  // Check Redis (required)
   try {
     const redis = getRedis();
     await redis.ping();
-    health.redis = "connected";
-  } catch {
-    health.redis = "disconnected";
+    services.redis = { status: "healthy" };
+  } catch (err) {
+    services.redis = { status: "unhealthy", error: (err as Error).message };
+    allHealthy = false;
   }
 
-  // Check Typesense
+  // Check Typesense (required)
   try {
     const typesense = getTypesense();
     await typesense.health.retrieve();
-    health.typesense = "connected";
-  } catch {
-    health.typesense = "disconnected";
+    services.typesense = { status: "healthy" };
+  } catch (err) {
+    services.typesense = { status: "unhealthy", error: (err as Error).message };
+    allHealthy = false;
   }
 
-  return Response.json(health);
+  // Check FlareSolverr (required for scraping)
+  try {
+    const response = await fetch(FLARESOLVERR_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cmd: "sessions.list" }),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    services.flaresolverr = { status: "healthy" };
+  } catch (err) {
+    services.flaresolverr = { status: "unhealthy", error: (err as Error).message };
+    allHealthy = false;
+  }
+
+  const health = {
+    status: allHealthy ? "healthy" : "unhealthy",
+    timestamp: new Date().toISOString(),
+    services,
+  };
+
+  return Response.json(health, { status: allHealthy ? 200 : 503 });
 }
 
 // Main server
