@@ -12,6 +12,7 @@ import { inngest } from "./inngest/client";
 import { scrapeBatch } from "./inngest/functions/scrape-batch";
 import { processBatch } from "./inngest/functions/process-batch";
 import { scrapeFairChance } from "./inngest/functions/scrape-fair-chance";
+import { scrapeCraigslist } from "./inngest/functions/scrape-craigslist";
 import { getRedis, closeRedis } from "./lib/redis";
 import { getTypesense, ensureJobsCollection, deleteJobDocuments, JOBS_COLLECTION } from "./lib/typesense";
 import { loadTransitData } from "./transit-scorer";
@@ -23,7 +24,7 @@ const PORT = parseInt(process.env.SCRAPE_PORT || "3001");
 // Inngest serve handler
 const inngestHandler = serve({
   client: inngest,
-  functions: [scrapeBatch, processBatch, scrapeFairChance],
+  functions: [scrapeBatch, processBatch, scrapeFairChance, scrapeCraigslist],
 });
 
 // Initialize services on startup

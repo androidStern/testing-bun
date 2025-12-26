@@ -40,6 +40,13 @@ const FILTER_KEYS = [
   'tier_medium',
   'tier_low',
   'tier_unlikely',
+  'tier_unknown',
+  // Source filters
+  'source_snagajob',
+  'source_craigslist',
+  // Job type filters
+  'job_type_job',
+  'job_type_gig',
   // Transit
   'bus_accessible',
   'rail_accessible',
@@ -64,6 +71,8 @@ interface SearchResult {
       id: string
       title: string
       company: string
+      source?: string
+      job_type?: string
       city?: string
       state?: string
       transit_score?: number
@@ -104,21 +113,40 @@ async function searchTypesense(params: SearchParams): Promise<SearchResult> {
   if (params.filters.tier_medium) selectedTiers.push('medium')
   if (params.filters.tier_low) selectedTiers.push('low')
   if (params.filters.tier_unlikely) selectedTiers.push('unlikely')
+  if (params.filters.tier_unknown) selectedTiers.push('unknown')
 
   if (selectedTiers.length > 0) {
     filterParts.push(`second_chance_tier:[${selectedTiers.join(',')}]`)
   }
 
-  // Handle other boolean filters normally
+  // Handle source filters - combine into OR filter for source
+  const selectedSources: string[] = []
+  if (params.filters.source_snagajob) selectedSources.push('snagajob')
+  if (params.filters.source_craigslist) selectedSources.push('craigslist')
+
+  if (selectedSources.length > 0) {
+    filterParts.push(`source:[${selectedSources.join(',')}]`)
+  }
+
+  // Handle job type filters - combine into OR filter for job_type
+  const selectedJobTypes: string[] = []
+  if (params.filters.job_type_job) selectedJobTypes.push('job')
+  if (params.filters.job_type_gig) selectedJobTypes.push('gig')
+
+  if (selectedJobTypes.length > 0) {
+    filterParts.push(`job_type:[${selectedJobTypes.join(',')}]`)
+  }
+
+  // Handle other boolean filters normally (skip tier_, source_, job_type_ which are handled above)
   for (const [key, value] of Object.entries(params.filters)) {
-    if (value === true && !key.startsWith('tier_')) {
+    if (value === true && !key.startsWith('tier_') && !key.startsWith('source_') && !key.startsWith('job_type_')) {
       filterParts.push(`${key}:=true`)
     }
   }
 
   const searchParams = new URLSearchParams({
     facet_by:
-      'source,city,state,second_chance_tier,bus_accessible,rail_accessible,shift_morning,shift_afternoon,shift_evening,shift_overnight,shift_flexible,is_urgent,is_easy_apply',
+      'source,job_type,city,state,second_chance_tier,bus_accessible,rail_accessible,shift_morning,shift_afternoon,shift_evening,shift_overnight,shift_flexible,is_urgent,is_easy_apply',
     page: String(params.page),
     per_page: '25',
     q: params.q || '*',
@@ -376,6 +404,39 @@ export function ScrapedJobsTable() {
           label='Unlikely'
           onChange={() => toggleFilter('tier_unlikely')}
         />
+        <FilterCheckbox
+          checked={filters.tier_unknown === true}
+          label='Unknown'
+          onChange={() => toggleFilter('tier_unknown')}
+        />
+
+        <span className='text-gray-300 mx-1'>|</span>
+
+        <span className='text-gray-500 mr-2'>Source:</span>
+        <FilterCheckbox
+          checked={filters.source_snagajob === true}
+          label='Snagajob'
+          onChange={() => toggleFilter('source_snagajob')}
+        />
+        <FilterCheckbox
+          checked={filters.source_craigslist === true}
+          label='Craigslist'
+          onChange={() => toggleFilter('source_craigslist')}
+        />
+
+        <span className='text-gray-300 mx-1'>|</span>
+
+        <span className='text-gray-500 mr-2'>Type:</span>
+        <FilterCheckbox
+          checked={filters.job_type_job === true}
+          label='Job'
+          onChange={() => toggleFilter('job_type_job')}
+        />
+        <FilterCheckbox
+          checked={filters.job_type_gig === true}
+          label='Gig'
+          onChange={() => toggleFilter('job_type_gig')}
+        />
 
         <span className='text-gray-300 mx-1'>|</span>
 
@@ -456,6 +517,7 @@ export function ScrapedJobsTable() {
                   </th>
                   <th className='px-4 py-2 text-left font-medium'>Title</th>
                   <th className='px-4 py-2 text-left font-medium'>Company</th>
+                  <th className='px-4 py-2 text-left font-medium'>Source</th>
                   <th className='px-4 py-2 text-left font-medium'>Location</th>
                   <th className='px-4 py-2 text-left font-medium'>Transit</th>
                   <th className='px-4 py-2 text-left font-medium'>Shifts</th>
@@ -486,6 +548,24 @@ export function ScrapedJobsTable() {
                       </a>
                     </td>
                     <td className='px-4 py-2'>{hit.document.company}</td>
+                    <td className='px-4 py-2'>
+                      <span className='inline-flex items-center gap-1'>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                            hit.document.source === 'craigslist'
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}
+                        >
+                          {hit.document.source || 'snagajob'}
+                        </span>
+                        {hit.document.job_type === 'gig' && (
+                          <span className='inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800'>
+                            gig
+                          </span>
+                        )}
+                      </span>
+                    </td>
                     <td className='px-4 py-2'>
                       {hit.document.city}
                       {hit.document.state && `, ${hit.document.state}`}

@@ -43,6 +43,7 @@ function toConvexInput(job: SnagajobJob, source: string): ConvexJobInput {
     externalId: job.id,
     isEasyApply: job.isEasyApply ?? undefined,
     isUrgent: job.isUrgent ?? undefined,
+    jobType: job.jobType ?? undefined,
     lat: job.latitude ?? undefined,
     lng: job.longitude ?? undefined,
     payMax: job.payMax ?? undefined,

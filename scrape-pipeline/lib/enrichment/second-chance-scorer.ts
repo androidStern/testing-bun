@@ -260,7 +260,9 @@ export function computeSecondChanceScore(
   const totalWeight = employerWeight * employer.confidence + onetWeight * onet.confidence
 
   // If we have no confident signals, return unknown
-  if (totalWeight < 0.1) {
+  // Threshold 0.4 means we need meaningful signal strength to make a classification
+  // e.g., LLM unknown + employer none + neutral O*NET group → unknown tier
+  if (totalWeight < 0.4) {
     return {
       confidence: 0.1,
       debug: {
@@ -385,8 +387,14 @@ export function generateOnetSignal(onetCode: string | undefined): OnetSignal {
   // Use major group scoring
   const groupScore = ONET_MAJOR_GROUP_SCORES[majorGroup] ?? 0
 
+  // Confidence based on how informative the group score is:
+  // - Strong signals (>= +10 or <= -15): high confidence (0.7)
+  // - Weak/neutral signals (-10 < score < +10): low confidence (0.3)
+  const isStrongSignal = groupScore >= 10 || groupScore <= -15
+  const confidence = isStrongSignal ? 0.7 : 0.3
+
   return {
-    confidence: 0.7,
+    confidence,
     isRestrictedOccupation: false,
     majorGroup,
     score: 50 + groupScore,

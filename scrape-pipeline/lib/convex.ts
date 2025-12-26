@@ -23,6 +23,7 @@ export interface ConvexJobInput {
   payMin?: number
   payMax?: number
   payType?: string
+  jobType?: string
   isUrgent?: boolean
   isEasyApply?: boolean
   postedAt?: number

@@ -71,6 +71,7 @@ export const jobsSchema: CollectionCreateSchema = {
     { name: "second_chance_confidence", type: "float", optional: true },
 
     // Job metadata
+    { name: "job_type", type: "string", facet: true, optional: true },
     { name: "is_urgent", type: "bool", facet: true, optional: true },
     { name: "is_easy_apply", type: "bool", facet: true, optional: true },
     { name: "url", type: "string" },
@@ -146,6 +147,7 @@ export interface TypesenseJobDocument {
   second_chance_score?: number;
   second_chance_tier?: string;
   second_chance_confidence?: number;
+  job_type?: string;
   is_urgent?: boolean;
   is_easy_apply?: boolean;
   url: string;
@@ -231,6 +233,7 @@ export function toTypesenseDocument(
   }
 
   // Job metadata
+  if (job.jobType) doc.job_type = job.jobType;
   doc.is_urgent = job.isUrgent;
   doc.is_easy_apply = job.isEasyApply;
 

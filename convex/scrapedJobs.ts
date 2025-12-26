@@ -42,6 +42,7 @@ const scrapedJobDocValidator = v.object({
   isEasyApply: v.optional(v.boolean()),
   // Job metadata
   isUrgent: v.optional(v.boolean()),
+  jobType: v.optional(v.string()), // 'job' | 'gig'
   lat: v.optional(v.float64()),
   lng: v.optional(v.float64()),
   payMax: v.optional(v.float64()),
@@ -90,6 +91,7 @@ export const insert = internalMutation({
     externalId: v.string(),
     isEasyApply: v.optional(v.boolean()),
     isUrgent: v.optional(v.boolean()),
+    jobType: v.optional(v.string()),
     lat: v.optional(v.float64()),
     lng: v.optional(v.float64()),
     payMax: v.optional(v.float64()),

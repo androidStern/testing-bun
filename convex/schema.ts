@@ -247,6 +247,7 @@ export default defineSchema({
 
     // Job metadata
     isUrgent: v.optional(v.boolean()),
+    jobType: v.optional(v.string()), // 'job' | 'gig'
     lat: v.optional(v.float64()),
     lng: v.optional(v.float64()),
     noBackgroundCheck: v.optional(v.boolean()), // DEPRECATED - being migrated
