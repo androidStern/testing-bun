@@ -26,8 +26,12 @@ export const Route = createFileRoute('/_authenticated/_admin/admin')({
     q: (search.q as string) || '',
     page: Number(search.page) || 1,
     // Boolean filters - handle both boolean (from navigate) and string (from URL)
-    second_chance: search.second_chance === true || search.second_chance === 'true' ? true : undefined,
-    no_background_check: search.no_background_check === true || search.no_background_check === 'true' ? true : undefined,
+    // Second-chance tier filters (new multi-signal scoring)
+    tier_high: search.tier_high === true || search.tier_high === 'true' ? true : undefined,
+    tier_medium: search.tier_medium === true || search.tier_medium === 'true' ? true : undefined,
+    tier_low: search.tier_low === true || search.tier_low === 'true' ? true : undefined,
+    tier_unlikely: search.tier_unlikely === true || search.tier_unlikely === 'true' ? true : undefined,
+    // Transit filters
     bus_accessible: search.bus_accessible === true || search.bus_accessible === 'true' ? true : undefined,
     rail_accessible: search.rail_accessible === true || search.rail_accessible === 'true' ? true : undefined,
     shift_morning: search.shift_morning === true || search.shift_morning === 'true' ? true : undefined,

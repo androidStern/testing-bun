@@ -45,8 +45,14 @@ export interface ConvexJobEnrichment {
   shiftOvernight?: boolean;
   shiftFlexible?: boolean;
   shiftSource?: string;
+  // Second-chance (legacy boolean - derive from tier)
   secondChance?: boolean;
-  noBackgroundCheck?: boolean;
+  // Second-chance scoring (new multi-signal)
+  secondChanceScore?: number;
+  secondChanceTier?: 'high' | 'medium' | 'low' | 'unlikely' | 'unknown';
+  secondChanceConfidence?: number;
+  secondChanceSignals?: string[];
+  secondChanceReasoning?: string;
 }
 
 // Configuration

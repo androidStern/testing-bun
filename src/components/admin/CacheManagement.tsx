@@ -22,8 +22,18 @@ interface CacheStats {
   };
 }
 
+interface FairChanceStats {
+  totalEmployers: number;
+  oldestLastSeen: string | null;
+  newestLastSeen: string | null;
+  employersSeenToday: number;
+  employersStale30Days: number;
+  employersStale60Days: number;
+}
+
 export function CacheManagement() {
   const [stats, setStats] = useState<CacheStats | null>(null);
+  const [fairChanceStats, setFairChanceStats] = useState<FairChanceStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState('');
@@ -31,14 +41,21 @@ export function CacheManagement() {
   const [clearResult, setClearResult] = useState<string | null>(null);
 
   const getCacheStats = useAction(api.scrapedJobs.getCacheStats);
+  const getFairChanceStats = useAction(api.scrapedJobs.getFairChanceStats);
   const clearCache = useAction(api.scrapedJobs.clearCache);
+  const nukeAllJobs = useAction(api.scrapedJobs.nukeAllJobs);
+  const [nukeResult, setNukeResult] = useState<string | null>(null);
 
   const fetchStats = async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await getCacheStats();
-      setStats(result as CacheStats);
+      const [cacheResult, fairChanceResult] = await Promise.all([
+        getCacheStats(),
+        getFairChanceStats(),
+      ]);
+      setStats(cacheResult as CacheStats);
+      setFairChanceStats(fairChanceResult as FairChanceStats);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -78,6 +95,37 @@ export function CacheManagement() {
     try {
       const result = await clearCache({ startDate, endDate });
       setClearResult(`Cleared ${(result as any).removedJobs} jobs (scanned ${(result as any).scanned})`);
+      await fetchStats();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNukeAll = async () => {
+    if (!confirm(
+      '⚠️ DANGER: This will DELETE ALL JOBS from:\n\n' +
+      '• Convex database\n' +
+      '• Typesense search index\n' +
+      '• Redis dedup cache\n\n' +
+      'This action CANNOT be undone.'
+    )) {
+      return;
+    }
+
+    const typed = prompt('Type "nuke" to confirm:');
+    if (typed !== 'nuke') {
+      alert('Cancelled - you must type "nuke" exactly');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setNukeResult(null);
+    try {
+      const result = await nukeAllJobs();
+      setNukeResult(result.message);
       await fetchStats();
     } catch (err) {
       setError((err as Error).message);
@@ -148,6 +196,33 @@ export function CacheManagement() {
         </div>
       )}
 
+      {fairChanceStats && (
+        <div className="rounded-lg border bg-white p-4 shadow-sm">
+          <h3 className="mb-3 font-medium">Fair Chance Employers (Redis)</h3>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-2xl font-semibold">{fairChanceStats.totalEmployers}</p>
+              <p className="text-sm text-gray-500">Total Employers</p>
+            </div>
+            <div>
+              <p className="text-2xl font-semibold text-green-600">{fairChanceStats.employersSeenToday}</p>
+              <p className="text-sm text-gray-500">Seen Today</p>
+            </div>
+            <div>
+              <p className="text-2xl font-semibold text-orange-600">
+                {fairChanceStats.employersStale30Days + fairChanceStats.employersStale60Days}
+              </p>
+              <p className="text-sm text-gray-500">Stale (30d+)</p>
+            </div>
+          </div>
+          {fairChanceStats.newestLastSeen && (
+            <p className="mt-2 text-xs text-gray-400">
+              Last updated: {new Date(fairChanceStats.newestLastSeen).toLocaleDateString()}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="rounded-lg border bg-white p-4 shadow-sm">
         <h3 className="mb-4 font-medium">Clear Cache</h3>
 
@@ -194,6 +269,28 @@ export function CacheManagement() {
           </p>
         </div>
       </div>
+
+      {/* Dev-only nuke button */}
+      {import.meta.env.DEV && (
+        <div className="rounded-lg border-2 border-red-500 bg-red-50 p-4">
+          <h3 className="mb-2 font-medium text-red-700">☢️ Development Only</h3>
+          <p className="mb-4 text-sm text-red-600">
+            Nuke ALL jobs from Convex, Typesense, and Redis. This cannot be undone.
+          </p>
+          {nukeResult && (
+            <div className="mb-4 rounded border border-green-300 bg-green-50 p-2 text-green-700">
+              {nukeResult}
+            </div>
+          )}
+          <button
+            onClick={handleNukeAll}
+            disabled={loading}
+            className="rounded bg-red-600 px-4 py-2 font-bold text-white hover:bg-red-700 disabled:opacity-50"
+          >
+            ☢️ NUKE ALL JOBS
+          </button>
+        </div>
+      )}
     </div>
   );
 }

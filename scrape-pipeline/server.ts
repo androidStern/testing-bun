@@ -10,19 +10,20 @@
 import { serve } from "inngest/bun";
 import { inngest } from "./inngest/client";
 import { scrapeBatch } from "./inngest/functions/scrape-batch";
-import { enrichJobFn } from "./inngest/functions/enrich-job";
 import { processBatch } from "./inngest/functions/process-batch";
+import { scrapeFairChance } from "./inngest/functions/scrape-fair-chance";
 import { getRedis, closeRedis } from "./lib/redis";
-import { getTypesense, ensureJobsCollection, deleteJobDocuments } from "./lib/typesense";
+import { getTypesense, ensureJobsCollection, deleteJobDocuments, JOBS_COLLECTION } from "./lib/typesense";
 import { loadTransitData } from "./transit-scorer";
 import * as dedup from "./dedup/job-dedup-enhanced.js";
+import { getFairChanceRedisStats } from "./fair-chance-employers";
 
 const PORT = parseInt(process.env.SCRAPE_PORT || "3001");
 
 // Inngest serve handler
 const inngestHandler = serve({
   client: inngest,
-  functions: [scrapeBatch, enrichJobFn, processBatch],
+  functions: [scrapeBatch, processBatch, scrapeFairChance],
 });
 
 // Initialize services on startup
@@ -143,6 +144,7 @@ const server = Bun.serve({
           { path: "/api/inngest", description: "Inngest webhook" },
           { path: "/api/admin/cache/stats", description: "Cache statistics" },
           { path: "/api/admin/cache/clear", description: "Clear cache" },
+          { path: "/api/admin/fair-chance/stats", description: "Fair chance employers statistics" },
         ],
       });
     }
@@ -163,6 +165,17 @@ const server = Bun.serve({
           return Response.json(stats);
         } catch (err) {
           console.error("[Server] Cache stats error:", err);
+          return Response.json({ error: (err as Error).message }, { status: 500 });
+        }
+      }
+
+      // Fair chance employers stats
+      if (url.pathname === "/api/admin/fair-chance/stats" && req.method === "GET") {
+        try {
+          const stats = await getFairChanceRedisStats();
+          return Response.json(stats);
+        } catch (err) {
+          console.error("[Server] Fair chance stats error:", err);
           return Response.json({ error: (err as Error).message }, { status: 500 });
         }
       }
@@ -220,6 +233,41 @@ const server = Bun.serve({
           });
         } catch (err) {
           console.error("[Server] Typesense delete error:", err);
+          return Response.json({ error: (err as Error).message }, { status: 500 });
+        }
+      }
+
+      // Nuke all jobs (dev only) - drops Typesense collection and clears Redis
+      if (url.pathname === "/api/admin/nuke-all" && req.method === "POST") {
+        // Safety: Only allow in development
+        if (process.env.NODE_ENV === "production") {
+          return new Response("Not allowed in production", { status: 403 });
+        }
+
+        try {
+          // 1. Drop and recreate Typesense collection (faster than deleting docs)
+          const typesense = getTypesense();
+          try {
+            await typesense.collections(JOBS_COLLECTION).delete();
+            console.log("[Server] Typesense collection dropped");
+          } catch (err: any) {
+            if (err?.httpStatus !== 404) throw err; // Ignore if doesn't exist
+          }
+          await ensureJobsCollection();
+          console.log("[Server] Typesense collection recreated");
+
+          // 2. Clear Redis dedup cache
+          const redis = getRedis();
+          await dedup.initialize({ redis });
+          await dedup.clearAll();
+          console.log("[Server] Redis dedup cache cleared");
+
+          return Response.json({
+            success: true,
+            message: "Typesense collection dropped and recreated, Redis cache cleared",
+          });
+        } catch (err) {
+          console.error("[Server] Nuke-all error:", err);
           return Response.json({ error: (err as Error).message }, { status: 500 });
         }
       }

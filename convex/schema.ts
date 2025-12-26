@@ -292,9 +292,24 @@ export default defineSchema({
     shiftFlexible: v.optional(v.boolean()),
     shiftSource: v.optional(v.string()),
 
-    // Enrichment: Second-chance
+    // Enrichment: Second-chance (legacy keyword detection)
     secondChance: v.optional(v.boolean()),
-    noBackgroundCheck: v.optional(v.boolean()),
+    noBackgroundCheck: v.optional(v.boolean()), // DEPRECATED - being migrated
+
+    // Enrichment: Second-chance scoring (new multi-signal)
+    secondChanceScore: v.optional(v.number()),
+    secondChanceTier: v.optional(
+      v.union(
+        v.literal('high'),
+        v.literal('medium'),
+        v.literal('low'),
+        v.literal('unlikely'),
+        v.literal('unknown')
+      )
+    ),
+    secondChanceConfidence: v.optional(v.float64()),
+    secondChanceSignals: v.optional(v.array(v.string())),
+    secondChanceReasoning: v.optional(v.string()),
 
     // Pipeline status tracking
     status: v.union(

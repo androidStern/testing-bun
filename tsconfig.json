@@ -16,10 +16,10 @@
     "strictNullChecks": true,
     "paths": {
       "@/*": ["./src/*"],
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
     },
-    "types": ["vite/client"]
+    "types": ["vite/client", "bun-types"],
   },
-  "include": ["src/**/*", "vite.config.ts", "types/**/*"],
-  "exclude": ["node_modules", "dist", ".tanstack"]
+  "include": ["src/**/*", "vite.config.ts", "types/**/*", "scrape-pipeline/**/*"],
+  "exclude": ["node_modules", "dist", ".tanstack"],
 }

@@ -23,8 +23,7 @@ export const search = adminAction({
         source: v.optional(v.string()),
         city: v.optional(v.string()),
         state: v.optional(v.string()),
-        second_chance: v.optional(v.boolean()),
-        no_background_check: v.optional(v.boolean()),
+        second_chance_tier: v.optional(v.string()),
         bus_accessible: v.optional(v.boolean()),
         rail_accessible: v.optional(v.boolean()),
         shift_morning: v.optional(v.boolean()),
@@ -68,7 +67,7 @@ export const search = adminAction({
 
     // Whitelist of allowed filter keys to prevent injection
     const ALLOWED_FILTERS = new Set([
-      'source', 'city', 'state', 'second_chance', 'no_background_check',
+      'source', 'city', 'state', 'second_chance_tier',
       'bus_accessible', 'rail_accessible', 'shift_morning', 'shift_afternoon',
       'shift_evening', 'shift_overnight', 'shift_flexible', 'is_urgent', 'is_easy_apply'
     ]);
@@ -105,7 +104,7 @@ export const search = adminAction({
       page: args.page || 1,
       per_page: args.perPage || 25,
       facet_by:
-        'source,city,state,second_chance,no_background_check,bus_accessible,rail_accessible,shift_morning,shift_afternoon,shift_evening,shift_overnight,shift_flexible,is_urgent,is_easy_apply',
+        'source,city,state,second_chance_tier,bus_accessible,rail_accessible,shift_morning,shift_afternoon,shift_evening,shift_overnight,shift_flexible,is_urgent,is_easy_apply',
     });
 
     return results;

@@ -1,19 +1,15 @@
 /**
- * Second-Chance Employer Detection
+ * Second-Chance Employer Detection (Legacy Keyword Matcher)
  *
  * Identifies jobs that are friendly to people with criminal backgrounds
  * through keyword matching on job descriptions.
  *
- * Categories:
- * - secondChance: Explicitly second-chance friendly employer
- * - noBackgroundCheck: Second-chance AND no background check required
- * - backgroundCheckRequired: Background check explicitly required
- * - drugTestRequired: Drug test explicitly required
+ * NOTE: This is the legacy keyword-based detection. The new multi-signal
+ * scorer in second-chance-scorer.ts provides more accurate results.
  */
 
 export interface SecondChanceResult {
   isSecondChance: boolean;
-  noBackgroundCheck: boolean;
   backgroundCheckRequired: boolean;
   drugTestRequired: boolean | null;
   signals: string[];
@@ -108,7 +104,6 @@ export function detectSecondChance(description: string | undefined): SecondChanc
   if (!description) {
     return {
       isSecondChance: false,
-      noBackgroundCheck: false,
       backgroundCheckRequired: false,
       drugTestRequired: null,
       signals: [],
@@ -154,13 +149,8 @@ export function detectSecondChance(description: string | undefined): SecondChanc
     }
   }
 
-  // Determine noBackgroundCheck status
-  // True only if we found positive signals AND no background check phrases
-  const noBackgroundCheck = isSecondChance && !backgroundCheckRequired;
-
   return {
     isSecondChance,
-    noBackgroundCheck,
     backgroundCheckRequired,
     drugTestRequired,
     signals,

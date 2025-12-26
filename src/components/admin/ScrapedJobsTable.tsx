@@ -34,15 +34,21 @@ const routeApi = getRouteApi('/_authenticated/_admin/admin');
 
 // Filter keys that map to boolean Typesense fields
 const FILTER_KEYS = [
-  'second_chance',
-  'no_background_check',
+  // Second-chance tier filters (new multi-signal scoring)
+  'tier_high',
+  'tier_medium',
+  'tier_low',
+  'tier_unlikely',
+  // Transit
   'bus_accessible',
   'rail_accessible',
+  // Shifts
   'shift_morning',
   'shift_afternoon',
   'shift_evening',
   'shift_overnight',
   'shift_flexible',
+  // Job metadata
   'is_urgent',
   'is_easy_apply',
 ] as const;
@@ -60,7 +66,9 @@ interface SearchResult {
       city?: string;
       state?: string;
       transit_score?: number;
-      second_chance?: boolean;
+      second_chance_tier?: 'high' | 'medium' | 'low' | 'unlikely' | 'unknown';
+      second_chance_score?: number;
+      second_chance_confidence?: number;
       shift_morning?: boolean;
       shift_afternoon?: boolean;
       shift_evening?: boolean;
@@ -88,8 +96,21 @@ async function searchTypesense(params: SearchParams): Promise<SearchResult> {
 
   // Build filter string from active filters
   const filterParts: string[] = [];
+
+  // Handle tier filters specially - combine into OR filter for second_chance_tier
+  const selectedTiers: string[] = [];
+  if (params.filters.tier_high) selectedTiers.push('high');
+  if (params.filters.tier_medium) selectedTiers.push('medium');
+  if (params.filters.tier_low) selectedTiers.push('low');
+  if (params.filters.tier_unlikely) selectedTiers.push('unlikely');
+
+  if (selectedTiers.length > 0) {
+    filterParts.push(`second_chance_tier:[${selectedTiers.join(',')}]`);
+  }
+
+  // Handle other boolean filters normally
   for (const [key, value] of Object.entries(params.filters)) {
-    if (value === true) {
+    if (value === true && !key.startsWith('tier_')) {
       filterParts.push(`${key}:=true`);
     }
   }
@@ -99,7 +120,7 @@ async function searchTypesense(params: SearchParams): Promise<SearchResult> {
     query_by: 'title,company,description',
     page: String(params.page),
     per_page: '25',
-    facet_by: 'source,city,state,second_chance,no_background_check,bus_accessible,rail_accessible,shift_morning,shift_afternoon,shift_evening,shift_overnight,shift_flexible,is_urgent,is_easy_apply',
+    facet_by: 'source,city,state,second_chance_tier,bus_accessible,rail_accessible,shift_morning,shift_afternoon,shift_evening,shift_overnight,shift_flexible,is_urgent,is_easy_apply',
   });
 
   if (filterParts.length > 0) {
@@ -333,18 +354,31 @@ export function ScrapedJobsTable() {
 
       {/* Facet Filters */}
       <div className="flex flex-wrap gap-2 text-sm">
-        <span className="text-gray-500 mr-2">Filters:</span>
+        <span className="text-gray-500 mr-2">Second Chance:</span>
+        <FilterCheckbox
+          label="High"
+          checked={filters.tier_high === true}
+          onChange={() => toggleFilter('tier_high')}
+        />
+        <FilterCheckbox
+          label="Medium"
+          checked={filters.tier_medium === true}
+          onChange={() => toggleFilter('tier_medium')}
+        />
+        <FilterCheckbox
+          label="Low"
+          checked={filters.tier_low === true}
+          onChange={() => toggleFilter('tier_low')}
+        />
+        <FilterCheckbox
+          label="Unlikely"
+          checked={filters.tier_unlikely === true}
+          onChange={() => toggleFilter('tier_unlikely')}
+        />
 
-        <FilterCheckbox
-          label="Second Chance"
-          checked={filters.second_chance === true}
-          onChange={() => toggleFilter('second_chance')}
-        />
-        <FilterCheckbox
-          label="No BG Check"
-          checked={filters.no_background_check === true}
-          onChange={() => toggleFilter('no_background_check')}
-        />
+        <span className="text-gray-300 mx-1">|</span>
+
+        <span className="text-gray-500 mr-2">Transit:</span>
         <FilterCheckbox
           label="Bus"
           checked={filters.bus_accessible === true}
@@ -358,6 +392,7 @@ export function ScrapedJobsTable() {
 
         <span className="text-gray-300 mx-1">|</span>
 
+        <span className="text-gray-500 mr-2">Shifts:</span>
         <FilterCheckbox
           label="Morning"
           checked={filters.shift_morning === true}
@@ -463,8 +498,16 @@ export function ScrapedJobsTable() {
                     </td>
                     <td className="px-4 py-2">{formatShifts(hit.document)}</td>
                     <td className="px-4 py-2">
-                      {hit.document.second_chance ? (
-                        <span className="text-green-600">Yes</span>
+                      {hit.document.second_chance_tier ? (
+                        <span className={
+                          hit.document.second_chance_tier === 'high' ? 'text-green-600 font-medium' :
+                          hit.document.second_chance_tier === 'medium' ? 'text-green-500' :
+                          hit.document.second_chance_tier === 'low' ? 'text-yellow-600' :
+                          hit.document.second_chance_tier === 'unlikely' ? 'text-red-500' :
+                          'text-gray-400'
+                        }>
+                          {hit.document.second_chance_tier}
+                        </span>
                       ) : (
                         '-'
                       )}

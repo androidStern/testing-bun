@@ -40,8 +40,14 @@ const enrichJobSchema = z.object({
   shiftOvernight: z.boolean().optional(),
   shiftFlexible: z.boolean().optional(),
   shiftSource: z.string().optional(),
+  // Second-chance (legacy boolean - derived from tier)
   secondChance: z.boolean().optional(),
-  noBackgroundCheck: z.boolean().optional(),
+  // Second-chance scoring (new multi-signal)
+  secondChanceScore: z.number().optional(),
+  secondChanceTier: z.enum(['high', 'medium', 'low', 'unlikely', 'unknown']).optional(),
+  secondChanceConfidence: z.number().optional(),
+  secondChanceSignals: z.array(z.string()).optional(),
+  secondChanceReasoning: z.string().optional(),
 });
 
 const markIndexedSchema = z.object({

@@ -3,7 +3,7 @@ import type { CollectionCreateSchema } from "typesense/lib/Typesense/Collections
 import type { SnagajobJob } from "../scrapers/snagajob";
 import type { TransitScore } from "../transit-scorer";
 import type { ShiftResult } from "./enrichment/shift-extractor";
-import type { SecondChanceResult } from "./enrichment/second-chance";
+import type { SecondChanceScore } from "./enrichment/second-chance-scorer";
 
 let client: Typesense.Client | null = null;
 
@@ -66,7 +66,9 @@ export const jobsSchema: CollectionCreateSchema = {
     { name: "shift_overnight", type: "bool", facet: true, optional: true },
     { name: "shift_flexible", type: "bool", facet: true, optional: true },
     { name: "second_chance", type: "bool", facet: true, optional: true },
-    { name: "no_background_check", type: "bool", facet: true, optional: true },
+    { name: "second_chance_score", type: "int32", optional: true },
+    { name: "second_chance_tier", type: "string", facet: true, optional: true },
+    { name: "second_chance_confidence", type: "float", optional: true },
 
     // Job metadata
     { name: "is_urgent", type: "bool", facet: true, optional: true },
@@ -81,8 +83,26 @@ export async function ensureJobsCollection(): Promise<void> {
   const typesense = getTypesense();
 
   try {
-    await typesense.collections(JOBS_COLLECTION).retrieve();
+    const existing = await typesense.collections(JOBS_COLLECTION).retrieve();
     console.log("[Typesense] Collection 'jobs' already exists");
+
+    // Check for missing fields and add them (skip reserved fields)
+    const existingFieldNames = new Set(existing.fields?.map((f) => f.name) || []);
+    const schemaFields = jobsSchema.fields || [];
+    const reservedFields = new Set(['id']); // Typesense reserved fields
+
+    for (const field of schemaFields) {
+      if (!existingFieldNames.has(field.name) && !reservedFields.has(field.name)) {
+        try {
+          await typesense.collections(JOBS_COLLECTION).update({
+            fields: [field as any],
+          });
+          console.log(`[Typesense] Added missing field '${field.name}'`);
+        } catch (err: any) {
+          console.error(`[Typesense] Failed to add field '${field.name}':`, err?.message);
+        }
+      }
+    }
   } catch (err: any) {
     if (err?.httpStatus === 404) {
       console.log("[Typesense] Creating 'jobs' collection...");
@@ -97,7 +117,7 @@ export async function ensureJobsCollection(): Promise<void> {
 export interface EnrichedJob extends SnagajobJob {
   transit?: TransitScore;
   shifts?: ShiftResult;
-  secondChance?: SecondChanceResult;
+  secondChanceScore?: SecondChanceScore;
 }
 
 export interface TypesenseJobDocument {
@@ -123,7 +143,9 @@ export interface TypesenseJobDocument {
   shift_overnight?: boolean;
   shift_flexible?: boolean;
   second_chance?: boolean;
-  no_background_check?: boolean;
+  second_chance_score?: number;
+  second_chance_tier?: string;
+  second_chance_confidence?: number;
   is_urgent?: boolean;
   is_easy_apply?: boolean;
   url: string;
@@ -199,10 +221,13 @@ export function toTypesenseDocument(
     doc.shift_flexible = job.shifts.flexible;
   }
 
-  // Second chance enrichment
-  if (job.secondChance) {
-    doc.second_chance = job.secondChance.isSecondChance;
-    doc.no_background_check = job.secondChance.noBackgroundCheck;
+  // Second chance enrichment (multi-signal scoring)
+  if (job.secondChanceScore) {
+    doc.second_chance_score = job.secondChanceScore.score;
+    doc.second_chance_tier = job.secondChanceScore.tier;
+    doc.second_chance_confidence = job.secondChanceScore.confidence;
+    // Derive legacy boolean from tier for backwards compatibility
+    doc.second_chance = job.secondChanceScore.tier === 'high' || job.secondChanceScore.tier === 'medium';
   }
 
   // Job metadata

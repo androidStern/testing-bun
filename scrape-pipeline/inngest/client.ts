@@ -3,12 +3,6 @@ import type { SnagajobJob } from "../scrapers/snagajob";
 
 // Event types for type safety
 type Events = {
-  "job/needs-enrichment": {
-    data: {
-      job: SnagajobJob;
-      source: string;
-    };
-  };
   "batch/process": {
     data: {
       jobs: SnagajobJob[];
@@ -16,6 +10,11 @@ type Events = {
     };
   };
   "jobs/reindex-all": {
+    data: {
+      reason?: string;
+    };
+  };
+  "fair-chance/refresh": {
     data: {
       reason?: string;
     };

@@ -22,8 +22,16 @@ import {
 } from "../../lib/convex";
 import type { SnagajobJob } from "../../scrapers/snagajob";
 import type { ShiftResult } from "../../lib/enrichment/shift-extractor";
-import type { SecondChanceResult } from "../../lib/enrichment/second-chance";
 import type { TransitScore } from "../../transit-scorer";
+// Multi-signal second-chance scoring
+import { analyzeJobForSecondChanceSafe } from "../../lib/enrichment/second-chance-llm";
+import { getEmployerSignal } from "../../lib/enrichment/second-chance-employer";
+import {
+  computeSecondChanceScore,
+  generateLLMSignal,
+  generateOnetSignal,
+  type SecondChanceScore,
+} from "../../lib/enrichment/second-chance-scorer";
 
 // Helper: Convert SnagajobJob to ConvexJobInput
 // Note: Convex rejects null, only accepts undefined for optional fields
@@ -51,8 +59,8 @@ function toConvexInput(job: SnagajobJob, source: string): ConvexJobInput {
 // Helper: Convert enrichment results to Convex enrichment format
 function toConvexEnrichment(
   shifts: ShiftResult | undefined,
-  secondChance: SecondChanceResult | undefined,
-  transit: TransitScore | undefined
+  transit: TransitScore | undefined,
+  secondChanceScore: SecondChanceScore | undefined
 ): ConvexJobEnrichment {
   return {
     // Transit
@@ -67,9 +75,15 @@ function toConvexEnrichment(
     shiftOvernight: shifts?.overnight,
     shiftFlexible: shifts?.flexible,
     shiftSource: shifts?.source,
-    // Second-chance
-    secondChance: secondChance?.isSecondChance,
-    noBackgroundCheck: secondChance?.noBackgroundCheck,
+    // Second-chance (derive legacy boolean from tier)
+    secondChance: secondChanceScore
+      ? secondChanceScore.tier === 'high' || secondChanceScore.tier === 'medium'
+      : undefined,
+    secondChanceScore: secondChanceScore?.score,
+    secondChanceTier: secondChanceScore?.tier,
+    secondChanceConfidence: secondChanceScore?.confidence,
+    secondChanceSignals: secondChanceScore?.signals,
+    secondChanceReasoning: secondChanceScore?.reasoning,
   };
 }
 
@@ -119,22 +133,33 @@ export const processBatch = inngest.createFunction(
         // Step 2: Insert to Convex
         const convexId = await insertJob(toConvexInput(job, source));
 
-        // Step 3: Enrich (shifts + second-chance + transit)
+        // Step 3: Enrich (shifts + transit)
         const enrichResult = await enrichJob(job);
-        const { shifts, secondChance } = enrichResult;
+        const { shifts } = enrichResult;
         const transit = job.latitude && job.longitude
           ? await scoreTransitAccess(job.latitude, job.longitude)
           : undefined;
 
-        // Step 4: Update Convex with enrichment data
-        await enrichConvexJob(convexId, toConvexEnrichment(shifts, secondChance, transit));
+        // Step 4: Multi-signal second-chance scoring
+        const llmAnalysis = await analyzeJobForSecondChanceSafe(job.descriptionText);
+        const llmSignal = generateLLMSignal(llmAnalysis);
+        const employerSignal = await getEmployerSignal(job.company);
+        const onetSignal = generateOnetSignal(job.onetCode);
+        const secondChanceScore = computeSecondChanceScore({
+          llm: llmSignal,
+          employer: employerSignal,
+          onet: onetSignal,
+        });
 
-        // Step 5: Index to Typesense
-        const enrichedJob: EnrichedJob = { ...job, transit, shifts, secondChance };
+        // Step 5: Update Convex with enrichment data
+        await enrichConvexJob(convexId, toConvexEnrichment(shifts, transit, secondChanceScore));
+
+        // Step 6: Index to Typesense
+        const enrichedJob: EnrichedJob = { ...job, transit, shifts, secondChanceScore };
         await indexJob(enrichedJob, source);
         const typesenseId = `${source}-${job.id}`;
 
-        // Step 6: Mark as indexed in Convex
+        // Step 7: Mark as indexed in Convex
         await markJobIndexed(convexId, typesenseId);
 
         indexed++;

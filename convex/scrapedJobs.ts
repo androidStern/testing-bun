@@ -9,6 +9,7 @@
 
 import { v } from 'convex/values';
 import { internalMutation, internalQuery } from './_generated/server';
+import { internal } from './_generated/api';
 import { adminAction } from './functions';
 
 import type { Id } from './_generated/dataModel';
@@ -61,7 +62,6 @@ const scrapedJobDocValidator = v.object({
   shiftSource: v.optional(v.string()),
   // Enrichment: Second-chance
   secondChance: v.optional(v.boolean()),
-  noBackgroundCheck: v.optional(v.boolean()),
   // Pipeline status tracking
   status: statusValidator,
   // Pipeline timestamps
@@ -156,9 +156,22 @@ export const enrich = internalMutation({
     shiftOvernight: v.optional(v.boolean()),
     shiftFlexible: v.optional(v.boolean()),
     shiftSource: v.optional(v.string()),
-    // Second-chance
+    // Second-chance (legacy)
     secondChance: v.optional(v.boolean()),
-    noBackgroundCheck: v.optional(v.boolean()),
+    // Second-chance scoring (new)
+    secondChanceScore: v.optional(v.number()),
+    secondChanceTier: v.optional(
+      v.union(
+        v.literal('high'),
+        v.literal('medium'),
+        v.literal('low'),
+        v.literal('unlikely'),
+        v.literal('unknown')
+      )
+    ),
+    secondChanceConfidence: v.optional(v.float64()),
+    secondChanceSignals: v.optional(v.array(v.string())),
+    secondChanceReasoning: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -399,6 +412,36 @@ export const clearCache = adminAction({
   },
 });
 
+/**
+ * Get fair chance employer statistics from Redis
+ */
+export const getFairChanceStats = adminAction({
+  args: {},
+  returns: v.any(),
+  handler: async () => {
+    const pipelineUrl = process.env.SCRAPE_PIPELINE_URL;
+    const pipelineSecret = process.env.SCRAPE_PIPELINE_SECRET;
+
+    if (!pipelineUrl || !pipelineSecret) {
+      throw new Error('SCRAPE_PIPELINE_URL or SCRAPE_PIPELINE_SECRET not configured');
+    }
+
+    const response = await fetch(`${pipelineUrl}/api/admin/fair-chance/stats`, {
+      method: 'GET',
+      headers: {
+        'X-Pipeline-Secret': pipelineSecret,
+      },
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Failed to get fair chance stats: ${response.status} ${text}`);
+    }
+
+    return response.json();
+  },
+});
+
 // ============================================================================
 // Delete Operations
 // ============================================================================
@@ -609,5 +652,148 @@ export const adminDeleteJobs = adminAction({
     const failed = results.filter((r: any) => !r.deleted).length;
 
     return { success: true, deleted, failed, results };
+  },
+});
+
+// ============================================================================
+// Nuke All (Dev Only)
+// ============================================================================
+
+/**
+ * Internal query to get all job IDs (for nuking)
+ */
+export const listAll = internalQuery({
+  args: {},
+  returns: v.array(v.object({ _id: v.id('scrapedJobs') })),
+  handler: async (ctx) => {
+    const jobs = await ctx.db.query('scrapedJobs').collect();
+    return jobs.map((j) => ({ _id: j._id }));
+  },
+});
+
+/**
+ * Internal mutation to delete a batch of jobs (no external cleanup)
+ */
+export const deleteJobsBatch = internalMutation({
+  args: { ids: v.array(v.id('scrapedJobs')) },
+  returns: v.null(),
+  handler: async (ctx, { ids }) => {
+    for (const id of ids) {
+      await ctx.db.delete(id);
+    }
+    return null;
+  },
+});
+
+/**
+ * DEV ONLY: Nuke all scraped jobs from Convex + Typesense + Redis
+ */
+export const nukeAllJobs = adminAction({
+  args: {},
+  returns: v.object({
+    success: v.boolean(),
+    convexDeleted: v.number(),
+    message: v.string(),
+  }),
+  handler: async (ctx) => {
+    const pipelineUrl = process.env.SCRAPE_PIPELINE_URL;
+    const pipelineSecret = process.env.SCRAPE_PIPELINE_SECRET;
+
+    if (!pipelineUrl || !pipelineSecret) {
+      throw new Error('SCRAPE_PIPELINE_URL or SCRAPE_PIPELINE_SECRET not configured');
+    }
+
+    // 1. Get all scrapedJobs from Convex
+    const allJobs = await ctx.runQuery(internal.scrapedJobs.listAll);
+    const allIds = allJobs.map((j) => j._id);
+
+    // 2. Delete from Convex in batches (if any exist)
+    let convexDeleted = 0;
+    if (allIds.length > 0) {
+      const BATCH_SIZE = 100;
+      for (let i = 0; i < allIds.length; i += BATCH_SIZE) {
+        const batch = allIds.slice(i, i + BATCH_SIZE);
+        await ctx.runMutation(internal.scrapedJobs.deleteJobsBatch, { ids: batch });
+        convexDeleted += batch.length;
+      }
+    }
+
+    // 3. Call pipeline to nuke Typesense + Redis
+    const response = await fetch(`${pipelineUrl}/api/admin/nuke-all`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Pipeline-Secret': pipelineSecret,
+      },
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Pipeline nuke failed: ${response.status} ${text}`);
+    }
+
+    return {
+      success: true,
+      convexDeleted,
+      message: `Deleted ${convexDeleted} jobs from Convex, nuked Typesense + Redis`,
+    };
+  },
+});
+
+// ============================================================================
+// Migrations
+// ============================================================================
+
+/**
+ * Migration: Remove deprecated noBackgroundCheck field from all documents
+ * Run this once, then remove noBackgroundCheck from schema.ts
+ *
+ * Usage: Call from Convex dashboard or via API
+ */
+export const migrateRemoveNoBackgroundCheck = internalMutation({
+  args: {
+    batchSize: v.optional(v.number()),
+  },
+  returns: v.object({
+    processed: v.number(),
+    updated: v.number(),
+    hasMore: v.boolean(),
+  }),
+  handler: async (ctx, args) => {
+    const batchSize = args.batchSize ?? 100;
+
+    // Get a batch of documents
+    const docs = await ctx.db
+      .query('scrapedJobs')
+      .take(batchSize);
+
+    let updated = 0;
+
+    for (const doc of docs) {
+      // Check if document has the deprecated field
+      if ('noBackgroundCheck' in doc) {
+        // Create a new object without the deprecated field
+        const { noBackgroundCheck: _, _id, _creationTime, ...rest } = doc as any;
+
+        // Replace the document (this removes the field)
+        await ctx.db.replace(doc._id, rest);
+        updated++;
+      }
+    }
+
+    // Check if there are more documents to process
+    const remaining = await ctx.db
+      .query('scrapedJobs')
+      .take(1);
+
+    // We need to check if any remaining docs have the field
+    // For simplicity, just report if we processed a full batch
+    const hasMore = docs.length === batchSize && updated > 0;
+
+    return {
+      processed: docs.length,
+      updated,
+      hasMore,
+    };
   },
 });
