@@ -1,155 +1,62 @@
-import { defineSchema, defineTable } from 'convex/server';
-import { v } from 'convex/values';
-import { zodOutputToConvex } from 'convex-helpers/server/zod4';
+import { defineSchema, defineTable } from 'convex/server'
+import { v } from 'convex/values'
+import { zodOutputToConvex } from 'convex-helpers/server/zod4'
 
-import { ParsedJobSchema } from './lib/jobSchema';
+import { ParsedJobSchema } from './lib/jobSchema'
 
 export default defineSchema({
-  numbers: defineTable({
-    value: v.number(),
-  }),
+  // Applications - seeker applications to job postings
+  applications: defineTable({
+    appliedAt: v.number(),
+    connectedAt: v.optional(v.number()),
+    jobSubmissionId: v.id('jobSubmissions'),
 
-  // User profiles - linked to WorkOS user IDs
-  profiles: defineTable({
-    workosUserId: v.string(),
+    message: v.optional(v.string()), // Optional note from seeker
+    passedAt: v.optional(v.number()),
+    seekerProfileId: v.id('profiles'),
+
+    status: v.union(v.literal('pending'), v.literal('connected'), v.literal('passed')),
+  })
+    .index('by_job', ['jobSubmissionId'])
+    .index('by_seeker', ['seekerProfileId'])
+    .index('by_job_and_status', ['jobSubmissionId', 'status']),
+
+  // Employers - job poster accounts (Checkpoint 3 vetting)
+  employers: defineTable({
+    approvedAt: v.optional(v.number()),
+    approvedBy: v.optional(v.string()),
+    company: v.string(),
+
+    // Timestamps
+    createdAt: v.number(),
     email: v.string(),
-    firstName: v.optional(v.string()),
-    lastName: v.optional(v.string()),
-    thingsICanOffer: v.array(v.string()),
-    headline: v.optional(v.string()),
-    bio: v.optional(v.string()),
-    resumeLink: v.optional(v.string()),
-    location: v.optional(v.string()),
-    website: v.optional(v.string()),
-    instagramUrl: v.optional(v.string()),
-    linkedinUrl: v.optional(v.string()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-    // Unique referral code for this user (6-char alphanumeric)
-    // Uniqueness is enforced by generateUniqueCode in referrals.ts
-    referralCode: v.optional(v.string()),
-  })
-    .index('by_workos_user_id', ['workosUserId'])
-    .index('by_email', ['email'])
-    .index('by_referral_code', ['referralCode']),
 
-  // Referral attribution - tracks who referred whom
-  referrals: defineTable({
-    referrerProfileId: v.id('profiles'),
-    referredProfileId: v.id('profiles'),
-    referralCode: v.string(), // The code that was used
-    createdAt: v.number(),
-  })
-    .index('by_referrer', ['referrerProfileId'])
-    .index('by_referred', ['referredProfileId']),
-
-  // OAuth authorization codes - short-lived, single-use
-  oauthAuthorizationCodes: defineTable({
-    code: v.string(),
-    clientId: v.string(),
-    workosUserId: v.string(),
-    redirectUri: v.string(),
-    codeChallenge: v.optional(v.string()),
-    codeChallengeMethod: v.optional(v.string()),
-    scope: v.optional(v.string()),
-    expiresAt: v.number(),
-    used: v.boolean(),
-    createdAt: v.number(),
-  }).index('by_code', ['code']),
-
-  // OAuth access tokens
-  oauthAccessTokens: defineTable({
-    token: v.string(),
-    workosUserId: v.string(),
-    clientId: v.string(),
-    scope: v.optional(v.string()),
-    expiresAt: v.number(),
-    createdAt: v.number(),
-  })
-    .index('by_token', ['token'])
-    .index('by_user_client', ['workosUserId', 'clientId']),
-
-  // OAuth refresh tokens
-  oauthRefreshTokens: defineTable({
-    token: v.string(),
-    workosUserId: v.string(),
-    clientId: v.string(),
-    scope: v.optional(v.string()),
-    expiresAt: v.number(),
-    createdAt: v.number(),
-  })
-    .index('by_token', ['token'])
-    .index('by_user_client', ['workosUserId', 'clientId']),
-
-  // OAuth clients (Circle.so credentials)
-  oauthClients: defineTable({
-    clientId: v.string(),
-    clientSecret: v.string(),
+    // From signup form
     name: v.string(),
-    redirectUris: v.array(v.string()),
-    createdAt: v.number(),
-  }).index('by_client_id', ['clientId']),
+    phone: v.string(),
+    role: v.optional(v.string()),
+    senderId: v.id('senders'), // Link to original sender
 
-  // User resumes - one per user
-  resumes: defineTable({
-    workosUserId: v.string(),
-    personalInfo: v.object({
-      name: v.string(),
-      email: v.string(),
-      phone: v.optional(v.string()),
-      location: v.optional(v.string()),
-      linkedin: v.optional(v.string()),
-    }),
-    summary: v.optional(v.string()),
-    workExperience: v.array(
-      v.object({
-        id: v.string(),
-        company: v.optional(v.string()),
-        position: v.optional(v.string()),
-        startDate: v.optional(v.string()),
-        endDate: v.optional(v.string()),
-        description: v.optional(v.string()),
-        achievements: v.optional(v.string()),
-      })
-    ),
-    education: v.array(
-      v.object({
-        id: v.string(),
-        institution: v.optional(v.string()),
-        degree: v.optional(v.string()),
-        field: v.optional(v.string()),
-        graduationDate: v.optional(v.string()),
-        description: v.optional(v.string()),
-      })
-    ),
-    skills: v.optional(v.string()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  }).index('by_workos_user_id', ['workosUserId']),
+    // Vetting status
+    status: v.union(v.literal('pending_review'), v.literal('approved'), v.literal('rejected')),
+    website: v.optional(v.string()),
 
-  // Senders - tracks phone/email and approval status (for both SMS and form submissions)
-  senders: defineTable({
-    phone: v.optional(v.string()),
-    email: v.optional(v.string()),
-    status: v.string(), // "pending" | "approved" | "blocked"
-    name: v.optional(v.string()),
-    company: v.optional(v.string()),
-    notes: v.optional(v.string()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
+    // WorkOS account (created after approval)
+    workosUserId: v.optional(v.string()),
   })
-    .index('by_phone', ['phone'])
+    .index('by_sender', ['senderId'])
+    .index('by_status', ['status'])
     .index('by_email', ['email'])
-    .index('by_status', ['status']),
+    .index('by_workos_user_id', ['workosUserId']),
 
   // Inbound SMS messages (legacy - will be replaced by jobSubmissions)
   inboundMessages: defineTable({
-    phone: v.string(),
     body: v.string(),
-    twilioMessageSid: v.string(),
+    createdAt: v.number(),
+    phone: v.string(),
     senderId: v.optional(v.id('senders')),
     status: v.string(), // "pending_review" | "approved" | "rejected" | "processed"
-    createdAt: v.number(),
+    twilioMessageSid: v.string(),
   })
     .index('by_status', ['status'])
     .index('by_phone', ['phone'])
@@ -158,15 +65,30 @@ export default defineSchema({
 
   // Job submissions - unified table for SMS and form submissions
   jobSubmissions: defineTable({
-    // Source tracking
-    source: v.union(v.literal('sms'), v.literal('form')),
-    senderId: v.id('senders'),
+    approvedAt: v.optional(v.number()),
+    approvedBy: v.optional(v.string()),
 
-    // Raw input
-    rawContent: v.string(), // SMS body or form JSON
+    // External links (set after approval)
+    circlePostUrl: v.optional(v.string()),
+    closedAt: v.optional(v.number()),
+    closedReason: v.optional(v.string()), // "employer_request" | "auto_expired"
+
+    // Timestamps
+    createdAt: v.number(),
+    denyReason: v.optional(v.string()),
 
     // Parsed job (after AI processing) - generated from shared Zod schema
     parsedJob: v.optional(zodOutputToConvex(ParsedJobSchema)),
+
+    // Raw input
+    rawContent: v.string(), // SMS body or form JSON
+    senderId: v.id('senders'),
+
+    // Slack message reference (for updating message after edit)
+    slackChannel: v.optional(v.string()),
+    slackMessageTs: v.optional(v.string()),
+    // Source tracking
+    source: v.union(v.literal('sms'), v.literal('form')),
 
     // Workflow state
     status: v.union(
@@ -174,142 +96,219 @@ export default defineSchema({
       v.literal('pending_approval'), // awaiting human approval
       v.literal('approved'),
       v.literal('denied'),
-      v.literal('closed') // job closed by employer or auto-expired
+      v.literal('closed'), // job closed by employer or auto-expired
     ),
-
-    // Timestamps
-    createdAt: v.number(),
-    approvedAt: v.optional(v.number()),
-    approvedBy: v.optional(v.string()),
-    denyReason: v.optional(v.string()),
-    closedAt: v.optional(v.number()),
-    closedReason: v.optional(v.string()), // "employer_request" | "auto_expired"
-
-    // Slack message reference (for updating message after edit)
-    slackChannel: v.optional(v.string()),
-    slackMessageTs: v.optional(v.string()),
-
-    // External links (set after approval)
-    circlePostUrl: v.optional(v.string()),
   })
     .index('by_status', ['status'])
     .index('by_sender', ['senderId'])
     .index('by_created_at', ['createdAt']),
+  numbers: defineTable({
+    value: v.number(),
+  }),
 
-  // Employers - job poster accounts (Checkpoint 3 vetting)
-  employers: defineTable({
-    senderId: v.id('senders'), // Link to original sender
-
-    // From signup form
-    name: v.string(),
-    email: v.string(),
-    phone: v.string(),
-    company: v.string(),
-    role: v.optional(v.string()),
-    website: v.optional(v.string()),
-
-    // Vetting status
-    status: v.union(
-      v.literal('pending_review'),
-      v.literal('approved'),
-      v.literal('rejected')
-    ),
-
-    // WorkOS account (created after approval)
-    workosUserId: v.optional(v.string()),
-
-    // Timestamps
+  // OAuth access tokens
+  oauthAccessTokens: defineTable({
+    clientId: v.string(),
     createdAt: v.number(),
-    approvedAt: v.optional(v.number()),
-    approvedBy: v.optional(v.string()),
+    expiresAt: v.number(),
+    scope: v.optional(v.string()),
+    token: v.string(),
+    workosUserId: v.string(),
   })
-    .index('by_sender', ['senderId'])
-    .index('by_status', ['status'])
+    .index('by_token', ['token'])
+    .index('by_user_client', ['workosUserId', 'clientId']),
+
+  // OAuth authorization codes - short-lived, single-use
+  oauthAuthorizationCodes: defineTable({
+    clientId: v.string(),
+    code: v.string(),
+    codeChallenge: v.optional(v.string()),
+    codeChallengeMethod: v.optional(v.string()),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+    redirectUri: v.string(),
+    scope: v.optional(v.string()),
+    used: v.boolean(),
+    workosUserId: v.string(),
+  }).index('by_code', ['code']),
+
+  // OAuth clients (Circle.so credentials)
+  oauthClients: defineTable({
+    clientId: v.string(),
+    clientSecret: v.string(),
+    createdAt: v.number(),
+    name: v.string(),
+    redirectUris: v.array(v.string()),
+  }).index('by_client_id', ['clientId']),
+
+  // OAuth refresh tokens
+  oauthRefreshTokens: defineTable({
+    clientId: v.string(),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+    scope: v.optional(v.string()),
+    token: v.string(),
+    workosUserId: v.string(),
+  })
+    .index('by_token', ['token'])
+    .index('by_user_client', ['workosUserId', 'clientId']),
+
+  // User profiles - linked to WorkOS user IDs
+  profiles: defineTable({
+    bio: v.optional(v.string()),
+    createdAt: v.number(),
+    email: v.string(),
+    firstName: v.optional(v.string()),
+    headline: v.optional(v.string()),
+    instagramUrl: v.optional(v.string()),
+    lastName: v.optional(v.string()),
+    linkedinUrl: v.optional(v.string()),
+    location: v.optional(v.string()),
+    // Unique referral code for this user (6-char alphanumeric)
+    // Uniqueness is enforced by generateUniqueCode in referrals.ts
+    referralCode: v.optional(v.string()),
+    resumeLink: v.optional(v.string()),
+    thingsICanOffer: v.array(v.string()),
+    updatedAt: v.number(),
+    website: v.optional(v.string()),
+    workosUserId: v.string(),
+  })
+    .index('by_workos_user_id', ['workosUserId'])
     .index('by_email', ['email'])
-    .index('by_workos_user_id', ['workosUserId']),
+    .index('by_referral_code', ['referralCode']),
 
-  // Applications - seeker applications to job postings
-  applications: defineTable({
-    jobSubmissionId: v.id('jobSubmissions'),
-    seekerProfileId: v.id('profiles'),
-
-    message: v.optional(v.string()), // Optional note from seeker
-
-    status: v.union(
-      v.literal('pending'),
-      v.literal('connected'),
-      v.literal('passed')
-    ),
-
-    appliedAt: v.number(),
-    connectedAt: v.optional(v.number()),
-    passedAt: v.optional(v.number()),
+  // Referral attribution - tracks who referred whom
+  referrals: defineTable({
+    createdAt: v.number(),
+    referralCode: v.string(), // The code that was used
+    referredProfileId: v.id('profiles'),
+    referrerProfileId: v.id('profiles'),
   })
-    .index('by_job', ['jobSubmissionId'])
-    .index('by_seeker', ['seekerProfileId'])
-    .index('by_job_and_status', ['jobSubmissionId', 'status']),
+    .index('by_referrer', ['referrerProfileId'])
+    .index('by_referred', ['referredProfileId']),
+
+  // User resumes - one per user
+  resumes: defineTable({
+    createdAt: v.number(),
+    education: v.array(
+      v.object({
+        degree: v.optional(v.string()),
+        description: v.optional(v.string()),
+        field: v.optional(v.string()),
+        graduationDate: v.optional(v.string()),
+        id: v.string(),
+        institution: v.optional(v.string()),
+      }),
+    ),
+    personalInfo: v.object({
+      email: v.string(),
+      linkedin: v.optional(v.string()),
+      location: v.optional(v.string()),
+      name: v.string(),
+      phone: v.optional(v.string()),
+    }),
+    skills: v.optional(v.string()),
+    summary: v.optional(v.string()),
+    updatedAt: v.number(),
+    workExperience: v.array(
+      v.object({
+        achievements: v.optional(v.string()),
+        company: v.optional(v.string()),
+        description: v.optional(v.string()),
+        endDate: v.optional(v.string()),
+        id: v.string(),
+        position: v.optional(v.string()),
+        startDate: v.optional(v.string()),
+      }),
+    ),
+    workosUserId: v.string(),
+  }).index('by_workos_user_id', ['workosUserId']),
 
   // Scraped Jobs - from external job boards (Snagajob, Indeed, etc.)
   // Separate from jobSubmissions which are employer-submitted
   scrapedJobs: defineTable({
-    // External identification
-    externalId: v.string(),
-    source: v.string(),
-
-    // Core job data
-    company: v.string(),
-    title: v.string(),
-    description: v.optional(v.string()),
-    url: v.string(),
+    busAccessible: v.optional(v.boolean()),
 
     // Location
     city: v.optional(v.string()),
-    state: v.optional(v.string()),
-    lat: v.optional(v.float64()),
-    lng: v.optional(v.float64()),
 
-    // Salary
-    payMin: v.optional(v.float64()),
-    payMax: v.optional(v.float64()),
-    payType: v.optional(v.string()),
+    // Core job data
+    company: v.string(),
+    description: v.optional(v.string()),
+    enrichedAt: v.optional(v.number()),
+    // External identification
+    externalId: v.string(),
+
+    // Error tracking
+    failureReason: v.optional(v.string()),
+    failureStage: v.optional(v.string()),
+    indexedAt: v.optional(v.number()),
+    isEasyApply: v.optional(v.boolean()),
 
     // Job metadata
     isUrgent: v.optional(v.boolean()),
-    isEasyApply: v.optional(v.boolean()),
-    postedAt: v.optional(v.number()),
+    lat: v.optional(v.float64()),
+    lng: v.optional(v.float64()),
+    noBackgroundCheck: v.optional(v.boolean()), // DEPRECATED - being migrated
+    payMax: v.optional(v.float64()),
 
-    // Enrichment: Transit
-    transitScore: v.optional(v.string()),
-    transitDistance: v.optional(v.float64()),
-    busAccessible: v.optional(v.boolean()),
+    // Salary
+    payMin: v.optional(v.float64()),
+    payType: v.optional(v.string()),
+    postedAt: v.optional(v.number()),
     railAccessible: v.optional(v.boolean()),
 
-    // Enrichment: Shifts
-    shiftMorning: v.optional(v.boolean()),
-    shiftAfternoon: v.optional(v.boolean()),
-    shiftEvening: v.optional(v.boolean()),
-    shiftOvernight: v.optional(v.boolean()),
-    shiftFlexible: v.optional(v.boolean()),
-    shiftSource: v.optional(v.string()),
+    // Pipeline timestamps
+    scrapedAt: v.number(),
 
     // Enrichment: Second-chance (legacy keyword detection)
     secondChance: v.optional(v.boolean()),
-    noBackgroundCheck: v.optional(v.boolean()), // DEPRECATED - being migrated
+    secondChanceConfidence: v.optional(v.float64()),
+
+    // Enrichment: Second-chance audit fields (for full traceability)
+    secondChanceDebug: v.optional(
+      v.object({
+        employerContribution: v.number(),
+        llmContribution: v.number(),
+        onetContribution: v.number(),
+        overrideApplied: v.optional(v.string()),
+      }),
+    ),
+    secondChanceEmployerMatch: v.optional(
+      v.object({
+        matchedName: v.optional(v.string()),
+        matchType: v.string(),
+        similarity: v.optional(v.float64()),
+      }),
+    ),
+    secondChanceLlmReasoning: v.optional(v.string()),
+    secondChanceLlmStance: v.optional(v.string()),
+    secondChanceOnetCode: v.optional(v.string()),
+    secondChanceReasoning: v.optional(v.string()),
 
     // Enrichment: Second-chance scoring (new multi-signal)
     secondChanceScore: v.optional(v.number()),
+    secondChanceScoredAt: v.optional(v.float64()),
+    secondChanceSignals: v.optional(v.array(v.string())),
     secondChanceTier: v.optional(
       v.union(
         v.literal('high'),
         v.literal('medium'),
         v.literal('low'),
         v.literal('unlikely'),
-        v.literal('unknown')
-      )
+        v.literal('unknown'),
+      ),
     ),
-    secondChanceConfidence: v.optional(v.float64()),
-    secondChanceSignals: v.optional(v.array(v.string())),
-    secondChanceReasoning: v.optional(v.string()),
+    shiftAfternoon: v.optional(v.boolean()),
+    shiftEvening: v.optional(v.boolean()),
+    shiftFlexible: v.optional(v.boolean()),
+
+    // Enrichment: Shifts
+    shiftMorning: v.optional(v.boolean()),
+    shiftOvernight: v.optional(v.boolean()),
+    shiftSource: v.optional(v.string()),
+    source: v.string(),
+    state: v.optional(v.string()),
 
     // Pipeline status tracking
     status: v.union(
@@ -317,24 +316,36 @@ export default defineSchema({
       v.literal('enriching'),
       v.literal('enriched'),
       v.literal('indexed'),
-      v.literal('failed')
+      v.literal('failed'),
     ),
+    title: v.string(),
+    transitDistance: v.optional(v.float64()),
 
-    // Pipeline timestamps
-    scrapedAt: v.number(),
-    enrichedAt: v.optional(v.number()),
-    indexedAt: v.optional(v.number()),
-
-    // Error tracking
-    failureReason: v.optional(v.string()),
-    failureStage: v.optional(v.string()),
+    // Enrichment: Transit
+    transitScore: v.optional(v.string()),
 
     // Typesense reference
     typesenseId: v.optional(v.string()),
+    url: v.string(),
   })
     .index('by_external_id_source', ['externalId', 'source'])
     .index('by_status', ['status'])
     .index('by_source', ['source'])
     .index('by_scraped_at', ['scrapedAt'])
     .index('by_typesense_id', ['typesenseId']),
-});
+
+  // Senders - tracks phone/email and approval status (for both SMS and form submissions)
+  senders: defineTable({
+    company: v.optional(v.string()),
+    createdAt: v.number(),
+    email: v.optional(v.string()),
+    name: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    status: v.string(), // "pending" | "approved" | "blocked"
+    updatedAt: v.number(),
+  })
+    .index('by_phone', ['phone'])
+    .index('by_email', ['email'])
+    .index('by_status', ['status']),
+})
