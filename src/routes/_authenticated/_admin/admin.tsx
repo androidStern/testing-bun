@@ -22,6 +22,9 @@ export const Route = createFileRoute('/_authenticated/_admin/admin')({
       search.is_easy_apply === true || search.is_easy_apply === 'true' ? true : undefined,
     is_urgent: search.is_urgent === true || search.is_urgent === 'true' ? true : undefined,
     job: (search.job as string) || undefined,
+    // Job type filters
+    job_type_gig: search.job_type_gig === true || search.job_type_gig === 'true' ? true : undefined,
+    job_type_job: search.job_type_job === true || search.job_type_job === 'true' ? true : undefined,
     page: Number(search.page) || 1,
     // Scraped jobs filters (only relevant when tab === 'scraped-jobs')
     q: (search.q as string) || '',

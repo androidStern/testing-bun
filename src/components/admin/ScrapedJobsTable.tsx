@@ -6,7 +6,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useAction } from 'convex/react'
-import { Trash2 } from 'lucide-react'
+import { PlusCircle, Trash2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 import { api } from '../../../convex/_generated/api'
@@ -21,9 +21,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../ui/alert-dialog'
+import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
+import { Checkbox } from '../ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog'
 import { Input } from '../ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { SecondChanceAuditDetails } from './SecondChanceAuditDetails'
 
 // Typesense config from environment
@@ -62,6 +65,31 @@ const FILTER_KEYS = [
 ] as const
 
 type FilterKey = (typeof FILTER_KEYS)[number]
+
+// Filter configuration for UI display
+const FILTER_CONFIG: Record<FilterKey, { category: string; label: string; displayLabel: string }> = {
+  tier_high: { category: 'Second Chance', label: 'High', displayLabel: 'Tier: High' },
+  tier_medium: { category: 'Second Chance', label: 'Medium', displayLabel: 'Tier: Medium' },
+  tier_low: { category: 'Second Chance', label: 'Low', displayLabel: 'Tier: Low' },
+  tier_unlikely: { category: 'Second Chance', label: 'Unlikely', displayLabel: 'Tier: Unlikely' },
+  tier_unknown: { category: 'Second Chance', label: 'Unknown', displayLabel: 'Tier: Unknown' },
+  source_snagajob: { category: 'Source', label: 'Snagajob', displayLabel: 'Snagajob' },
+  source_craigslist: { category: 'Source', label: 'Craigslist', displayLabel: 'Craigslist' },
+  job_type_job: { category: 'Type', label: 'Job', displayLabel: 'Job' },
+  job_type_gig: { category: 'Type', label: 'Gig', displayLabel: 'Gig' },
+  bus_accessible: { category: 'Transit', label: 'Bus', displayLabel: 'Bus' },
+  rail_accessible: { category: 'Transit', label: 'Rail', displayLabel: 'Rail' },
+  shift_morning: { category: 'Shifts', label: 'Morning', displayLabel: 'Morning' },
+  shift_afternoon: { category: 'Shifts', label: 'Afternoon', displayLabel: 'Afternoon' },
+  shift_evening: { category: 'Shifts', label: 'Evening', displayLabel: 'Evening' },
+  shift_overnight: { category: 'Shifts', label: 'Overnight', displayLabel: 'Overnight' },
+  shift_flexible: { category: 'Shifts', label: 'Flexible', displayLabel: 'Flexible' },
+  is_urgent: { category: 'Metadata', label: 'Urgent', displayLabel: 'Urgent' },
+  is_easy_apply: { category: 'Metadata', label: 'Easy Apply', displayLabel: 'Easy Apply' },
+}
+
+// Category display order
+const CATEGORY_ORDER = ['Second Chance', 'Source', 'Type', 'Transit', 'Shifts', 'Metadata']
 
 interface SearchResult {
   found: number
@@ -257,6 +285,24 @@ export function ScrapedJobsTable() {
     })
   }
 
+  // Clear all filters
+  const clearAllFilters = () => {
+    navigate({
+      search: prev => {
+        const next = { ...prev }
+        for (const key of FILTER_KEYS) {
+          delete next[key]
+        }
+        next.page = 1
+        return next
+      },
+      to: '.',
+    })
+  }
+
+  // Check if any filters are active
+  const hasActiveFilters = FILTER_KEYS.some(key => filters[key] === true)
+
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp)
     const now = new Date()
@@ -381,113 +427,32 @@ export function ScrapedJobsTable() {
         )}
       </div>
 
-      {/* Facet Filters */}
-      <div className='flex flex-wrap gap-2 text-sm'>
-        <span className='text-gray-500 mr-2'>Second Chance:</span>
-        <FilterCheckbox
-          checked={filters.tier_high === true}
-          label='High'
-          onChange={() => toggleFilter('tier_high')}
-        />
-        <FilterCheckbox
-          checked={filters.tier_medium === true}
-          label='Medium'
-          onChange={() => toggleFilter('tier_medium')}
-        />
-        <FilterCheckbox
-          checked={filters.tier_low === true}
-          label='Low'
-          onChange={() => toggleFilter('tier_low')}
-        />
-        <FilterCheckbox
-          checked={filters.tier_unlikely === true}
-          label='Unlikely'
-          onChange={() => toggleFilter('tier_unlikely')}
-        />
-        <FilterCheckbox
-          checked={filters.tier_unknown === true}
-          label='Unknown'
-          onChange={() => toggleFilter('tier_unknown')}
-        />
+      {/* Filter Bar */}
+      <div className='flex flex-wrap items-center gap-2'>
+        {/* Add filter popover - first for stable position */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button className='h-7 border-dashed' size='sm' variant='outline'>
+              <PlusCircle className='h-3.5 w-3.5 mr-1' />
+              Add filter
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align='start' className='w-56 p-0 bg-background'>
+            <FilterDropdownContent activeFilters={filters} onToggle={toggleFilter} />
+          </PopoverContent>
+        </Popover>
 
-        <span className='text-gray-300 mx-1'>|</span>
+        {/* Active filter pills */}
+        {FILTER_KEYS.filter(key => filters[key] === true).map(key => (
+          <FilterPill key={key} filterKey={key} onRemove={() => toggleFilter(key)} />
+        ))}
 
-        <span className='text-gray-500 mr-2'>Source:</span>
-        <FilterCheckbox
-          checked={filters.source_snagajob === true}
-          label='Snagajob'
-          onChange={() => toggleFilter('source_snagajob')}
-        />
-        <FilterCheckbox
-          checked={filters.source_craigslist === true}
-          label='Craigslist'
-          onChange={() => toggleFilter('source_craigslist')}
-        />
-
-        <span className='text-gray-300 mx-1'>|</span>
-
-        <span className='text-gray-500 mr-2'>Type:</span>
-        <FilterCheckbox
-          checked={filters.job_type_job === true}
-          label='Job'
-          onChange={() => toggleFilter('job_type_job')}
-        />
-        <FilterCheckbox
-          checked={filters.job_type_gig === true}
-          label='Gig'
-          onChange={() => toggleFilter('job_type_gig')}
-        />
-
-        <span className='text-gray-300 mx-1'>|</span>
-
-        <span className='text-gray-500 mr-2'>Transit:</span>
-        <FilterCheckbox
-          checked={filters.bus_accessible === true}
-          label='Bus'
-          onChange={() => toggleFilter('bus_accessible')}
-        />
-        <FilterCheckbox
-          checked={filters.rail_accessible === true}
-          label='Rail'
-          onChange={() => toggleFilter('rail_accessible')}
-        />
-
-        <span className='text-gray-300 mx-1'>|</span>
-
-        <span className='text-gray-500 mr-2'>Shifts:</span>
-        <FilterCheckbox
-          checked={filters.shift_morning === true}
-          label='Morning'
-          onChange={() => toggleFilter('shift_morning')}
-        />
-        <FilterCheckbox
-          checked={filters.shift_afternoon === true}
-          label='Afternoon'
-          onChange={() => toggleFilter('shift_afternoon')}
-        />
-        <FilterCheckbox
-          checked={filters.shift_evening === true}
-          label='Evening'
-          onChange={() => toggleFilter('shift_evening')}
-        />
-        <FilterCheckbox
-          checked={filters.shift_overnight === true}
-          label='Overnight'
-          onChange={() => toggleFilter('shift_overnight')}
-        />
-
-        <span className='text-gray-300 mx-1'>|</span>
-
-        <FilterCheckbox
-          checked={filters.is_urgent === true}
-          label='Urgent'
-          onChange={() => toggleFilter('is_urgent')}
-        />
-        <FilterCheckbox
-          checked={filters.is_easy_apply === true}
-          label='Easy Apply'
-          onChange={() => toggleFilter('is_easy_apply')}
-        />
+        {/* Clear all */}
+        {hasActiveFilters && (
+          <Button className='h-7 text-muted-foreground' onClick={clearAllFilters} size='sm' variant='ghost'>
+            Clear all
+          </Button>
+        )}
       </div>
 
       {/* Error */}
@@ -696,25 +661,62 @@ export function ScrapedJobsTable() {
   )
 }
 
-function FilterCheckbox({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string
-  checked: boolean
-  onChange: () => void
-}) {
+function FilterPill({ filterKey, onRemove }: { filterKey: FilterKey; onRemove: () => void }) {
+  const config = FILTER_CONFIG[filterKey]
   return (
-    <label className='flex items-center gap-1 cursor-pointer'>
-      <input
-        checked={checked}
-        className='rounded border-gray-300'
-        onChange={onChange}
-        type='checkbox'
-      />
-      <span className={checked ? 'font-medium' : ''}>{label}</span>
-    </label>
+    <Badge className='h-7 gap-1 px-2 font-normal' variant='secondary'>
+      {config.displayLabel}
+      <button
+        className='ml-1 rounded-full outline-none focus:ring-2 focus:ring-ring'
+        onClick={onRemove}
+        type='button'
+      >
+        <X className='h-3 w-3 text-muted-foreground hover:text-foreground' />
+      </button>
+    </Badge>
+  )
+}
+
+function FilterDropdownContent({
+  activeFilters,
+  onToggle,
+}: {
+  activeFilters: Partial<Record<FilterKey, boolean>>
+  onToggle: (key: FilterKey) => void
+}) {
+  // Group filters by category
+  const grouped = FILTER_KEYS.reduce<Record<string, Array<FilterKey>>>(
+    (acc, key) => {
+      const { category } = FILTER_CONFIG[key]
+      ;(acc[category] ??= []).push(key)
+      return acc
+    },
+    {},
+  )
+
+  return (
+    <div className='max-h-72 overflow-y-auto p-1'>
+      {CATEGORY_ORDER.map(category => {
+        const keys = grouped[category] ?? []
+        return (
+          <div key={category}>
+            <div className='px-2 py-1.5 text-xs font-medium text-muted-foreground'>{category}</div>
+            {keys.map(key => (
+              <label
+                className='flex items-center gap-2 rounded-sm px-2 py-1.5 cursor-pointer hover:bg-accent'
+                key={key}
+              >
+                <Checkbox
+                  checked={activeFilters[key] === true}
+                  onCheckedChange={() => onToggle(key)}
+                />
+                <span className='text-sm'>{FILTER_CONFIG[key].label}</span>
+              </label>
+            ))}
+          </div>
+        )
+      })}
+    </div>
   )
 }
 

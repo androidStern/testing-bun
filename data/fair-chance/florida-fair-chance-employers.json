@@ -1,7 +1,7 @@
 {
-  "scrapedAt": "2025-12-26T09:56:18.937Z",
+  "scrapedAt": "2025-12-26T09:57:41.907Z",
   "totalEmployers": 33,
-  "totalJobsSeen": 72,
+  "totalJobsSeen": 74,
   "employers": [
     {
       "fccid": "be3b11aa573faee7",
@@ -30,6 +30,31 @@
       "indeedUrl": "https://www.indeed.com/cmp/CVS-Health"
     },
     {
+      "fccid": "8560c2a313694ce7",
+      "name": "HomeGoods",
+      "slug": "HomeGoods",
+      "jobCount": 7,
+      "locations": [
+        "Winter Garden, FL 34787",
+        "Saint Petersburg, FL 33714",
+        "Ocala, FL 34474",
+        "Medley, FL 33178",
+        "Clermont, FL 34711",
+        "Naples, FL 34110",
+        "Lake Worth, FL 33463"
+      ],
+      "jobTitles": [
+        "Merchandise Associate",
+        "Retail Associate New Store Babcock Ranch",
+        "Seasonal Merchandise Associate",
+        "Part- Time Retail Merchandise Associate",
+        "Store Cleaning Associate"
+      ],
+      "firstSeen": "2025-12-26T09:50:58.315Z",
+      "lastSeen": "2025-12-26T09:50:58.315Z",
+      "indeedUrl": "https://www.indeed.com/cmp/HomeGoods"
+    },
+    {
       "fccid": "fefd75f5326e1589",
       "name": "WALGREENS",
       "slug": "WALGREENS",
@@ -54,39 +79,16 @@
       "indeedUrl": "https://www.indeed.com/cmp/WALGREENS"
     },
     {
-      "fccid": "8560c2a313694ce7",
-      "name": "HomeGoods",
-      "slug": "HomeGoods",
-      "jobCount": 6,
-      "locations": [
-        "Winter Garden, FL 34787",
-        "Saint Petersburg, FL 33714",
-        "Ocala, FL 34474",
-        "Medley, FL 33178",
-        "Clermont, FL 34711",
-        "Naples, FL 34110"
-      ],
-      "jobTitles": [
-        "Merchandise Associate",
-        "Retail Associate New Store Babcock Ranch",
-        "Seasonal Merchandise Associate",
-        "Part- Time Retail Merchandise Associate",
-        "Store Cleaning Associate"
-      ],
-      "firstSeen": "2025-12-26T09:50:58.315Z",
-      "lastSeen": "2025-12-26T09:50:58.315Z",
-      "indeedUrl": "https://www.indeed.com/cmp/HomeGoods"
-    },
-    {
       "fccid": "756537cd73891813",
       "name": "Ulta Beauty, Inc.",
       "slug": "Ulta-Beauty,-Inc.",
-      "jobCount": 5,
+      "jobCount": 6,
       "locations": [
         "Pembroke Pines, FL 33026",
         "Lutz, FL 33559",
         "Winter Park, FL 32789",
-        "Florida"
+        "Florida",
+        "Pembroke, FL"
       ],
       "jobTitles": [
         "Seasonal Task Associate",
