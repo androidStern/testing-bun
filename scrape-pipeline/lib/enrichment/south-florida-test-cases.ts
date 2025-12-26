@@ -5,8 +5,8 @@
  * from South Florida (Miami-Dade, Broward, Palm Beach counties).
  *
  * Classifications:
- * - explicitly_excludes: Jobs with clear disqualifying language for criminal records
- * - explicitly_fair_chance: Jobs explicitly welcoming people with records
+ * - likely_excludes: Jobs with regulatory barriers or explicit exclusionary language
+ * - fair_chance: Jobs explicitly welcoming people with records
  * - unknown: Jobs without clear language either way
  *
  * Sources: Indeed, Glassdoor, ZipRecruiter, Snagajob, company career pages

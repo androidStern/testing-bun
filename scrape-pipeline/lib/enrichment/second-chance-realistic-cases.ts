@@ -1,16 +1,16 @@
 /**
  * Realistic test cases for second-chance LLM classification
- * 
+ *
  * Generated from web research of actual job postings on Indeed, ZipRecruiter,
  * company career pages, and industry-specific hiring requirements.
- * 
+ *
  * These test cases capture authentic language patterns found in real job descriptions.
  */
 
 export interface TestCase {
-  name: string;
-  description: string;
-  expectedStance: 'explicitly_fair_chance' | 'explicitly_excludes' | 'unknown';
+  name: string
+  description: string
+  expectedStance: 'fair_chance' | 'likely_excludes' | 'unknown'
 }
 
 // ============================================================================
@@ -21,7 +21,6 @@ export interface TestCase {
 
 export const EXCLUDES_CASES: TestCase[] = [
   {
-    name: 'FDIC-regulated bank teller with Section 19 reference',
     description: `
 Bank Teller - First National Bank
 
@@ -41,10 +40,10 @@ Requirements:
 
 In accordance with Section 19 of the Federal Deposit Insurance Act, candidates with convictions involving dishonesty, breach of trust, or money laundering are ineligible for employment. All offers contingent upon successful completion of criminal background check and credit history review.
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'FDIC-regulated bank teller with Section 19 reference',
   },
   {
-    name: 'Childcare worker with fingerprint and registry requirements',
     description: `
 Lead Preschool Teacher - Little Stars Learning Center
 
@@ -65,10 +64,10 @@ All candidates must:
 
 Child safety is our top priority. Individuals with any history of crimes against children or vulnerable populations will not be considered.
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'Childcare worker with fingerprint and registry requirements',
   },
   {
-    name: 'Armed security guard with licensing restrictions',
     description: `
 Armed Security Officer - Premier Protection Services
 
@@ -89,10 +88,10 @@ Must pass extensive background investigation including:
 
 Candidates with any felony convictions or misdemeanor crimes involving violence, theft, or moral turpitude are ineligible for licensure per state regulations.
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'Armed security guard with licensing restrictions',
   },
   {
-    name: 'CDL driver with clean record requirement',
     description: `
 CDL-A Driver - Regional Routes
 
@@ -114,10 +113,10 @@ Requirements:
 
 Apply today and start your journey with America's most trusted freight company!
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'CDL driver with clean record requirement',
   },
   {
-    name: 'Healthcare facility with disqualifying offense list',
     description: `
 Certified Nursing Assistant (CNA) - Sunrise Senior Living
 
@@ -141,10 +140,10 @@ All employees must pass state-mandated criminal background check. Per state heal
 
 We are committed to providing safe care for our vulnerable population.
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'Healthcare facility with disqualifying offense list',
   },
   {
-    name: 'School district with mandatory exclusions',
     description: `
 Substitute Teacher - Jefferson County School District
 
@@ -165,10 +164,10 @@ Per state education code, all school personnel must:
 
 Individuals with any felony conviction or any misdemeanor involving moral turpitude, violence, or crimes against minors are permanently barred from school employment. No exceptions.
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'School district with mandatory exclusions',
   },
   {
-    name: 'Pharmacy tech with Board of Pharmacy restrictions',
     description: `
 Pharmacy Technician - CVS Health
 
@@ -189,10 +188,10 @@ Requirements:
 
 Candidates must meet State Board of Pharmacy requirements. Criminal convictions involving controlled substances, drug diversion, theft, or fraud will result in denial of technician registration. Background check required.
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'Pharmacy tech with Board of Pharmacy restrictions',
   },
   {
-    name: 'Mixed messaging - Fair chance label with contingent language',
     description: `
 Retail Sales Associate - Major Department Store
 
@@ -210,10 +209,10 @@ We are a Fair Chance Employer and consider qualified applicants with criminal hi
 
 All offers of employment are contingent upon successful completion of a background check, which includes verification of criminal history. Candidates with convictions for theft, fraud, or violent crimes may be disqualified based on the nature and recency of the offense.
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'Mixed messaging - Fair chance label with contingent language',
   },
   {
-    name: 'Government contractor with security clearance',
     description: `
 Systems Administrator - Defense Contractor
 
@@ -236,10 +235,10 @@ Requirements:
 Security Clearance Requirements:
 Position requires eligibility for security clearance. Candidates with felony convictions, drug offenses, or financial issues may be disqualified during the adjudication process. All candidates subject to comprehensive background investigation including criminal history, credit check, and interviews with references.
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'Government contractor with security clearance',
   },
   {
-    name: 'Property management with tenant access concerns',
     description: `
 Maintenance Technician - Greystar Property Management
 
@@ -261,10 +260,10 @@ Requirements:
 
 This position requires unsupervised access to resident units. Candidates must pass criminal background check. Applicants with any conviction involving theft, burglary, assault, or sexual offenses will not be considered for positions requiring unit access.
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'Property management with tenant access concerns',
   },
   {
-    name: 'Home health aide with patient safety restrictions',
     description: `
 Home Health Aide - Comfort Keepers
 
@@ -291,10 +290,10 @@ For the protection of our vulnerable clients, all caregivers must pass:
 
 Convictions for abuse, neglect, exploitation, theft, or violent crimes are disqualifying. No felonies within the past 7 years.
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'Home health aide with patient safety restrictions',
   },
   {
-    name: 'Casino vault with gaming commission requirements',
     description: `
 Cashier/Vault Attendant - Lucky Strike Casino
 
@@ -319,10 +318,10 @@ All casino employees must obtain gaming license. Background check required. Auto
 - Any theft, fraud, or embezzlement conviction (regardless of date)
 - Outstanding warrants or pending charges
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'Casino vault with gaming commission requirements',
   },
   {
-    name: 'Delivery driver with blanket felony exclusion',
     description: `
 Delivery Driver - Pizza Palace
 
@@ -340,10 +339,10 @@ Must pass background check and drug screen.
 
 Note: Due to insurance requirements, we cannot hire applicants with any felony convictions or DUI/DWI within the past 5 years. This policy applies to all driving positions.
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'Delivery driver with blanket felony exclusion',
   },
   {
-    name: 'Financial advisor with FINRA disqualification',
     description: `
 Financial Advisor Trainee - Edward Jones
 
@@ -368,10 +367,10 @@ Requirements:
 FINRA Registration Requirements:
 Per FINRA rules, individuals with felony convictions within the past 10 years, or any conviction involving securities violations, theft, or dishonesty are statutorily disqualified from registration. Comprehensive background check and fingerprinting required.
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'Financial advisor with FINRA disqualification',
   },
   {
-    name: 'Insurance agent with licensure restrictions',
     description: `
 Insurance Sales Agent - State Farm
 
@@ -394,9 +393,10 @@ Requirements:
 Licensing Requirements:
 Per state insurance regulations, applicants with felony convictions involving dishonesty, breach of trust, or money crimes within the past 10 years are ineligible for licensure. Comprehensive background investigation required.
     `,
-    expectedStance: 'explicitly_excludes',
+    expectedStance: 'likely_excludes',
+    name: 'Insurance agent with licensure restrictions',
   },
-];
+]
 
 // ============================================================================
 // EXPLICITLY_FAIR_CHANCE: Jobs with clear second-chance friendly language
@@ -406,7 +406,6 @@ Per state insurance regulations, applicants with felony convictions involving di
 
 export const FAIR_CHANCE_CASES: TestCase[] = [
   {
-    name: 'Greyston-style open hiring bakery',
     description: `
 Baker/Production Worker - Community Bakery Co.
 
@@ -425,10 +424,10 @@ Add your name to our hiring list and we'll call you when a position opens. Train
 
 We are a certified B Corp committed to inclusive employment practices.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Greyston-style open hiring bakery',
   },
   {
-    name: 'Construction company with explicit felony friendly statement',
     description: `
 Construction Laborer - BuildRight Construction
 
@@ -450,10 +449,10 @@ Requirements:
 
 We believe in second chances. Felony friendly - we do not automatically disqualify applicants based on criminal history. Your past doesn't define your future. Come build something great with us.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Construction company with explicit felony friendly statement',
   },
   {
-    name: 'Warehouse with fair chance and individualized assessment',
     description: `
 Warehouse Associate - Distribution Dynamics
 
@@ -476,10 +475,10 @@ Requirements:
 Fair Chance Employer Statement:
 We are a proud Fair Chance Employer. We conduct an individualized assessment of each candidate and do not automatically disqualify anyone based on criminal history. A record does not prevent you from being hired here. We evaluate the nature of the offense, time elapsed, and relevance to the job.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Warehouse with fair chance and individualized assessment',
   },
   {
-    name: 'Restaurant chain with explicit second chance policy',
     description: `
 Line Cook - Flavor Town Kitchen
 
@@ -502,10 +501,10 @@ What You Need:
 We Are a Second Chance Employer
 Everyone deserves an opportunity. We welcome applicants with criminal backgrounds and do not ask about conviction history on our application. We evaluate candidates based on their skills, work ethic, and potential - not their past mistakes.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Restaurant chain with explicit second chance policy',
   },
   {
-    name: 'Peer support specialist with lived experience valued',
     description: `
 Peer Recovery Support Specialist - Hope Recovery Center
 
@@ -527,10 +526,10 @@ Qualifications:
 
 Justice-involved individuals are encouraged to apply. We value lived experience with the criminal justice system as it enhances your ability to connect with and support our clients. Your past is an asset here, not a barrier.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Peer support specialist with lived experience valued',
   },
   {
-    name: 'Moving company with reentry program partnership',
     description: `
 Mover/Driver Helper - Fresh Start Moving Co.
 
@@ -552,10 +551,10 @@ Requirements:
 
 We proudly partner with local reentry programs and welcome formerly incarcerated individuals to apply. We know that a job can be the key to successful reintegration. Returning citizens welcome - your willingness to work hard matters more than your record.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Moving company with reentry program partnership',
   },
   {
-    name: 'Manufacturing with Ban the Box and no automatic disqualification',
     description: `
 Production Operator - Precision Parts Manufacturing
 
@@ -577,10 +576,10 @@ Requirements:
 
 Ban the Box Employer: We have removed the criminal history question from our application. A criminal record will not automatically disqualify you from consideration. We believe in giving everyone a fair chance to demonstrate their abilities and contribute to our team.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Manufacturing with Ban the Box and no automatic disqualification',
   },
   {
-    name: 'Landscaping with background friendly explicit statement',
     description: `
 Landscaping Crew Member - Green Thumb Services
 
@@ -603,10 +602,10 @@ What We Need:
 Background Friendly - All Backgrounds Welcome
 We give everyone a fair shot. If you're ready to work hard and show up every day, we want to talk to you. No judgment about your past. What matters is your future with us.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Landscaping with background friendly explicit statement',
   },
   {
-    name: 'Staffing agency with explicit we hire felons',
     description: `
 General Labor - Ready Workforce Staffing
 
@@ -626,10 +625,10 @@ Requirements:
 
 WE HIRE FELONS. Yes, you read that right. We believe in second chances and partner with clients who do too. Your criminal record doesn't automatically disqualify you here. Come in, let us match you with the right opportunity.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Staffing agency with explicit we hire felons',
   },
   {
-    name: 'Hotel housekeeping with commitment to fair consideration',
     description: `
 Housekeeper - Marriott Select Service Hotel
 
@@ -652,10 +651,10 @@ Requirements:
 Marriott Commitment to Fair Chance Hiring:
 Marriott is committed to giving all qualified individuals a fair chance. We do not conduct background checks until a conditional offer is made. Even then, criminal history is considered only as it relates to the position. A past conviction does not automatically exclude you from joining the Marriott family.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Hotel housekeeping with commitment to fair consideration',
   },
   {
-    name: 'Roofing company explicit about hiring people with records',
     description: `
 Roofer - Top Notch Roofing
 
@@ -677,10 +676,10 @@ What You Need:
 We Hire People With Records
 Plenty of our best guys have a past. What matters is showing up on time, working hard, and doing quality work. We don't care what you did before - we care what you do now. If you want to build a career in roofing, we'll give you the chance.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Roofing company explicit about hiring people with records',
   },
   {
-    name: 'Restaurant group with clear no automatic disqualification policy',
     description: `
 Dishwasher/Prep Cook - Iron Chef Restaurant Group
 
@@ -703,10 +702,10 @@ Requirements:
 Fair Chance Policy:
 Iron Chef Restaurant Group does not disqualify applicants based on arrest records, sealed records, or expunged convictions. For other criminal history, we conduct an individualized assessment considering the offense, time passed, and job relevance. We believe in second chances.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Restaurant group with clear no automatic disqualification policy',
   },
   {
-    name: 'Janitorial services with reentry focus',
     description: `
 Commercial Cleaner - Clean Slate Janitorial Services
 
@@ -729,10 +728,10 @@ Requirements:
 Our Mission:
 Clean Slate Janitorial was founded to provide meaningful employment opportunities for individuals facing barriers to employment, including those with criminal records. We partner with local reentry organizations and welcome applications from recently released individuals. Your past doesn't define you - your work ethic does.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Janitorial services with reentry focus',
   },
   {
-    name: 'Temp agency with explicit fair chance statement',
     description: `
 Forklift Operator - Express Employment Professionals
 
@@ -748,10 +747,10 @@ Requirements:
 
 Express Employment is a Fair Chance employer. We evaluate candidates based on their qualifications and do not automatically reject applicants with criminal records. Many of our client companies are also committed to fair chance hiring. Don't let your past stop you from applying.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Temp agency with explicit fair chance statement',
   },
   {
-    name: 'Recycling center with community employment mission',
     description: `
 Recycling Sorter - EcoWorks Recycling Center
 
@@ -774,9 +773,10 @@ Requirements:
 EcoWorks Social Enterprise:
 We are a nonprofit social enterprise with a mission to provide transitional employment to individuals facing barriers. Justice-impacted individuals are encouraged to apply. We provide job training, support services, and a pathway to permanent employment. No background check required for most positions.
     `,
-    expectedStance: 'explicitly_fair_chance',
+    expectedStance: 'fair_chance',
+    name: 'Recycling center with community employment mission',
   },
-];
+]
 
 // ============================================================================
 // UNKNOWN: Jobs with no clear signals either way
@@ -785,7 +785,6 @@ We are a nonprofit social enterprise with a mission to provide transitional empl
 
 export const UNKNOWN_CASES: TestCase[] = [
   {
-    name: 'Generic retail with no criminal mentions',
     description: `
 Sales Associate - Target
 
@@ -808,9 +807,9 @@ Requirements:
 Benefits include health insurance, 401k, and 10% discount. Apply online today!
     `,
     expectedStance: 'unknown',
+    name: 'Generic retail with no criminal mentions',
   },
   {
-    name: 'Software developer with standard requirements',
     description: `
 Full Stack Developer - TechStartup Inc.
 
@@ -839,9 +838,9 @@ Benefits:
 We are an equal opportunity employer committed to diversity and inclusion.
     `,
     expectedStance: 'unknown',
+    name: 'Software developer with standard requirements',
   },
   {
-    name: 'Restaurant server with generic background check mention',
     description: `
 Server - Olive Garden
 
@@ -864,9 +863,9 @@ What We're Looking For:
 We offer flexible scheduling, meal discounts, and opportunities for advancement. Background check may be conducted as part of hiring process.
     `,
     expectedStance: 'unknown',
+    name: 'Restaurant server with generic background check mention',
   },
   {
-    name: 'Office administrator with standard screening',
     description: `
 Administrative Assistant - Johnson & Associates Law Firm
 
@@ -891,9 +890,9 @@ Requirements:
 We offer competitive salary, health benefits, and paid time off. Pre-employment screening required.
     `,
     expectedStance: 'unknown',
+    name: 'Office administrator with standard screening',
   },
   {
-    name: 'Fast food with only drug test mentioned',
     description: `
 Crew Member - McDonald's
 
@@ -915,9 +914,9 @@ What We're Looking For:
 Benefits include meal discounts, flexible scheduling, and advancement opportunities. Must be 16+ to apply. Drug test required.
     `,
     expectedStance: 'unknown',
+    name: 'Fast food with only drug test mentioned',
   },
   {
-    name: 'Medical receptionist with generic compliance',
     description: `
 Front Desk Receptionist - Family Health Medical Group
 
@@ -942,9 +941,9 @@ Qualifications:
 We are an equal opportunity employer. Standard pre-employment screening applies.
     `,
     expectedStance: 'unknown',
+    name: 'Medical receptionist with generic compliance',
   },
   {
-    name: 'Warehouse with just physical requirements',
     description: `
 Warehouse Worker - ABC Distribution
 
@@ -968,9 +967,9 @@ Requirements:
 We offer weekly pay, health benefits, and opportunities for advancement. Apply in person or online.
     `,
     expectedStance: 'unknown',
+    name: 'Warehouse with just physical requirements',
   },
   {
-    name: 'Call center with standard equal opportunity',
     description: `
 Customer Service Representative - National Call Center
 
@@ -994,9 +993,9 @@ Requirements:
 We provide paid training, benefits, and a supportive team environment. Equal opportunity employer.
     `,
     expectedStance: 'unknown',
+    name: 'Call center with standard equal opportunity',
   },
   {
-    name: 'Rideshare driver with only driving record check',
     description: `
 Delivery Driver - DoorDash
 
@@ -1015,9 +1014,9 @@ We check your driving record to ensure you meet our safety standards. Three year
 Earn money on your schedule. Cash out daily with Fast Pay. Sign up today and start delivering!
     `,
     expectedStance: 'unknown',
+    name: 'Rideshare driver with only driving record check',
   },
   {
-    name: 'Barista with no background language',
     description: `
 Barista - Local Coffee House
 
@@ -1040,9 +1039,9 @@ What We Need:
 We're a small locally-owned shop that values our team. Free drinks on shift and flexible scheduling. Apply in person with your availability.
     `,
     expectedStance: 'unknown',
+    name: 'Barista with no background language',
   },
   {
-    name: 'Manufacturing with unspecified screening',
     description: `
 Machine Operator - Plastics Manufacturing Inc.
 
@@ -1066,9 +1065,9 @@ Requirements:
 We offer competitive pay, health insurance, 401k, and opportunity for advancement. Pre-employment screening and physical may be required.
     `,
     expectedStance: 'unknown',
+    name: 'Manufacturing with unspecified screening',
   },
   {
-    name: 'Grocery store clerk generic posting',
     description: `
 Grocery Clerk - Publix Super Markets
 
@@ -1091,9 +1090,9 @@ Qualifications:
 Publix is consistently ranked as one of the best places to work. We offer competitive pay, benefits, and employee stock ownership. Apply online today!
     `,
     expectedStance: 'unknown',
+    name: 'Grocery store clerk generic posting',
   },
   {
-    name: 'Auto mechanic with licensing focus',
     description: `
 Automotive Technician - Jiffy Lube
 
@@ -1116,9 +1115,9 @@ Requirements:
 We provide training and ASE certification assistance. Career advancement opportunities available. Apply online or in person.
     `,
     expectedStance: 'unknown',
+    name: 'Auto mechanic with licensing focus',
   },
   {
-    name: 'Hotel front desk with generic professionalism',
     description: `
 Front Desk Agent - Holiday Inn Express
 
@@ -1143,9 +1142,9 @@ Requirements:
 IHG offers competitive pay, hotel discounts worldwide, and career growth opportunities. We are an equal opportunity employer.
     `,
     expectedStance: 'unknown',
+    name: 'Hotel front desk with generic professionalism',
   },
   {
-    name: 'Dental assistant with standard verification',
     description: `
 Dental Assistant - Smile Dental Care
 
@@ -1170,8 +1169,9 @@ Requirements:
 We offer a great team environment, competitive pay, and full benefits. Credential verification required.
     `,
     expectedStance: 'unknown',
+    name: 'Dental assistant with standard verification',
   },
-];
+]
 
 // ============================================================================
 // ALL TEST CASES COMBINED
@@ -1181,6 +1181,6 @@ export const ALL_TEST_CASES: TestCase[] = [
   ...EXCLUDES_CASES,
   ...FAIR_CHANCE_CASES,
   ...UNKNOWN_CASES,
-];
+]
 
-export default ALL_TEST_CASES;
+export default ALL_TEST_CASES
