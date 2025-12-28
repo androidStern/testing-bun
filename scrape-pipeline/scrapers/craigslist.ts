@@ -1,15 +1,14 @@
 /**
- * Craigslist Scraper using Playwright
+ * Craigslist Scraper using fetch + cheerio
  *
  * Scrapes job listings from Craigslist South Florida.
- * Uses Playwright for HTML scraping (no API available).
+ * Uses static HTML fallback (no browser required).
  * FlareSolverr is NOT required - Craigslist doesn't use Cloudflare.
  *
  * API matches Snagajob scraper for pipeline compatibility.
  */
 
-import { chromium } from "playwright";
-import type { Browser, Page } from "playwright";
+import * as cheerio from "cheerio";
 
 // Craigslist region codes for South Florida
 export const REGIONS = {
@@ -84,46 +83,20 @@ export interface ScrapeOptions {
 // Rate limiting constants
 const RATE_LIMITS = {
 	listingPageDelay: 500,
-	detailPageDelay: 200,
-	detailConcurrency: 5,
+	detailPageDelay: 100,
+	detailConcurrency: 10,
 	regionDelay: 1000,
 };
 
-// Browser instance (reused across scrapes)
-let browser: Browser | null = null;
+const USER_AGENT =
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
-async function getBrowser(): Promise<Browser> {
-	if (!browser || !browser.isConnected()) {
-		browser = await chromium.launch({
-			headless: true,
-			args: ["--disable-blink-features=AutomationControlled", "--no-sandbox"],
-		});
-	}
-	return browser;
-}
-
+/**
+ * No-op for backwards compatibility.
+ * Browser cleanup is no longer needed with fetch-based scraping.
+ */
 export async function closeBrowser(): Promise<void> {
-	if (browser) {
-		await browser.close();
-		browser = null;
-	}
-}
-
-// Strip HTML tags and clean up whitespace
-function stripHtml(html: string): string {
-	if (!html) return "";
-	return html
-		.replace(/<!\[CDATA\[/g, "")
-		.replace(/\]\]>/g, "")
-		.replace(/<[^>]*>/g, " ")
-		.replace(/&nbsp;/g, " ")
-		.replace(/&amp;/g, "&")
-		.replace(/&lt;/g, "<")
-		.replace(/&gt;/g, ">")
-		.replace(/&quot;/g, '"')
-		.replace(/&#39;/g, "'")
-		.replace(/\s+/g, " ")
-		.trim();
+	// No-op - no browser to close
 }
 
 // Parse compensation text to structured format
@@ -247,190 +220,131 @@ function buildSearchUrl(region: string, category: CategoryCode = "jjj", postedTo
 	return queryString ? `${base}?${queryString}` : base;
 }
 
-// Scrape listing page
+// Fetch HTML from URL
+async function fetchHtml(url: string): Promise<string> {
+	const response = await fetch(url, {
+		headers: { "User-Agent": USER_AGENT },
+	});
+
+	if (!response.ok) {
+		throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+	}
+
+	return response.text();
+}
+
+// Scrape listing page using static HTML fallback
 async function scrapeListingPage(
-	page: Page,
 	region: string,
 	category: CategoryCode = "jjj"
 ): Promise<Array<CraigslistJob>> {
 	const url = buildSearchUrl(region, category, true);
-	await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+	const html = await fetchHtml(url);
+	const $ = cheerio.load(html);
 
-	// Wait for results to load
-	await page
-		.waitForSelector(".cl-search-result[data-pid]", { timeout: 10000 })
-		.catch(() => null);
-
-	// Extract job data from listing page
-	/* eslint-disable @typescript-eslint/no-unnecessary-condition -- DOM elements can be null */
-	const jobs = await page.evaluate((regionCode: string) => {
-		const results = document.querySelectorAll(".cl-search-result[data-pid]");
-		return Array.from(results).map((el) => {
-			const pid = el.getAttribute("data-pid") || "";
-			const titleEl = el.querySelector("a.posting-title");
-			const title =
-				el.getAttribute("title") ||
-				titleEl?.querySelector(".label")?.textContent?.trim() ||
-				"";
-			const href = titleEl?.getAttribute("href") || "";
-
-			// Parse meta section for date, pay, company
-			const meta = el.querySelector(".meta");
-			const timeSpan = meta?.querySelector("span[title]");
-			const postedDate = timeSpan?.getAttribute("title") || "";
-
-			// Meta structure: date | separator | pay | separator | company
-			// Get text nodes between separators
-			let pay = "";
-			let company = "";
-			if (meta) {
-				const children = Array.from(meta.childNodes);
-				const textParts: Array<string> = [];
-				for (const child of children) {
-					if (child.nodeType === Node.TEXT_NODE) {
-						const text = child.textContent?.trim();
-						if (text) textParts.push(text);
-					} else if (
-						child.nodeType === Node.ELEMENT_NODE &&
-						!(child as Element).classList.contains("separator") &&
-						(child as Element).tagName !== "BUTTON"
-					) {
-						// Skip the time span (first element usually)
-						if ((child as Element).tagName !== "SPAN") {
-							const text = (child as Element).textContent?.trim();
-							if (text) textParts.push(text);
-						}
-					}
-				}
-				// First non-date text is usually pay, second is company
-				if (textParts.length > 0) pay = textParts[0];
-				if (textParts.length > 1) company = textParts[1];
-			}
-
-			// Get location from the first div in result-info
-			const location =
-				el.querySelector(".result-info > div:first-child")?.textContent?.trim() ||
-				"";
-
-			return {
-				id: pid,
-				title,
-				company: company || "Unknown Employer",
-				pay,
-				applyUrl: href.startsWith("http")
-					? href
-					: `https://miami.craigslist.org${href}`,
-				isUrgent: false,
-				isEasyApply: false,
-				postedDate,
-				city: location,
-				state: "FL",
-				region: regionCode,
-			};
-		});
-	}, region);
-	/* eslint-enable @typescript-eslint/no-unnecessary-condition */
-
-	// Parse compensation for each job and set jobType
+	const jobs: Array<CraigslistJob> = [];
 	const jobType = CATEGORIES[category];
-	return jobs.map((job) => {
-		const parsed = parseCompensation(job.pay);
-		return {
-			...job,
+
+	// Craigslist serves static HTML fallback with cl-static-search-result
+	$(".cl-static-search-result").each((_, el) => {
+		const $el = $(el);
+		const title = $el.attr("title") || $el.find(".title").text().trim();
+		const href = $el.find("a").attr("href") || "";
+		const price = $el.find(".price").text().trim();
+		const location = $el.find(".location").text().trim();
+
+		// Extract ID from URL: /mdc/lab/d/hialeah-driver/7902991535.html -> 7902991535
+		const idMatch = href.match(/\/(\d+)\.html$/);
+		const pid = idMatch ? idMatch[1] : "";
+
+		if (!pid) return; // Skip if no ID found
+
+		const parsed = parseCompensation(price);
+
+		jobs.push({
+			id: pid,
+			title,
+			company: "Unknown Employer",
+			pay: price,
+			applyUrl: href.startsWith("http") ? href : `https://miami.craigslist.org${href}`,
+			isUrgent: false,
+			isEasyApply: false,
+			postedDate: "",
+			city: location,
+			state: "FL",
+			region,
+			jobType,
 			payMin: parsed.min,
 			payMax: parsed.max,
 			payType: parsed.type,
-			jobType,
-		};
+		});
 	});
+
+	return jobs;
 }
 
 // Scrape detail page for full job info
-async function scrapeDetailPage(
-	page: Page,
-	job: CraigslistJob
-): Promise<Partial<CraigslistJob>> {
+async function scrapeDetailPage(job: CraigslistJob): Promise<Partial<CraigslistJob>> {
 	try {
-		await page.goto(job.applyUrl, {
-			waitUntil: "domcontentloaded",
-			timeout: 15000,
-		});
+		const html = await fetchHtml(job.applyUrl);
+		const $ = cheerio.load(html);
 
-		/* eslint-disable @typescript-eslint/no-unnecessary-condition -- DOM elements can be null */
-		const details = await page.evaluate(() => {
-			const result: Record<string, any> = {};
+		const details: Partial<CraigslistJob> = {};
 
-			// Title
-			result.title =
-				document.querySelector("#titletextonly")?.textContent?.trim() || "";
+		// Title
+		const title = $("#titletextonly").text().trim();
+		if (title) details.title = title;
 
-			// Company (only ~30% have this)
-			result.company =
-				document.querySelector("h2.company-name")?.textContent?.trim() || "";
+		// Company (only ~30% have this)
+		const company = $("h2.company-name").text().trim();
+		if (company) details.company = company;
 
-			// Description
-			const bodyEl = document.querySelector("#postingbody");
-			if (bodyEl) {
-				result.description = bodyEl.innerHTML;
-				// Remove QR code text - use textContent for type safety
-				result.descriptionText = (bodyEl.textContent || "")
-					.replace(/QR Code Link to This Post/g, "")
-					.trim();
-			}
-
-			// Map coordinates
-			const mapEl = document.querySelector("#map");
-			if (mapEl) {
-				const lat = mapEl.getAttribute("data-latitude");
-				const lng = mapEl.getAttribute("data-longitude");
-				if (lat) result.latitude = parseFloat(lat);
-				if (lng) result.longitude = parseFloat(lng);
-			}
-
-			// Posted date
-			const timeEl = document.querySelector("time.date.timeago[datetime]");
-			if (timeEl) {
-				result.postedDate = timeEl.getAttribute("datetime") || "";
-			}
-
-			// Attributes
-			const attributes: Record<string, string> = {};
-			document.querySelectorAll(".attrgroup .attr").forEach((attr) => {
-				const label = attr
-					.querySelector(".labl")
-					?.textContent?.replace(":", "")
-					.trim();
-				const value = attr.querySelector(".valu")?.textContent?.trim();
-				if (label && value) {
-					attributes[label] = value;
-				}
-			});
-			result.attributes = attributes;
-
-			// Extract specific attributes
-			if (attributes.compensation) {
-				result.pay = attributes.compensation;
-			}
-			if (attributes["employment type"]) {
-				result.employmentTypes = [attributes["employment type"]];
-				result.jobType = attributes["employment type"];
-			}
-
-			return result;
-		});
-		/* eslint-enable @typescript-eslint/no-unnecessary-condition */
-
-		// Update company only if found on detail page
-		if (details.company) {
-			job.company = details.company;
+		// Description
+		const $body = $("#postingbody");
+		if ($body.length) {
+			details.description = $body.html() || "";
+			details.descriptionText = $body
+				.text()
+				.replace(/QR Code Link to This Post/g, "")
+				.trim();
 		}
 
-		// Parse compensation from detail page if available
-		if (details.pay) {
-			const parsed = parseCompensation(details.pay);
+		// Map coordinates
+		const $map = $("#map");
+		if ($map.length) {
+			const lat = $map.attr("data-latitude");
+			const lng = $map.attr("data-longitude");
+			if (lat) details.latitude = parseFloat(lat);
+			if (lng) details.longitude = parseFloat(lng);
+		}
+
+		// Posted date
+		const datetime = $("time.date.timeago").attr("datetime");
+		if (datetime) details.postedDate = datetime;
+
+		// Attributes
+		const attributes: Record<string, string> = {};
+		$(".attrgroup .attr").each((_, attr) => {
+			const label = $(attr).find(".labl").text().replace(":", "").trim();
+			const value = $(attr).find(".valu").text().trim();
+			if (label && value) {
+				attributes[label] = value;
+			}
+		});
+		if (Object.keys(attributes).length > 0) {
+			details.attributes = attributes;
+		}
+
+		// Extract specific attributes
+		if (attributes.compensation) {
+			details.pay = attributes.compensation;
+			const parsed = parseCompensation(attributes.compensation);
 			if (parsed.min !== undefined) details.payMin = parsed.min;
 			if (parsed.max !== undefined) details.payMax = parsed.max;
 			if (parsed.type !== undefined) details.payType = parsed.type;
+		}
+		if (attributes["employment type"]) {
+			details.employmentTypes = [attributes["employment type"]];
 		}
 
 		return details;
@@ -462,39 +376,28 @@ export async function scrapeCraigslistListings(
 
 	debug("Starting Craigslist scrape (listings only)");
 
-	const browserInstance = await getBrowser();
-	const context = await browserInstance.newContext({
-		userAgent:
-			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-	});
-	const page = await context.newPage();
-
 	const allJobs: Array<CraigslistJob> = [];
 	const seenIds = new Set<string>();
 
-	try {
-		onProgress(`Scraping ${regionName} ${categoryName}s...`);
+	onProgress(`Scraping ${regionName} ${categoryName}s...`);
 
-		const jobs = await scrapeListingPage(page, region, category);
+	const jobs = await scrapeListingPage(region, category);
 
-		// Dedupe by ID
-		for (const job of jobs) {
-			if (!seenIds.has(job.id)) {
-				seenIds.add(job.id);
-				allJobs.push(job);
-			}
+	// Dedupe by ID
+	for (const job of jobs) {
+		if (!seenIds.has(job.id)) {
+			seenIds.add(job.id);
+			allJobs.push(job);
 		}
-
-		debug(`Region ${region}: ${jobs.length} jobs`);
-		onPage(1, 1, allJobs);
-
-		debug(`Listings complete: ${allJobs.length} jobs`);
-		onProgress(`Found ${allJobs.length} listings`);
-
-		return allJobs;
-	} finally {
-		await context.close();
 	}
+
+	debug(`Region ${region}: ${jobs.length} jobs`);
+	onPage(1, 1, allJobs);
+
+	debug(`Listings complete: ${allJobs.length} jobs`);
+	onProgress(`Found ${allJobs.length} listings`);
+
+	return allJobs;
 }
 
 /**
@@ -511,92 +414,70 @@ export async function enrichJobDetails(
 	let completed = 0;
 	let enriched = 0;
 
-	const browserInstance = await getBrowser();
-	const context = await browserInstance.newContext({
-		userAgent:
-			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-	});
+	// Process in batches with concurrency limit
+	for (let i = 0; i < jobs.length; i += batchSize) {
+		const batch = jobs.slice(i, i + batchSize);
 
-	// Create multiple pages for concurrent scraping
-	const pages: Array<Page> = [];
-	for (let i = 0; i < RATE_LIMITS.detailConcurrency; i++) {
-		pages.push(await context.newPage());
-	}
+		// Fetch all in batch concurrently
+		const results = await Promise.all(
+			batch.map(async (job, idx) => {
+				// Small delay to stagger requests
+				await new Promise((r) => setTimeout(r, idx * RATE_LIMITS.detailPageDelay));
 
-	try {
-		// Process in batches
-		for (let i = 0; i < jobs.length; i += batchSize) {
-			const batch = jobs.slice(i, i + batchSize);
-
-			// Fetch all in batch concurrently (limited by page count)
-			const results = await Promise.all(
-				batch.map(async (job, idx) => {
-					const page = pages[idx % pages.length];
-
-					// Small delay to stagger requests
-					await new Promise((r) =>
-						setTimeout(r, idx * RATE_LIMITS.detailPageDelay)
-					);
-
-					try {
-						const details = await scrapeDetailPage(page, job);
-						return { job, details, success: true };
-					} catch (err) {
-						console.error(`[Craigslist] Failed to enrich ${job.id}:`, err);
-						return { job, details: {}, success: false };
-					}
-				})
-			);
-
-			// Apply results to jobs
-			for (const { job, details, success } of results) {
-				if (success && Object.keys(details).length > 0) {
-					// Update title if better version found
-					if (details.title) job.title = details.title;
-					// Update company if found (don't override with empty)
-					if (details.company) job.company = details.company;
-					// Description
-					if (details.description) job.description = details.description;
-					if (details.descriptionText)
-						job.descriptionText = details.descriptionText;
-					// Coordinates
-					if (details.latitude) job.latitude = details.latitude;
-					if (details.longitude) job.longitude = details.longitude;
-					// Posted date (prefer detail page)
-					if (details.postedDate) job.postedDate = details.postedDate;
-					// Compensation (prefer detail page if more specific)
-					if (details.payMin !== undefined) job.payMin = details.payMin;
-					if (details.payMax !== undefined) job.payMax = details.payMax;
-					if (details.payType !== undefined) job.payType = details.payType;
-					if (details.pay) job.pay = details.pay;
-					// Employment
-					if (details.employmentTypes) job.employmentTypes = details.employmentTypes;
-					if (details.jobType) job.jobType = details.jobType;
-					// Attributes
-					if (details.attributes) job.attributes = details.attributes;
-
-					enriched++;
+				try {
+					const details = await scrapeDetailPage(job);
+					return { job, details, success: true };
+				} catch (err) {
+					console.error(`[Craigslist] Failed to enrich ${job.id}:`, err);
+					return { job, details: {}, success: false };
 				}
-			}
+			})
+		);
 
-			// Call batch complete callback with enriched jobs
-			if (onBatchComplete) {
-				const enrichedBatch = batch.filter((j) => j.descriptionText);
-				if (enrichedBatch.length > 0) {
-					onBatchComplete(enrichedBatch);
-				}
-			}
+		// Apply results to jobs
+		for (const { job, details, success } of results) {
+			if (success && Object.keys(details).length > 0) {
+				// Update title if better version found
+				if (details.title) job.title = details.title;
+				// Update company if found (don't override with empty)
+				if (details.company) job.company = details.company;
+				// Description
+				if (details.description) job.description = details.description;
+				if (details.descriptionText) job.descriptionText = details.descriptionText;
+				// Coordinates
+				if (details.latitude) job.latitude = details.latitude;
+				if (details.longitude) job.longitude = details.longitude;
+				// Posted date (prefer detail page)
+				if (details.postedDate) job.postedDate = details.postedDate;
+				// Compensation (prefer detail page if more specific)
+				if (details.payMin !== undefined) job.payMin = details.payMin;
+				if (details.payMax !== undefined) job.payMax = details.payMax;
+				if (details.payType !== undefined) job.payType = details.payType;
+				if (details.pay) job.pay = details.pay;
+				// Employment
+				if (details.employmentTypes) job.employmentTypes = details.employmentTypes;
+				// Attributes
+				if (details.attributes) job.attributes = details.attributes;
 
-			completed += batch.length;
-			onProgress(`Enriching jobs: ${completed}/${total} (${enriched} enriched)`);
-
-			// Small delay between batches
-			if (i + batchSize < jobs.length) {
-				await new Promise((r) => setTimeout(r, RATE_LIMITS.listingPageDelay));
+				enriched++;
 			}
 		}
-	} finally {
-		await context.close();
+
+		// Call batch complete callback with enriched jobs
+		if (onBatchComplete) {
+			const enrichedBatch = batch.filter((j) => j.descriptionText);
+			if (enrichedBatch.length > 0) {
+				onBatchComplete(enrichedBatch);
+			}
+		}
+
+		completed += batch.length;
+		onProgress(`Enriching jobs: ${completed}/${total} (${enriched} enriched)`);
+
+		// Small delay between batches
+		if (i + batchSize < jobs.length) {
+			await new Promise((r) => setTimeout(r, RATE_LIMITS.listingPageDelay));
+		}
 	}
 }
 
@@ -635,7 +516,7 @@ export async function scrapeCraigslist(
 // Test runner
 if (import.meta.main) {
 	(async () => {
-		console.log("Testing Craigslist scraper - ALL REGIONS + ALL CATEGORIES WITH DEDUP\n");
+		console.log("Testing Craigslist scraper (fetch + cheerio) - ALL REGIONS + ALL CATEGORIES\n");
 		console.log("=".repeat(60));
 
 		try {
@@ -707,33 +588,35 @@ if (import.meta.main) {
 				}
 			}
 
-			// Step 4: Enrich unique jobs only (optional for test)
-			console.log(`\nEnriching ${uniqueJobs.length} unique jobs...`);
-			let enrichedJobs = 0;
-			let enrichedGigs = 0;
+			// Step 4: Enrich a sample of jobs
+			const sampleToEnrich = uniqueJobs.slice(0, 5);
+			console.log(`\nEnriching ${sampleToEnrich.length} sample jobs...`);
 
 			await enrichJobDetails(
-				uniqueJobs,
+				sampleToEnrich,
 				(msg) => console.log(`  ${msg}`),
 				(batch) => {
-					for (const job of batch) {
-						if (job.jobType === "gig") enrichedGigs++;
-						else enrichedJobs++;
-					}
 					console.log(`  Batch ready: ${batch.length} items`);
 				},
-				10
+				5
 			);
 
 			console.log("\n" + "=".repeat(60));
-			console.log(`FINAL COUNT (enriched): ${enrichedJobs + enrichedGigs}`);
-			console.log(`  Jobs: ${enrichedJobs}`);
-			console.log(`  Gigs: ${enrichedGigs}`);
+			console.log("SAMPLE ENRICHED JOB:");
+			const enrichedSample = sampleToEnrich.find((j) => j.descriptionText);
+			if (enrichedSample) {
+				console.log(`  Title: ${enrichedSample.title}`);
+				console.log(`  Company: ${enrichedSample.company}`);
+				console.log(`  Pay: ${enrichedSample.pay}`);
+				console.log(`  Location: ${enrichedSample.city}, ${enrichedSample.state}`);
+				console.log(`  Coords: ${enrichedSample.latitude}, ${enrichedSample.longitude}`);
+				console.log(`  Description: ${enrichedSample.descriptionText?.slice(0, 150)}...`);
+				console.log(`  Attributes:`, enrichedSample.attributes);
+			}
 			console.log("=".repeat(60));
 		} catch (err) {
 			console.error("Test failed:", err);
-		} finally {
-			await closeBrowser();
+			process.exit(1);
 		}
 	})();
 }
