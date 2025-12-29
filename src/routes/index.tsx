@@ -1,45 +1,59 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
-import { getCookie } from '@tanstack/react-start-server'
-import { Authenticated, Unauthenticated } from 'convex/react'
-import { useAuth } from '@workos/authkit-tanstack-react-start/client'
-import { getAuth, getSignInUrl, getSignUpUrl } from '@workos/authkit-tanstack-react-start'
-import { Suspense, useEffect } from 'react'
-import type { User } from '@workos/authkit-tanstack-react-start'
-import { ProfileForm } from '../components/ProfileForm'
-import { ReferralCard } from '../components/ReferralCard'
-import { api } from '../../convex/_generated/api'
-
-import { convexQuery } from '@convex-dev/react-query'
+import { createFileRoute } from '@tanstack/react-router';
+import { createServerFn } from '@tanstack/react-start';
+import { getCookie } from '@tanstack/react-start-server';
+import { Authenticated, Unauthenticated } from 'convex/react';
+import { useAuth } from '@workos/authkit-tanstack-react-start/client';
+import {
+  getAuth,
+  getSignInUrl,
+  getSignUpUrl,
+} from '@workos/authkit-tanstack-react-start';
+import { Suspense, useEffect } from 'react';
+import type { User } from '@workos/authkit-tanstack-react-start';
+import { LogOut } from 'lucide-react';
+import { ProfileForm } from '@/components/ProfileForm';
+import { ReferralCard } from '@/components/ReferralCard';
+import { HomeLocationCard } from '@/components/HomeLocationCard';
+import { Button } from '@/components/ui/button';
+import { api } from '@/convex/_generated/api';
+import { convexQuery } from '@convex-dev/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 // Server function to read referral cookie (loaders are isomorphic, so we need this)
 const getReferralCookie = createServerFn({ method: 'GET' }).handler(async () => {
-  return getCookie('pending_referral') || null
-})
+  return getCookie('pending_referral') || null;
+});
 
 export const Route = createFileRoute('/')({
   component: Home,
   loader: async ({ context }) => {
-    const { user } = await getAuth()
-    const signInUrl = await getSignInUrl()
-    const signUpUrl = await getSignUpUrl()
+    const { user } = await getAuth();
+    const signInUrl = await getSignInUrl();
+    const signUpUrl = await getSignUpUrl();
 
     // Read referral cookie for direct signups (non-OAuth flow)
-    const referralCode = await getReferralCookie()
+    const referralCode = await getReferralCookie();
 
     if (user) {
       await context.queryClient.ensureQueryData(
-           convexQuery(api.profiles.getByWorkosUserId, { workosUserId: user.id }),
-      )
+        convexQuery(api.profiles.getByWorkosUserId, { workosUserId: user.id }),
+      );
     }
 
-    return { user, signInUrl, signUpUrl, referralCode }
+    return { user, signInUrl, signUpUrl, referralCode };
   },
-})
+});
 
 function Home() {
-  const { user, signInUrl, signUpUrl, referralCode } = Route.useLoaderData()
-  return <HomeContent user={user} signInUrl={signInUrl} signUpUrl={signUpUrl} referralCode={referralCode} />
+  const { user, signInUrl, signUpUrl, referralCode } = Route.useLoaderData();
+  return (
+    <HomeContent
+      user={user}
+      signInUrl={signInUrl}
+      signUpUrl={signUpUrl}
+      referralCode={referralCode}
+    />
+  );
 }
 
 function HomeContent({
@@ -48,86 +62,116 @@ function HomeContent({
   signUpUrl,
   referralCode,
 }: {
-  user: User | null
-  signInUrl: string
-  signUpUrl: string
-  referralCode: string | null
+  user: User | null;
+  signInUrl: string;
+  signUpUrl: string;
+  referralCode: string | null;
 }) {
   return (
-    <div className='min-h-screen flex flex-col'>
-      <header className='sticky top-0 z-10 bg-card border-b border-border'>
-        <div className='flex items-center justify-between px-4 py-3 sm:px-6'>
-          <span className='font-semibold text-foreground'>Recovery Jobs</span>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3 sm:px-6">
+          <span className="font-semibold text-foreground">Recovery Jobs</span>
           {user && <UserMenu user={user} />}
         </div>
       </header>
       <AuthDebug />
-      <main className='flex-1'>
+      <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
         <Authenticated>
           {user && (
-            <div className="space-y-6">
-              <ProfileForm user={user} referredByCode={referralCode ?? undefined} />
-              <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-                <Suspense fallback={null}>
-                  <ReferralCard workosUserId={user.id} />
-                </Suspense>
-              </div>
-            </div>
+            <ProfileDashboard user={user} referralCode={referralCode} />
           )}
         </Authenticated>
         <Unauthenticated>
-          <div className='flex flex-col items-center justify-center min-h-[calc(100vh-53px)] gap-6 px-4 py-8'>
-            <h1 className='text-2xl sm:text-3xl font-bold text-center'>Welcome to Recovery Jobs</h1>
-            <p className='text-muted-foreground text-center'>Sign in to access your profile</p>
-            <SignInForm signInUrl={signInUrl} signUpUrl={signUpUrl} />
-          </div>
+          <WelcomeScreen signInUrl={signInUrl} signUpUrl={signUpUrl} />
         </Unauthenticated>
       </main>
     </div>
-  )
+  );
 }
 
-function SignInForm({ signInUrl, signUpUrl }: { signInUrl: string; signUpUrl: string }) {
+function ProfileDashboard({
+  user,
+  referralCode,
+}: {
+  user: User;
+  referralCode: string | null;
+}) {
+  const { data: profile } = useQuery(
+    convexQuery(api.profiles.getByWorkosUserId, { workosUserId: user.id }),
+  );
+
+  const hasProfile = !!profile;
+
   return (
-    <div className='flex flex-col sm:flex-row gap-3 w-full sm:w-auto'>
-      <a href={signInUrl} className='w-full sm:w-auto'>
-        <button className='w-full bg-primary text-primary-foreground px-6 py-2.5 rounded-md hover:bg-primary/90 transition-colors'>
-          Sign in
-        </button>
-      </a>
-      <a href={signUpUrl} className='w-full sm:w-auto'>
-        <button className='w-full bg-secondary text-secondary-foreground px-6 py-2.5 rounded-md hover:bg-secondary/80 transition-colors'>
-          Sign up
-        </button>
-      </a>
+    <div className="space-y-6">
+      {/* Profile Form - always shown */}
+      <ProfileForm user={user} referredByCode={referralCode ?? undefined} />
+
+      {/* Only show these cards after profile exists */}
+      {hasProfile && (
+        <>
+          <HomeLocationCard workosUserId={user.id} />
+          <Suspense fallback={null}>
+            <ReferralCard workosUserId={user.id} />
+          </Suspense>
+        </>
+      )}
     </div>
-  )
+  );
+}
+
+function WelcomeScreen({
+  signInUrl,
+  signUpUrl,
+}: {
+  signInUrl: string;
+  signUpUrl: string;
+}) {
+  return (
+    <div className="flex min-h-[calc(100vh-theme(spacing.16))] flex-col items-center justify-center gap-6 text-center">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          Welcome to Recovery Jobs
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Sign in to access your profile and find opportunities
+        </p>
+      </div>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Button asChild size="lg">
+          <a href={signInUrl}>Sign in</a>
+        </Button>
+        <Button asChild variant="outline" size="lg">
+          <a href={signUpUrl}>Create account</a>
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 function UserMenu({ user }: { user: User }) {
-  const { signOut } = useAuth()
+  const { signOut } = useAuth();
 
   return (
-    <div className='flex items-center gap-3'>
-      <span className='hidden sm:block text-sm text-muted-foreground truncate max-w-[200px]'>
+    <div className="flex items-center gap-3">
+      <span className="hidden max-w-[200px] truncate text-sm text-muted-foreground sm:block">
         {user.email}
       </span>
-      <button
-        onClick={() => signOut()}
-        className='bg-destructive text-destructive-foreground px-3 py-1.5 rounded-md text-sm hover:bg-destructive/90 transition-colors whitespace-nowrap'
-      >
-        Sign out
-      </button>
+      <Button variant="ghost" size="sm" onClick={() => signOut()}>
+        <LogOut className="h-4 w-4" />
+        <span className="hidden sm:inline">Sign out</span>
+      </Button>
     </div>
-  )
+  );
 }
 
 function AuthDebug() {
-  const auth = useAuth()
+  const auth = useAuth();
 
   useEffect(() => {
-    console.log('Auth state', { loading: auth.loading, user: auth.user })
-  }, [auth.loading, auth.user])
+    console.log('Auth state', { loading: auth.loading, user: auth.user });
+  }, [auth.loading, auth.user]);
 
-  return null
+  return null;
 }
