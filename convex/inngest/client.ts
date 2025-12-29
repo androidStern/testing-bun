@@ -72,6 +72,16 @@ type EmployerAccountCreatedEvent = {
   };
 };
 
+// Isochrones compute - triggered when user sets home location
+type IsochronesComputeEvent = {
+  name: 'isochrones/compute';
+  data: {
+    profileId: string; // Convex ID serialized
+    lat: number;
+    lon: number;
+  };
+};
+
 type Events = {
   'job/submitted': JobSubmittedEvent;
   'slack/approval.clicked': SlackApprovalClickedEvent;
@@ -79,6 +89,7 @@ type Events = {
   'job/first-applicant': JobFirstApplicantEvent;
   'employer/approved': EmployerApprovedEvent;
   'employer/account-created': EmployerAccountCreatedEvent;
+  'isochrones/compute': IsochronesComputeEvent;
 };
 
 // Middleware to inject Convex ActionCtx into Inngest function context
@@ -108,5 +119,6 @@ export type {
   JobFirstApplicantEvent,
   EmployerApprovedEvent,
   EmployerAccountCreatedEvent,
+  IsochronesComputeEvent,
   Events,
 };

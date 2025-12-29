@@ -39,6 +39,9 @@ const schema = z.object({
   // App
   APP_BASE_URL: z.string().url(),
   INNGEST_WEBHOOK_URL: z.string().url().optional(),
+
+  // Geoapify (transit isochrones)
+  GEOAPIFY_API_KEY: z.string().min(1),
 });
 
 type Env = z.infer<typeof schema>;

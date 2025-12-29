@@ -160,7 +160,19 @@ export default defineSchema({
     email: v.string(),
     firstName: v.optional(v.string()),
     headline: v.optional(v.string()),
+    // Home location for transit isochrone calculations
+    homeLat: v.optional(v.number()),
+    homeLon: v.optional(v.number()),
     instagramUrl: v.optional(v.string()),
+    // Transit isochrones (10/30/60 minute zones from home location)
+    isochrones: v.optional(
+      v.object({
+        tenMinute: v.any(), // GeoJSON FeatureCollection
+        thirtyMinute: v.any(),
+        sixtyMinute: v.any(),
+        computedAt: v.number(),
+      }),
+    ),
     lastName: v.optional(v.string()),
     linkedinUrl: v.optional(v.string()),
     location: v.optional(v.string()),

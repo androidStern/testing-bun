@@ -1,6 +1,7 @@
 import { NoOp } from 'convex-helpers/server/customFunctions';
 import { zCustomMutation } from 'convex-helpers/server/zod4';
 import { v } from 'convex/values';
+import { z } from 'zod';
 
 import {
   profileFormSchema,
@@ -8,7 +9,7 @@ import {
 } from '../src/lib/schemas/profile';
 
 import { internal } from './_generated/api';
-import { internalQuery, mutation, query } from './_generated/server';
+import { internalMutation, internalQuery, mutation, query } from './_generated/server';
 import type { Id } from './_generated/dataModel';
 
 const zodMutation = zCustomMutation(mutation, NoOp);
@@ -32,6 +33,16 @@ const profileDocValidator = v.object({
   createdAt: v.number(),
   updatedAt: v.number(),
   referralCode: v.optional(v.string()),
+  homeLat: v.optional(v.number()),
+  homeLon: v.optional(v.number()),
+  isochrones: v.optional(
+    v.object({
+      tenMinute: v.any(),
+      thirtyMinute: v.any(),
+      sixtyMinute: v.any(),
+      computedAt: v.number(),
+    }),
+  ),
 });
 
 // Internal query for workflow to fetch profile by ID
@@ -192,5 +203,61 @@ export const update = zodMutation({
     });
 
     return profile._id;
+  },
+});
+
+// Set user's home location and trigger isochrone computation
+export const setHomeLocation = zodMutation({
+  args: z.object({
+    lat: z.number(),
+    lon: z.number(),
+  }),
+  returns: z.null(),
+  handler: async (ctx, { lat, lon }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error('Not authenticated');
+
+    const profile = await ctx.db
+      .query('profiles')
+      .withIndex('by_workos_user_id', (q) =>
+        q.eq('workosUserId', identity.subject),
+      )
+      .unique();
+
+    if (!profile) throw new Error('Profile not found');
+
+    await ctx.db.patch(profile._id, {
+      homeLat: lat,
+      homeLon: lon,
+      // Clear stale isochrones - will be recomputed
+      isochrones: undefined,
+    });
+
+    // Trigger isochrone computation via Inngest
+    await ctx.scheduler.runAfter(0, internal.isochrones.triggerCompute, {
+      profileId: profile._id,
+      lat,
+      lon,
+    });
+
+    return null;
+  },
+});
+
+// Internal mutation called by Inngest to save computed isochrones
+export const saveIsochrones = internalMutation({
+  args: {
+    profileId: v.id('profiles'),
+    isochrones: v.object({
+      tenMinute: v.any(),
+      thirtyMinute: v.any(),
+      sixtyMinute: v.any(),
+      computedAt: v.number(),
+    }),
+  },
+  returns: v.null(),
+  handler: async (ctx, { profileId, isochrones }) => {
+    await ctx.db.patch(profileId, { isochrones });
+    return null;
   },
 });
