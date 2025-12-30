@@ -15,7 +15,7 @@ import {
 import { useState } from 'react';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { api } from '@/convex/_generated/api';
+import { api } from '../../convex/_generated/api';
 import type { ProfileFormData } from '@/lib/schemas/profile';
 import { profileFormSchema } from '@/lib/schemas/profile';
 import { Button } from '@/components/ui/button';

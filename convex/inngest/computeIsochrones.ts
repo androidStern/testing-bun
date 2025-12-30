@@ -2,6 +2,7 @@
 
 import { inngest } from './client';
 import { internal } from '../_generated/api';
+import type { ActionCtx } from '../_generated/server';
 import type { Id } from '../_generated/dataModel';
 import {
   fetchIsochrones,
@@ -9,6 +10,15 @@ import {
   parseIsochrones,
   type GeoJSONFeatureCollection,
 } from '../lib/geoapify';
+
+// Extended handler args type with middleware-injected convex context
+interface HandlerArgs {
+  event: { data: { profileId: string; lat: number; lon: number } };
+  step: {
+    run: <T>(name: string, fn: () => Promise<T>) => Promise<T>;
+  };
+  convex: ActionCtx;
+}
 
 /**
  * Compute transit isochrones for a user's home location.
@@ -25,9 +35,10 @@ export const computeIsochrones = inngest.createFunction(
     retries: 10,
   },
   { event: 'isochrones/compute' },
-  async ({ event, step, ctx }) => {
+  async (args) => {
+    // Cast to get middleware-injected convex context
+    const { event, step, convex } = args as unknown as HandlerArgs;
     const { profileId, lat, lon } = event.data;
-    const convex = ctx.convex;
 
     // Step 1: Initial fetch (may return immediately or async job)
     const initial = await step.run('fetch-isochrones', async () => {

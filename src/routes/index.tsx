@@ -15,7 +15,7 @@ import { ProfileForm } from '@/components/ProfileForm';
 import { ReferralCard } from '@/components/ReferralCard';
 import { HomeLocationCard } from '@/components/HomeLocationCard';
 import { Button } from '@/components/ui/button';
-import { api } from '@/convex/_generated/api';
+import { api } from '../../convex/_generated/api';
 import { convexQuery } from '@convex-dev/react-query';
 import { useQuery } from '@tanstack/react-query';
 

@@ -10,7 +10,7 @@ import {
   workExperienceFromDictationSchema,
 } from '../src/lib/schemas/resume'
 
-import { action, mutation, query } from './_generated/server'
+import { action, internalQuery, mutation, query } from './_generated/server'
 
 const zodMutation = zCustomMutation(mutation, NoOp)
 
@@ -22,6 +22,18 @@ export const getByWorkosUserId = query({
       .withIndex('by_workos_user_id', q => q.eq('workosUserId', args.workosUserId))
       .first()
   },
+})
+
+// Internal query for agent tools - returns same shape as public version
+export const getByWorkosUserIdInternal = internalQuery({
+  args: { workosUserId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query('resumes')
+      .withIndex('by_workos_user_id', q => q.eq('workosUserId', args.workosUserId))
+      .first()
+  },
+  returns: v.any(),
 })
 
 export const upsert = zodMutation({
@@ -248,7 +260,11 @@ export const parseResumeFromStorage = action({
         {
           content: [
             { text: 'Parse this resume into the schema.', type: 'text' },
-            { data: url, mediaType: (mimeType || 'application/pdf') as 'application/pdf', type: 'file' },
+            {
+              data: url,
+              mediaType: (mimeType || 'application/pdf') as 'application/pdf',
+              type: 'file',
+            },
           ],
           role: 'user',
         },
@@ -266,11 +282,7 @@ export const parseResumeFromStorage = action({
 export const transcribeSectionFromStorage = action({
   args: {
     mimeType: v.string(),
-    section: v.union(
-      v.literal('summary'),
-      v.literal('workExperience'),
-      v.literal('education'),
-    ),
+    section: v.union(v.literal('summary'), v.literal('workExperience'), v.literal('education')),
     storageId: v.id('_storage'),
   },
   handler: async (ctx, args) => {

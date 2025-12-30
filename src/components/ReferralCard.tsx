@@ -3,7 +3,7 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link2, Copy, Check, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { api } from '@/convex/_generated/api';
+import { api } from '../../convex/_generated/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {

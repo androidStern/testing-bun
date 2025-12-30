@@ -24,6 +24,7 @@ import { Route as EmployerSetupRouteImport } from './routes/employer/setup'
 import { Route as EmployerCandidatesRouteImport } from './routes/employer/candidates'
 import { Route as ApplyJobIdRouteImport } from './routes/apply/$jobId'
 import { Route as AuthenticatedResumesRouteImport } from './routes/_authenticated/resumes'
+import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/jobs'
 import { Route as AuthenticatedInviteRouteImport } from './routes/_authenticated/invite'
 import { Route as AuthenticatedAuthenticatedRouteImport } from './routes/_authenticated/authenticated'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/_admin'
@@ -103,6 +104,11 @@ const AuthenticatedResumesRoute = AuthenticatedResumesRouteImport.update({
   path: '/resumes',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedJobsRoute = AuthenticatedJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedInviteRoute = AuthenticatedInviteRouteImport.update({
   id: '/invite',
   path: '/invite',
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/sms-terms': typeof SmsTermsRoute
   '/authenticated': typeof AuthenticatedAuthenticatedRoute
   '/invite': typeof AuthenticatedInviteRoute
+  '/jobs': typeof AuthenticatedJobsRoute
   '/resumes': typeof AuthenticatedResumesRoute
   '/apply/$jobId': typeof ApplyJobIdRoute
   '/employer/candidates': typeof EmployerCandidatesRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/sms-terms': typeof SmsTermsRoute
   '/authenticated': typeof AuthenticatedAuthenticatedRoute
   '/invite': typeof AuthenticatedInviteRoute
+  '/jobs': typeof AuthenticatedJobsRoute
   '/resumes': typeof AuthenticatedResumesRoute
   '/apply/$jobId': typeof ApplyJobIdRoute
   '/employer/candidates': typeof EmployerCandidatesRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/authenticated': typeof AuthenticatedAuthenticatedRoute
   '/_authenticated/invite': typeof AuthenticatedInviteRoute
+  '/_authenticated/jobs': typeof AuthenticatedJobsRoute
   '/_authenticated/resumes': typeof AuthenticatedResumesRoute
   '/apply/$jobId': typeof ApplyJobIdRoute
   '/employer/candidates': typeof EmployerCandidatesRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/sms-terms'
     | '/authenticated'
     | '/invite'
+    | '/jobs'
     | '/resumes'
     | '/apply/$jobId'
     | '/employer/candidates'
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/sms-terms'
     | '/authenticated'
     | '/invite'
+    | '/jobs'
     | '/resumes'
     | '/apply/$jobId'
     | '/employer/candidates'
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin'
     | '/_authenticated/authenticated'
     | '/_authenticated/invite'
+    | '/_authenticated/jobs'
     | '/_authenticated/resumes'
     | '/apply/$jobId'
     | '/employer/candidates'
@@ -370,6 +382,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedResumesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/jobs': {
+      id: '/_authenticated/jobs'
+      path: '/jobs'
+      fullPath: '/jobs'
+      preLoaderRoute: typeof AuthenticatedJobsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/invite': {
       id: '/_authenticated/invite'
       path: '/invite'
@@ -416,6 +435,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAuthenticatedRoute: typeof AuthenticatedAuthenticatedRoute
   AuthenticatedInviteRoute: typeof AuthenticatedInviteRoute
+  AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
   AuthenticatedResumesRoute: typeof AuthenticatedResumesRoute
 }
 
@@ -423,6 +443,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAuthenticatedRoute: AuthenticatedAuthenticatedRoute,
   AuthenticatedInviteRoute: AuthenticatedInviteRoute,
+  AuthenticatedJobsRoute: AuthenticatedJobsRoute,
   AuthenticatedResumesRoute: AuthenticatedResumesRoute,
 }
 

@@ -1,8 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useConvexMutation, convexQuery } from '@convex-dev/react-query';
-import { api } from '@/convex/_generated/api';
-import { getUserLocation, getCityFromCoords } from '@/lib/geo';
+import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
 import { useEffect, useState } from 'react';
+import { Loader2, MapPin, Navigation, RefreshCw } from 'lucide-react';
+import { api } from '../../convex/_generated/api';
+import { geocodeAddress, getCityFromCoords, getUserLocation } from '@/lib/geo';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -11,7 +12,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { MapPin, Loader2, RefreshCw, Navigation } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
 interface HomeLocationCardProps {
@@ -23,13 +32,19 @@ export function HomeLocationCard({ workosUserId }: HomeLocationCardProps) {
   const [city, setCity] = useState<string | null>(null);
   const [cityLoading, setCityLoading] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [manualAddress, setManualAddress] = useState('');
+  const [geocoding, setGeocoding] = useState(false);
 
   const { data: profile } = useQuery(
     convexQuery(api.profiles.getByWorkosUserId, { workosUserId }),
   );
 
+  const setHomeLocationMutation = useConvexMutation(
+    api.profiles.setHomeLocation,
+  );
   const { mutate: updateLocation, isPending } = useMutation({
-    mutationFn: useConvexMutation(api.profiles.setHomeLocation),
+    mutationFn: setHomeLocationMutation,
     onSuccess: () => {
       toast({
         title: 'Location updated',
@@ -62,15 +77,32 @@ export function HomeLocationCard({ workosUserId }: HomeLocationCardProps) {
     try {
       const { lat, lon } = await getUserLocation();
       updateLocation({ lat, lon });
+    } catch {
+      // Browser geolocation failed - show manual entry dialog
+      setShowManualEntry(true);
+    } finally {
+      setLocating(false);
+    }
+  }
+
+  async function handleManualSubmit() {
+    if (!manualAddress.trim()) return;
+
+    setGeocoding(true);
+    try {
+      const { lat, lon } = await geocodeAddress(manualAddress);
+      updateLocation({ lat, lon });
+      setShowManualEntry(false);
+      setManualAddress('');
     } catch (error) {
       toast({
         title: 'Location error',
         description:
-          error instanceof Error ? error.message : 'Could not get location',
+          error instanceof Error ? error.message : 'Could not find location',
         variant: 'destructive',
       });
     } finally {
-      setLocating(false);
+      setGeocoding(false);
     }
   }
 
@@ -79,72 +111,123 @@ export function HomeLocationCard({ workosUserId }: HomeLocationCardProps) {
   const isLoading = locating || isPending;
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-            <Navigation className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <CardTitle className="text-lg">Home Location</CardTitle>
-            <CardDescription>
-              Find jobs accessible by public transit
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <>
+      <Card>
+        <CardHeader>
           <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            {cityLoading ? (
-              <span className="text-sm text-muted-foreground">Loading...</span>
-            ) : city ? (
-              <div className="flex flex-col">
-                <span className="font-medium">{city}</span>
-                {hasLocation && !hasIsochrones && (
-                  <span className="text-xs text-muted-foreground">
-                    Computing transit zones...
-                  </span>
-                )}
-                {hasIsochrones && (
-                  <span className="text-xs text-muted-foreground">
-                    Transit zones ready
-                  </span>
-                )}
-              </div>
-            ) : (
-              <span className="text-sm text-muted-foreground">
-                No location set
-              </span>
-            )}
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <Navigation className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">Home Location</CardTitle>
+              <CardDescription>
+                Find jobs accessible by public transit
+              </CardDescription>
+            </div>
           </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              {cityLoading ? (
+                <span className="text-sm text-muted-foreground">Loading...</span>
+              ) : city ? (
+                <div className="flex flex-col">
+                  <span className="font-medium">{city}</span>
+                  {hasLocation && !hasIsochrones && (
+                    <span className="text-xs text-muted-foreground">
+                      Computing transit zones...
+                    </span>
+                  )}
+                  {hasIsochrones && (
+                    <span className="text-xs text-muted-foreground">
+                      Transit zones ready
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  No location set
+                </span>
+              )}
+            </div>
 
-          <Button
-            variant={hasLocation ? 'outline' : 'default'}
-            size="sm"
-            onClick={handleChangeLocation}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Locating...
-              </>
-            ) : hasLocation ? (
-              <>
-                <RefreshCw className="h-4 w-4" />
-                Update Location
-              </>
-            ) : (
-              <>
-                <MapPin className="h-4 w-4" />
-                Set Location
-              </>
-            )}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+            <div className="flex gap-2">
+              <Button
+                variant={hasLocation ? 'outline' : 'default'}
+                size="sm"
+                onClick={handleChangeLocation}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Locating...
+                  </>
+                ) : hasLocation ? (
+                  <>
+                    <RefreshCw className="h-4 w-4" />
+                    Update
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="h-4 w-4" />
+                    Use my location
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowManualEntry(true)}
+                disabled={isLoading}
+              >
+                Enter manually
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={showManualEntry} onOpenChange={setShowManualEntry}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enter your location</DialogTitle>
+            <DialogDescription>
+              Enter your city, address, or zip code to find jobs accessible by
+              public transit.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            placeholder="e.g. Tampa, FL or 33602"
+            value={manualAddress}
+            onChange={(e) => setManualAddress(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleManualSubmit();
+            }}
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowManualEntry(false)}
+              disabled={geocoding}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleManualSubmit} disabled={geocoding}>
+              {geocoding ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Finding...
+                </>
+              ) : (
+                'Use this location'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
