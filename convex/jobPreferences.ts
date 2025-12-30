@@ -53,7 +53,9 @@ export const getByWorkosUserIdInternal = internalQuery({
 // Upsert preferences
 export const upsert = mutation({
   args: {
-    maxCommuteMinutes: v.optional(v.union(v.literal(10), v.literal(30), v.literal(60))),
+    maxCommuteMinutes: v.optional(
+      v.union(v.literal(10), v.literal(30), v.literal(60), v.null())
+    ),
     preferEasyApply: v.optional(v.boolean()),
     preferSecondChance: v.optional(v.boolean()),
     preferUrgent: v.optional(v.boolean()),
@@ -78,6 +80,9 @@ export const upsert = mutation({
 
     const data = {
       ...args,
+      // Convert null to undefined so the field is removed from the document
+      maxCommuteMinutes:
+        args.maxCommuteMinutes === null ? undefined : args.maxCommuteMinutes,
       updatedAt: Date.now(),
       workosUserId: identity.subject,
     }

@@ -29,7 +29,7 @@ export function JobPreferencesForm() {
 
   const form = useForm({
     defaultValues: {
-      maxCommuteMinutes: preferences?.maxCommuteMinutes ?? undefined,
+      maxCommuteMinutes: preferences?.maxCommuteMinutes ?? null,
       preferEasyApply: preferences?.preferEasyApply ?? false,
       preferSecondChance: preferences?.preferSecondChance ?? false,
       preferUrgent: preferences?.preferUrgent ?? false,
@@ -82,7 +82,7 @@ export function JobPreferencesForm() {
   useEffect(() => {
     if (preferences) {
       form.reset({
-        maxCommuteMinutes: preferences.maxCommuteMinutes ?? undefined,
+        maxCommuteMinutes: preferences.maxCommuteMinutes ?? null,
         preferEasyApply: preferences.preferEasyApply ?? false,
         preferSecondChance: preferences.preferSecondChance ?? false,
         preferUrgent: preferences.preferUrgent ?? false,
@@ -131,7 +131,7 @@ export function JobPreferencesForm() {
                   <Label htmlFor={`${formId}-maxCommute`}>Maximum commute time</Label>
                   <Select
                     onValueChange={v =>
-                      field.handleChange(v === 'none' ? undefined : (parseInt(v) as 10 | 30 | 60))
+                      field.handleChange(v === 'none' ? null : (parseInt(v) as 10 | 30 | 60))
                     }
                     value={field.state.value?.toString() ?? 'none'}
                   >
