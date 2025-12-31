@@ -31,6 +31,8 @@
   "dependencies": {
     "@ai-sdk/groq": "2",
     "@ai-sdk/openai": "^2.0.79",
+    "@assistant-ui/react": "^0.11.53",
+    "@assistant-ui/react-markdown": "^0.11.9",
     "@convex-dev/agent": "^0.3.2",
     "@convex-dev/react-query": "^0.0.0-alpha.11",
     "@convex-dev/workflow": "^0.3.3",
@@ -63,6 +65,7 @@
     "cookie": "^1.1.1",
     "double-metaphone": "^2.0.1",
     "effect": "^3.19.11",
+    "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.25",
     "html2canvas": "^1.4.1",
     "inngest": "^3.48.1",

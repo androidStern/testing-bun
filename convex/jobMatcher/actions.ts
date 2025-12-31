@@ -6,7 +6,6 @@ import { internal } from '../_generated/api'
 import { action } from '../_generated/server'
 
 import { jobMatcherAgent } from './agent'
-import { jobResultsSchema } from './schema'
 
 /**
  * Start a new job search or continue an existing one
@@ -33,15 +32,8 @@ export const startSearch = action({
         userId,
       })
 
-      // Phase 1: Run tools with streaming
+      // Stream agent response - tool results (including job cards) are rendered by the UI
       await thread.streamText({ prompt: args.prompt }, { saveStreamDeltas: true })
-
-      // Phase 2: Generate structured output
-      await thread.generateObject({
-        prompt:
-          'Format the job search results from above into the required JSON structure. Include all matching jobs found, a summary of the search, and any suggestions for improving results.',
-        schema: jobResultsSchema,
-      })
 
       return { isNew: false, threadId: args.threadId }
     }
@@ -59,15 +51,8 @@ export const startSearch = action({
       workosUserId: userId,
     })
 
-    // Phase 1: Run tools with streaming
+    // Stream agent response - tool results (including job cards) are rendered by the UI
     await thread.streamText({ prompt: args.prompt }, { saveStreamDeltas: true })
-
-    // Phase 2: Generate structured output
-    await thread.generateObject({
-      prompt:
-        'Format the job search results from above into the required JSON structure. Include all matching jobs found, a summary of the search, and any suggestions for improving results.',
-      schema: jobResultsSchema,
-    })
 
     return { isNew: true, threadId }
   },
@@ -94,15 +79,8 @@ export const sendMessage = action({
       userId: identity.subject,
     })
 
-    // Phase 1: Run tools with streaming
+    // Stream agent response - tool results (including job cards) are rendered by the UI
     await thread.streamText({ prompt: args.message }, { saveStreamDeltas: true })
-
-    // Phase 2: Generate structured output
-    await thread.generateObject({
-      prompt:
-        'Format the job search results from above into the required JSON structure. Include all matching jobs found, a summary of the search, and any suggestions for improving results.',
-      schema: jobResultsSchema,
-    })
 
     return null
   },
@@ -128,4 +106,61 @@ export const cancelSearch = action({
     return null
   },
   returns: v.null(),
+})
+
+/**
+ * Force a job search immediately, bypassing Q&A flow
+ * Used when user clicks "Search Now" button in header
+ */
+export const forceSearch = action({
+  args: {
+    threadId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error('Not authenticated')
+
+    const userId = identity.subject
+    const forcePrompt =
+      'Search for jobs immediately using whatever information is available. Skip any questions and find the best matches based on my resume and preferences. If I have no resume, search for general entry-level positions.'
+
+    console.log(`[JobMatcher] Force search for user=${userId}`)
+
+    // If continuing existing thread
+    if (args.threadId) {
+      console.log(`[JobMatcher] Force search on existing thread=${args.threadId}`)
+
+      const { thread } = await jobMatcherAgent.continueThread(ctx, {
+        threadId: args.threadId,
+        userId,
+      })
+
+      // Stream agent response - tool results (including job cards) are rendered by the UI
+      await thread.streamText({ prompt: forcePrompt }, { saveStreamDeltas: true })
+
+      return { isNew: false, threadId: args.threadId }
+    }
+
+    // Create new thread
+    const { thread, threadId } = await jobMatcherAgent.createThread(ctx, {
+      userId,
+    })
+    console.log(`[JobMatcher] Created thread=${threadId} for force search`)
+
+    // Record the search
+    await ctx.runMutation(internal.jobMatcher.queries.createSearchRecord, {
+      initialPrompt: forcePrompt,
+      threadId,
+      workosUserId: userId,
+    })
+
+    // Stream agent response - tool results (including job cards) are rendered by the UI
+    await thread.streamText({ prompt: forcePrompt }, { saveStreamDeltas: true })
+
+    return { isNew: true, threadId }
+  },
+  returns: v.object({
+    isNew: v.boolean(),
+    threadId: v.string(),
+  }),
 })

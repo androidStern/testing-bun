@@ -412,7 +412,61 @@ Tips:
   },
 })
 
+/**
+ * Ask the user a clarifying question with quick-reply options
+ *
+ * Use this tool when you need to gather information from the user:
+ * - What kind of work they're looking for (if no resume)
+ * - What shifts work for them (if no preferences set)
+ * - How far they're willing to commute (if no commute preference)
+ *
+ * The UI will render clickable buttons for each option.
+ */
+export const askQuestion = createTool({
+  args: z.object({
+    allowFreeText: z
+      .boolean()
+      .optional()
+      .describe('Whether to allow the user to type their own answer (defaults to true)'),
+    options: z
+      .array(
+        z.object({
+          description: z.string().optional().describe('Additional context for the option'),
+          id: z.string().describe('Unique identifier for this option'),
+          label: z.string().describe('Display text for this option'),
+        })
+      )
+      .min(1)
+      .max(5)
+      .describe('2-5 quick-reply options. Each MUST have id and label properties.'),
+    question: z.string().describe('The question to ask the user'),
+  }),
+  description: `Ask the user a clarifying question with quick-reply buttons.
+
+IMPORTANT: Each option object MUST have exactly these properties:
+- id: string (unique identifier)
+- label: string (display text)
+- description: string (optional, additional context)
+
+Use this to gather missing information before searching:
+- Job type preferences (if no resume)
+- Shift availability (if not set)
+- Commute distance (if not set)
+- Location preferences
+
+The user can click an option OR type their own answer.
+After receiving their response, proceed with the job search.`,
+  handler: async (ctx, args) => {
+    // This tool is a passthrough - the UI handles rendering
+    // The return value shows up in the tool result
+    const allowFreeText = args.allowFreeText ?? true
+    console.log(`[Tool:askQuestion] question="${args.question.substring(0, 40)}...", options=${args.options.length}, freeText=${allowFreeText}`)
+    return { ...args, allowFreeText }
+  },
+})
+
 export const tools = {
+  askQuestion,
   getMyJobPreferences,
   getMyResume,
   searchJobs,
