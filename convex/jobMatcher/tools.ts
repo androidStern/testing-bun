@@ -68,6 +68,39 @@ interface SanitizedJob {
 }
 
 /**
+ * Search context returned alongside jobs for UI display
+ * This tells the UI what filters were actually applied
+ */
+interface SearchContext {
+  query: string
+  totalFound: number
+  location: {
+    city?: string
+    state?: string
+    withinCommuteZone: boolean
+    maxCommuteMinutes?: number
+    homeLocation?: string // User's home location string (e.g., "Miami, FL")
+  }
+  filters: {
+    secondChanceRequired: boolean
+    secondChancePreferred: boolean
+    busRequired: boolean
+    railRequired: boolean
+    shifts: string[]
+    urgentOnly: boolean
+    easyApplyOnly: boolean
+  }
+}
+
+/**
+ * Result from searchJobs tool - includes both jobs and search context
+ */
+interface SearchResult {
+  jobs: SanitizedJob[]
+  searchContext: SearchContext
+}
+
+/**
  * Get the authenticated user's resume
  *
  * Security: Uses ctx.userId (from auth) - LLM cannot access other users' resumes
@@ -202,7 +235,7 @@ Tips:
 - Search for job titles, skills, or industries from the user's resume
 - Use filters to narrow by shift times or second-chance employers
 - Run multiple searches with different keywords to find diverse matches`,
-  handler: async (ctx, args): Promise<SanitizedJob[]> => {
+  handler: async (ctx, args): Promise<SearchResult> => {
     if (!ctx.userId) throw new Error('Not authenticated')
 
     console.log(`[Tool:searchJobs] query="${args.query.substring(0, 40)}${args.query.length > 40 ? '...' : ''}", limit=${args.limit}`)
@@ -383,7 +416,7 @@ Tips:
     }
 
     // Return sanitized results
-    const results = jobs.map(hit => {
+    const sanitizedJobs = jobs.map(hit => {
       const doc = hit.document
       return {
         busAccessible: doc.bus_accessible ?? false,
@@ -406,9 +439,34 @@ Tips:
       }
     })
 
-    console.log(`[Tool:searchJobs] → found=${foundCount}, returned=${results.length} jobs`)
+    // Build search context for UI display
+    const searchContext: SearchContext = {
+      query: args.query,
+      totalFound: foundCount,
+      location: {
+        city: args.filters?.city,
+        state: args.filters?.state,
+        withinCommuteZone: !!(profile?.isochrones && prefs?.requirePublicTransit),
+        maxCommuteMinutes: prefs?.maxCommuteMinutes,
+        homeLocation: profile?.location ?? undefined,
+      },
+      filters: {
+        secondChanceRequired: prefs?.requireSecondChance ?? args.filters?.second_chance_only ?? false,
+        secondChancePreferred: prefs?.preferSecondChance ?? false,
+        busRequired: prefs?.requireBusAccessible ?? args.filters?.bus_accessible ?? false,
+        railRequired: prefs?.requireRailAccessible ?? args.filters?.rail_accessible ?? false,
+        shifts: shiftPreferences,
+        urgentOnly: args.filters?.urgent_only ?? false,
+        easyApplyOnly: args.filters?.easy_apply_only ?? false,
+      },
+    }
 
-    return results
+    console.log(`[Tool:searchJobs] → found=${foundCount}, returned=${sanitizedJobs.length} jobs`)
+
+    return {
+      jobs: sanitizedJobs,
+      searchContext,
+    }
   },
 })
 

@@ -101,34 +101,35 @@ export function JobMatcherChat() {
         />
 
         <div className="flex-1 flex items-center justify-center p-4">
-          <Card className="max-w-md">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                AI Job Matcher
-              </CardTitle>
-              <CardDescription>
-                I'll help you find jobs that match your skills and preferences.
-                Start by telling me what you're looking for, or click "Search Now"
-                to find matches based on your profile.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <JobMatcherRuntimeProvider threadId={null} onThreadCreated={handleThreadCreated}>
-                <ComposerPrimitive.Root className="flex gap-2">
-                  <ComposerPrimitive.Input
-                    placeholder="What kind of job are you looking for?"
-                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          <div className="w-full max-w-2xl flex flex-col">
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <MessageSquare className="h-6 w-6" />
+                <h1 className="text-3xl font-semibold">AI JOB SEARCH</h1>
+              </div>
+            </div>
+
+            <JobMatcherRuntimeProvider threadId={null} onThreadCreated={handleThreadCreated}>
+              <ComposerPrimitive.Root className="flex flex-col gap-3">
+                <ComposerPrimitive.Input
+                  asChild
+                  placeholder="I'll help you find jobs that match your skills and preferences. Start by telling me what you're looking for, or click 'Search Now' to find matches based on your profile."
+                >
+                  <textarea
+                    className="w-full min-h-40 rounded-xl border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
                   />
+                </ComposerPrimitive.Input>
+                <div className="flex gap-2 justify-end">
                   <ComposerPrimitive.Send asChild>
-                    <Button size="icon">
+                    <Button size="lg" className="gap-2">
                       <Send className="h-4 w-4" />
+                      Search Now
                     </Button>
                   </ComposerPrimitive.Send>
-                </ComposerPrimitive.Root>
-              </JobMatcherRuntimeProvider>
-            </CardContent>
-          </Card>
+                </div>
+              </ComposerPrimitive.Root>
+            </JobMatcherRuntimeProvider>
+          </div>
         </div>
       </div>
     )
@@ -159,12 +160,14 @@ export function JobMatcherChat() {
               </div>
             </ThreadPrimitive.Empty>
 
-            <ThreadPrimitive.Messages
-              components={{
-                UserMessage: UserMessageComponent,
-                AssistantMessage: AssistantMessageComponent,
-              }}
-            />
+            <div className="flex flex-col space-y-6">
+              <ThreadPrimitive.Messages
+                components={{
+                  UserMessage: UserMessageComponent,
+                  AssistantMessage: AssistantMessageComponent,
+                }}
+              />
+            </div>
 
             <ThreadPrimitive.ViewportFooter className="sticky bottom-0">
               <ThreadPrimitive.ScrollToBottom asChild>
