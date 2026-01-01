@@ -50,7 +50,7 @@ export function convertConvexMessage(msg: ConvexUIMessage, idx: number): ThreadM
   if (msg.role === 'assistant') {
     return {
       ...baseMessage,
-      status: mapStatus(msg.status),
+      status: mapStatus(msg.status, msg),
     }
   }
 
@@ -60,8 +60,10 @@ export function convertConvexMessage(msg: ConvexUIMessage, idx: number): ThreadM
 /**
  * Maps Convex Agent status to assistant-ui MessageStatus.
  * Convex Agent status can be: 'streaming' | 'pending' | 'success' | 'error' | 'failed'
+ *
+ * For error states, extracts error message from message parts if available.
  */
-function mapStatus(status: string): ThreadMessageLike['status'] {
+function mapStatus(status: string, msg?: ConvexUIMessage): ThreadMessageLike['status'] {
   switch (status) {
     case 'streaming':
     case 'pending':
@@ -69,11 +71,48 @@ function mapStatus(status: string): ThreadMessageLike['status'] {
     case 'success':
       return { type: 'complete', reason: 'stop' }
     case 'error':
-    case 'failed':
-      return { type: 'incomplete', reason: 'error' }
+    case 'failed': {
+      // Try to extract error message from the message
+      const errorMessage = extractErrorMessage(msg)
+      return {
+        type: 'incomplete',
+        reason: 'error',
+        error: errorMessage,
+      }
+    }
     default:
       return { type: 'complete', reason: 'stop' }
   }
+}
+
+/**
+ * Attempts to extract an error message from a failed message.
+ * Checks text content and tool call errors.
+ */
+function extractErrorMessage(msg?: ConvexUIMessage): string {
+  if (!msg) {
+    return 'An unexpected error occurred. Please try again.'
+  }
+
+  // Check if the message text contains error information
+  if (msg.text && msg.text.length > 0) {
+    // If the text looks like an error message, use it
+    const text = msg.text.trim()
+    if (text.toLowerCase().includes('error') || text.toLowerCase().includes('failed')) {
+      return text.length > 200 ? text.substring(0, 200) + '...' : text
+    }
+  }
+
+  // Check tool call parts for errors
+  for (const part of msg.parts ?? []) {
+    if ('state' in part && part.state === 'output-error' && 'errorText' in part) {
+      const errorText = part.errorText as string
+      return errorText.length > 200 ? errorText.substring(0, 200) + '...' : errorText
+    }
+  }
+
+  // Default error message
+  return 'Something went wrong. Please try again.'
 }
 
 /**

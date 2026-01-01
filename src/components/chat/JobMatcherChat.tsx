@@ -1,20 +1,15 @@
 'use client'
 
-import {
-  ComposerPrimitive,
-  MessagePrimitive,
-  ThreadPrimitive,
-} from '@assistant-ui/react'
-import { MarkdownTextPrimitive } from '@assistant-ui/react-markdown'
+import { ComposerPrimitive } from '@assistant-ui/react'
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
 import { useAction } from 'convex/react'
 import { Loader2, MessageSquare, Send } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
+import { Thread } from '@/components/assistant-ui/thread'
 import { api } from '../../../convex/_generated/api'
 import { Button } from '../ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import { ChatHeader } from './ChatHeader'
 import { JobMatcherRuntimeProvider } from './JobMatcherRuntimeProvider'
 import {
@@ -23,6 +18,7 @@ import {
   SearchJobsToolUI,
   QuestionToolUI,
 } from './tools'
+import type { JobPreferences } from '../jobs/FilterSummaryBanner'
 
 /**
  * JobMatcherChat - Main chat interface for the job matcher.
@@ -36,11 +32,21 @@ import {
  */
 export function JobMatcherChat() {
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
+  const [lastSearchPrefs, setLastSearchPrefs] = useState<JobPreferences | null>(null)
 
   // Check for existing active search
   const { data: activeSearch, isLoading: searchLoading, refetch: refetchSearch } = useQuery(
     convexQuery(api.jobMatcher.queries.getActiveSearch, {})
   )
+
+  // Get current preferences for filter change detection
+  const { data: currentPrefs } = useQuery(convexQuery(api.jobPreferences.get, {}))
+
+  // Detect if filters have changed since last search
+  const filtersChanged = useMemo(() => {
+    if (!lastSearchPrefs || !currentPrefs) return false
+    return JSON.stringify(lastSearchPrefs) !== JSON.stringify(currentPrefs)
+  }, [lastSearchPrefs, currentPrefs])
 
   // Use active search's thread ID if available
   const threadId = activeThreadId ?? activeSearch?.threadId ?? null
@@ -55,6 +61,10 @@ export function JobMatcherChat() {
   const handleForceSearch = useCallback(async () => {
     setIsForceSearching(true)
     try {
+      // Snapshot current preferences before search
+      if (currentPrefs) {
+        setLastSearchPrefs(currentPrefs)
+      }
       const result = await forceSearchAction({ threadId: threadId ?? undefined })
       if (result.isNew) {
         setActiveThreadId(result.threadId)
@@ -63,7 +73,7 @@ export function JobMatcherChat() {
     } finally {
       setIsForceSearching(false)
     }
-  }, [forceSearchAction, threadId, refetchSearch])
+  }, [forceSearchAction, threadId, refetchSearch, currentPrefs])
 
   const handleThreadCreated = useCallback(
     (newThreadId: string) => {
@@ -77,9 +87,15 @@ export function JobMatcherChat() {
     if (activeSearch) {
       await cancelSearchAction({ searchId: activeSearch._id })
       setActiveThreadId(null)
+      setLastSearchPrefs(null)
       await refetchSearch()
     }
   }, [activeSearch, cancelSearchAction, refetchSearch])
+
+  // Redo search with updated filters
+  const handleRedoSearch = useCallback(async () => {
+    await handleForceSearch()
+  }, [handleForceSearch])
 
   // Loading state
   if (searchLoading) {
@@ -98,6 +114,7 @@ export function JobMatcherChat() {
           onForceSearch={handleForceSearch}
           isSearching={isForceSearching}
           hasActiveThread={false}
+          filtersChanged={false}
         />
 
         <div className="flex-1 flex items-center justify-center p-4">
@@ -135,120 +152,30 @@ export function JobMatcherChat() {
     )
   }
 
-  // Active thread - show chat interface
+  // Active thread - show chat interface with generated Thread component
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       <ChatHeader
         onForceSearch={handleForceSearch}
+        onNewChat={handleNewChat}
+        onRedoSearch={handleRedoSearch}
         isSearching={isForceSearching}
         hasActiveThread={true}
+        filtersChanged={filtersChanged}
       />
 
       <JobMatcherRuntimeProvider threadId={threadId} onThreadCreated={handleThreadCreated}>
-        {/* Register tool UIs */}
+        {/* Register custom tool UIs */}
         <ResumeToolUI />
         <PreferencesToolUI />
         <SearchJobsToolUI />
         <QuestionToolUI />
 
-        {/* Thread content */}
-        <ThreadPrimitive.Root className="flex flex-col flex-1 overflow-hidden">
-          <ThreadPrimitive.Viewport className="flex-1 overflow-y-auto">
-            <ThreadPrimitive.Empty>
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                <p>Start a conversation to find jobs...</p>
-              </div>
-            </ThreadPrimitive.Empty>
-
-            <div className="flex flex-col space-y-6">
-              <ThreadPrimitive.Messages
-                components={{
-                  UserMessage: UserMessageComponent,
-                  AssistantMessage: AssistantMessageComponent,
-                }}
-              />
-            </div>
-
-            <ThreadPrimitive.ViewportFooter className="sticky bottom-0">
-              <ThreadPrimitive.ScrollToBottom asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 data-[at-bottom=true]:hidden"
-                >
-                  Scroll to bottom
-                </Button>
-              </ThreadPrimitive.ScrollToBottom>
-            </ThreadPrimitive.ViewportFooter>
-          </ThreadPrimitive.Viewport>
-
-          {/* Composer */}
-          <div className="border-t bg-background p-4">
-            <ComposerPrimitive.Root className="flex gap-2">
-              <ComposerPrimitive.Input
-                placeholder="Ask about jobs or refine your search..."
-                className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              />
-              <ComposerPrimitive.Send asChild>
-                <Button size="icon">
-                  <Send className="h-4 w-4" />
-                </Button>
-              </ComposerPrimitive.Send>
-            </ComposerPrimitive.Root>
-
-            {/* Action buttons */}
-            <div className="flex items-center justify-between mt-2 pt-2 border-t">
-              <Button variant="ghost" size="sm" onClick={handleNewChat}>
-                Start new search
-              </Button>
-            </div>
-          </div>
-        </ThreadPrimitive.Root>
+        {/* Use the generated Thread component with proper styling */}
+        <div className="flex-1 overflow-hidden">
+          <Thread />
+        </div>
       </JobMatcherRuntimeProvider>
-    </div>
-  )
-}
-
-/**
- * User message component
- */
-function UserMessageComponent() {
-  return (
-    <div className="flex justify-end px-4 py-2">
-      <div className="max-w-[80%] rounded-lg bg-primary text-primary-foreground px-4 py-2">
-        <MessagePrimitive.Content />
-      </div>
-    </div>
-  )
-}
-
-/**
- * Assistant message component with tool rendering
- */
-function AssistantMessageComponent() {
-  return (
-    <div className="px-4 py-2 w-full min-w-0">
-      <div className="max-w-[90%] w-full min-w-0">
-        {/* Tool calls and text content are rendered via MessagePrimitive.Content */}
-        {/* Tool UIs registered above will render for their respective tool calls */}
-        {/* Job cards are rendered inline by SearchJobsToolUI */}
-        <MessagePrimitive.Content
-          components={{
-            Text: MarkdownText,
-          }}
-        />
-      </div>
-    </div>
-  )
-}
-
-/**
- * Markdown text renderer with styling
- */
-function MarkdownText() {
-  return (
-    <div className="rounded-lg bg-muted/50 px-4 py-2 text-sm prose prose-sm prose-neutral dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-      <MarkdownTextPrimitive />
     </div>
   )
 }

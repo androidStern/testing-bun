@@ -384,7 +384,7 @@ export const SearchJobsToolUI = makeAssistantToolUI<SearchJobsArgs, SearchResult
     // No results
     if (jobs.length === 0) {
       return (
-        <Card className="overflow-hidden">
+        <Card className="mb-4 overflow-hidden">
           <div className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Search className="h-4 w-4" />
@@ -399,7 +399,7 @@ export const SearchJobsToolUI = makeAssistantToolUI<SearchJobsArgs, SearchResult
 
     // Results card with carousel
     return (
-      <Card className="overflow-hidden">
+      <Card className="mb-4 overflow-hidden">
         {/* Header with query and count */}
         <div className="p-4 pb-3">
           <div className="flex items-start justify-between gap-4">

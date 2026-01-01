@@ -224,7 +224,7 @@ export const searchJobs = createTool({
         urgent_only: z.boolean().optional().describe('Only show urgent hiring'),
       })
       .optional(),
-    limit: z.number().min(1).max(30).default(15).describe('Number of results to return (max 30)'),
+    limit: z.number().min(1).max(15).default(10).describe('Number of results to return (max 15)'),
     query: z.string().describe('Search keywords: job titles, skills, company names, industries'),
   }),
   description: `Search for jobs matching keywords and filters.
@@ -421,8 +421,9 @@ Tips:
       return {
         busAccessible: doc.bus_accessible ?? false,
         company: doc.company,
+        // Truncate to 200 chars to stay within model token limits
         description: doc.description
-          ? doc.description.substring(0, 500) + (doc.description.length > 500 ? '...' : '')
+          ? doc.description.substring(0, 200) + (doc.description.length > 200 ? '...' : '')
           : null,
         id: doc.id,
         isEasyApply: doc.is_easy_apply ?? false,

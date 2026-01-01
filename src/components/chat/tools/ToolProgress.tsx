@@ -104,7 +104,7 @@ export function ToolCard({
   className?: string
 }) {
   return (
-    <div className={cn('flex items-center gap-3 rounded-lg bg-muted/50 p-3 text-sm', className)}>
+    <div className={cn('mb-4 flex items-center gap-3 rounded-lg bg-muted/50 p-3 text-sm', className)}>
       <div className="flex-shrink-0">
         {status === 'running' ? (
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
