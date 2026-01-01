@@ -36,7 +36,7 @@ export function ToolProgress({
   const isRunning = status === 'running'
 
   return (
-    <div className={cn('rounded-lg border bg-muted/30 p-3', className)}>
+    <div className={cn('border bg-muted/30 p-3', className)}>
       {/* Header */}
       <div className="flex items-center gap-2">
         {isRunning ? (
@@ -104,7 +104,7 @@ export function ToolCard({
   className?: string
 }) {
   return (
-    <div className={cn('mb-4 flex items-center gap-3 rounded-lg bg-muted/50 p-3 text-sm', className)}>
+    <div className={cn('mb-4 flex items-center gap-3 bg-muted/50 p-3 text-sm', className)}>
       <div className="flex-shrink-0">
         {status === 'running' ? (
           <Loader2 className="h-4 w-4 animate-spin text-primary" />

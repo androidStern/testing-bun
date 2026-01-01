@@ -283,7 +283,7 @@ export function ResumePreview({ formData }: ResumePreviewProps) {
                   <h2 className='text-lg font-semibold border-b border-gray-300 pb-2'>Skills</h2>
                   <div className='flex flex-wrap gap-2'>
                     {formatSkills(formData.skills).map((skill, index) => (
-                      <span className='bg-gray-100 px-3 py-1 rounded-md text-sm' key={index}>
+                      <span className='bg-muted px-3 py-1 text-sm' key={index}>
                         {skill}
                       </span>
                     ))}

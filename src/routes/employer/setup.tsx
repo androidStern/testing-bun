@@ -230,7 +230,7 @@ function EmployerSetupPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="bg-accent/50 border border-accent rounded-lg p-4 mb-6">
+            <div className="bg-accent/50 border border-accent p-4 mb-6">
               <p className="text-sm font-medium text-accent-foreground mb-2">What happens next?</p>
               <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
                 <li>Submit this form (takes 2 minutes)</li>
@@ -308,7 +308,7 @@ function EmployerSetupPage() {
               </div>
 
               {error && (
-                <p className="text-sm text-destructive bg-destructive/10 p-2 rounded">{error}</p>
+                <p className="text-sm text-destructive bg-destructive/10 p-2">{error}</p>
               )}
 
               <Button type="submit" className="w-full" disabled={submitting}>

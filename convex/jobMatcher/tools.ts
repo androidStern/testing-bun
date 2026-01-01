@@ -121,7 +121,9 @@ export const getMyResume = createTool({
       return null
     }
 
-    console.log(`[Tool:getMyResume] skills=${!!resume.skills}, summary=${!!resume.summary}, exp=${resume.workExperience?.length ?? 0}, edu=${resume.education?.length ?? 0}`)
+    console.log(
+      `[Tool:getMyResume] skills=${!!resume.skills}, summary=${!!resume.summary}, exp=${resume.workExperience?.length ?? 0}, edu=${resume.education?.length ?? 0}`,
+    )
 
     // Return sanitized data - no internal IDs, timestamps, or storage refs
     return {
@@ -190,7 +192,9 @@ export const getMyJobPreferences = createTool({
       },
     }
 
-    console.log(`[Tool:getMyJobPreferences] home=${result.hasHomeLocation}, transit=${result.hasTransitZones}, commute=${result.maxCommuteMinutes}min`)
+    console.log(
+      `[Tool:getMyJobPreferences] home=${result.hasHomeLocation}, transit=${result.hasTransitZones}, commute=${result.maxCommuteMinutes}min`,
+    )
 
     return result
   },
@@ -224,7 +228,7 @@ export const searchJobs = createTool({
         urgent_only: z.boolean().optional().describe('Only show urgent hiring'),
       })
       .optional(),
-    limit: z.number().min(1).max(15).default(10).describe('Number of results to return (max 15)'),
+    limit: z.number().min(1).max(8).default(5).describe('Number of results to return (max 8)'),
     query: z.string().describe('Search keywords: job titles, skills, company names, industries'),
   }),
   description: `Search for jobs matching keywords and filters.
@@ -238,7 +242,9 @@ Tips:
   handler: async (ctx, args): Promise<SearchResult> => {
     if (!ctx.userId) throw new Error('Not authenticated')
 
-    console.log(`[Tool:searchJobs] query="${args.query.substring(0, 40)}${args.query.length > 40 ? '...' : ''}", limit=${args.limit}`)
+    console.log(
+      `[Tool:searchJobs] query="${args.query.substring(0, 40)}${args.query.length > 40 ? '...' : ''}", limit=${args.limit}`,
+    )
 
     // Fetch user context (LLM never sees this)
     const [prefs, profile] = await Promise.all([
@@ -421,9 +427,9 @@ Tips:
       return {
         busAccessible: doc.bus_accessible ?? false,
         company: doc.company,
-        // Truncate to 200 chars to stay within model token limits
+        // Truncate to 100 chars to stay within Groq's 10K TPM limit
         description: doc.description
-          ? doc.description.substring(0, 200) + (doc.description.length > 200 ? '...' : '')
+          ? doc.description.substring(0, 100) + (doc.description.length > 100 ? '...' : '')
           : null,
         id: doc.id,
         isEasyApply: doc.is_easy_apply ?? false,
@@ -442,24 +448,25 @@ Tips:
 
     // Build search context for UI display
     const searchContext: SearchContext = {
-      query: args.query,
-      totalFound: foundCount,
-      location: {
-        city: args.filters?.city,
-        state: args.filters?.state,
-        withinCommuteZone: !!(profile?.isochrones && prefs?.requirePublicTransit),
-        maxCommuteMinutes: prefs?.maxCommuteMinutes,
-        homeLocation: profile?.location ?? undefined,
-      },
       filters: {
-        secondChanceRequired: prefs?.requireSecondChance ?? args.filters?.second_chance_only ?? false,
-        secondChancePreferred: prefs?.preferSecondChance ?? false,
         busRequired: prefs?.requireBusAccessible ?? args.filters?.bus_accessible ?? false,
+        easyApplyOnly: args.filters?.easy_apply_only ?? false,
         railRequired: prefs?.requireRailAccessible ?? args.filters?.rail_accessible ?? false,
+        secondChancePreferred: prefs?.preferSecondChance ?? false,
+        secondChanceRequired:
+          prefs?.requireSecondChance ?? args.filters?.second_chance_only ?? false,
         shifts: shiftPreferences,
         urgentOnly: args.filters?.urgent_only ?? false,
-        easyApplyOnly: args.filters?.easy_apply_only ?? false,
       },
+      location: {
+        city: args.filters?.city,
+        homeLocation: profile?.location ?? undefined,
+        maxCommuteMinutes: prefs?.maxCommuteMinutes,
+        state: args.filters?.state,
+        withinCommuteZone: !!(profile?.isochrones && prefs?.requirePublicTransit),
+      },
+      query: args.query,
+      totalFound: foundCount,
     }
 
     console.log(`[Tool:searchJobs] → found=${foundCount}, returned=${sanitizedJobs.length} jobs`)
@@ -493,7 +500,7 @@ export const askQuestion = createTool({
           description: z.string().optional().describe('Additional context for the option'),
           id: z.string().describe('Unique identifier for this option'),
           label: z.string().describe('Display text for this option'),
-        })
+        }),
       )
       .min(1)
       .max(5)
@@ -519,7 +526,9 @@ After receiving their response, proceed with the job search.`,
     // This tool is a passthrough - the UI handles rendering
     // The return value shows up in the tool result
     const allowFreeText = args.allowFreeText ?? true
-    console.log(`[Tool:askQuestion] question="${args.question.substring(0, 40)}...", options=${args.options.length}, freeText=${allowFreeText}`)
+    console.log(
+      `[Tool:askQuestion] question="${args.question.substring(0, 40)}...", options=${args.options.length}, freeText=${allowFreeText}`,
+    )
     return { ...args, allowFreeText }
   },
 })

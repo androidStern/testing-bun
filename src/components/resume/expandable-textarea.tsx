@@ -8,7 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from './dialog'
+} from '../ui/dialog'
 
 interface ExpandableTextareaProps {
   className?: string
@@ -32,7 +32,7 @@ export function ExpandableTextarea({
   const [isOpen, setIsOpen] = useState(false)
 
   const textareaClasses =
-    'bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none'
+    'bg-input text-foreground w-full px-3 py-2.5 border border-border focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none'
 
   return (
     <>

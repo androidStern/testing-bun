@@ -117,11 +117,11 @@ export function SenderCard({
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <StatusBadge status={sender.status} />
-              <span className="text-xs text-gray-500">Editing</span>
+              <span className="text-xs text-muted-foreground">Editing</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-gray-500">Phone</label>
+                <label className="text-xs font-medium text-muted-foreground">Phone</label>
                 <Input
                   value={editValues.phone}
                   onChange={(e) => setEditValues({ ...editValues, phone: e.target.value })}
@@ -130,7 +130,7 @@ export function SenderCard({
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500">Email</label>
+                <label className="text-xs font-medium text-muted-foreground">Email</label>
                 <Input
                   value={editValues.email}
                   onChange={(e) => setEditValues({ ...editValues, email: e.target.value })}
@@ -139,7 +139,7 @@ export function SenderCard({
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500">Name</label>
+                <label className="text-xs font-medium text-muted-foreground">Name</label>
                 <Input
                   value={editValues.name}
                   onChange={(e) => setEditValues({ ...editValues, name: e.target.value })}
@@ -148,7 +148,7 @@ export function SenderCard({
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500">Company</label>
+                <label className="text-xs font-medium text-muted-foreground">Company</label>
                 <Input
                   value={editValues.company}
                   onChange={(e) => setEditValues({ ...editValues, company: e.target.value })}
@@ -158,7 +158,7 @@ export function SenderCard({
               </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500">Notes</label>
+              <label className="text-xs font-medium text-muted-foreground">Notes</label>
               <Input
                 value={editValues.notes}
                 onChange={(e) => setEditValues({ ...editValues, notes: e.target.value })}
@@ -190,26 +190,26 @@ export function SenderCard({
                 <span className="font-mono font-medium">{sender.phone}</span>
               )}
               {sender.email && (
-                <span className="text-sm text-gray-600">{sender.email}</span>
+                <span className="text-sm text-muted-foreground">{sender.email}</span>
               )}
               <StatusBadge status={sender.status} />
             </div>
             {sender.name && (
-              <div className="mt-1 text-sm text-gray-600">{sender.name}</div>
+              <div className="mt-1 text-sm text-muted-foreground">{sender.name}</div>
             )}
             {sender.company && (
-              <div className="text-sm text-gray-500">{sender.company}</div>
+              <div className="text-sm text-muted-foreground">{sender.company}</div>
             )}
             {sender.notes && (
-              <div className="mt-1 text-xs text-gray-500 italic">Notes: {sender.notes}</div>
+              <div className="mt-1 text-xs text-muted-foreground italic">Notes: {sender.notes}</div>
             )}
             {firstMessagePreview && (
-              <div className="mt-2 text-sm text-gray-600 italic">
+              <div className="mt-2 text-sm text-muted-foreground italic">
                 "{firstMessagePreview.slice(0, 100)}
                 {firstMessagePreview.length > 100 ? '...' : ''}"
               </div>
             )}
-            <div className="mt-2 text-xs text-gray-400">
+            <div className="mt-2 text-xs text-muted-foreground">
               {sender.messageCount !== undefined && (
                 <span className="mr-2">
                   {sender.messageCount} message{sender.messageCount !== 1 ? 's' : ''}

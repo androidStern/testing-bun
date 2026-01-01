@@ -413,7 +413,7 @@ export function ScrapedJobsTable() {
           placeholder='Search jobs...'
           value={inputQuery}
         />
-        {isPending && <span className='text-sm text-gray-400 self-center'>Searching...</span>}
+        {isPending && <span className='text-sm text-muted-foreground self-center'>Searching...</span>}
         {selectedIds.size > 0 && (
           <Button disabled={deleting} onClick={handleDeleteSelected} variant='destructive'>
             <Trash2 className='h-4 w-4 mr-2' />
@@ -452,7 +452,7 @@ export function ScrapedJobsTable() {
 
       {/* Error */}
       {error && (
-        <div className='p-4 bg-red-50 text-red-700 rounded-lg'>
+        <div className='p-4 bg-destructive/10 text-destructive border border-destructive/20'>
           {error instanceof Error ? error.message : 'Search failed'}
         </div>
       )}
@@ -460,19 +460,17 @@ export function ScrapedJobsTable() {
       {/* Results */}
       {results && (
         <>
-          <div className='text-sm text-gray-500'>Found {results.found} jobs</div>
+          <div className='text-sm text-muted-foreground'>Found {results.found} jobs</div>
 
           {/* Table */}
-          <div className='overflow-x-auto border rounded-lg'>
+          <div className='overflow-x-auto border'>
             <table className='w-full text-sm'>
-              <thead className='bg-gray-50'>
+              <thead className='bg-muted'>
                 <tr>
                   <th className='px-2 py-2 w-10'>
-                    <input
+                    <Checkbox
                       checked={results.hits.length > 0 && selectedIds.size === results.hits.length}
-                      className='rounded border-gray-300'
-                      onChange={toggleSelectAll}
-                      type='checkbox'
+                      onCheckedChange={toggleSelectAll}
                     />
                   </th>
                   <th className='px-4 py-2 text-left font-medium'>Title</th>
@@ -488,18 +486,16 @@ export function ScrapedJobsTable() {
               </thead>
               <tbody className='divide-y'>
                 {results.hits.map(hit => (
-                  <tr className='hover:bg-gray-50' key={hit.document.id}>
+                  <tr className='hover:bg-muted/50' key={hit.document.id}>
                     <td className='px-2 py-2'>
-                      <input
+                      <Checkbox
                         checked={selectedIds.has(hit.document.id)}
-                        className='rounded border-gray-300'
-                        onChange={() => toggleSelect(hit.document.id)}
-                        type='checkbox'
+                        onCheckedChange={() => toggleSelect(hit.document.id)}
                       />
                     </td>
                     <td className='px-4 py-2'>
                       <a
-                        className='text-blue-600 hover:underline'
+                        className='text-primary hover:underline'
                         href={hit.document.url}
                         rel='noopener noreferrer'
                         target='_blank'
@@ -548,7 +544,7 @@ export function ScrapedJobsTable() {
                                   ? 'text-yellow-600'
                                   : hit.document.second_chance_tier === 'unlikely'
                                     ? 'text-red-500'
-                                    : 'text-gray-400'
+                                    : 'text-muted-foreground'
                           }`}
                           onClick={() => {
                             setAuditJobId(hit.document.id)
@@ -563,12 +559,12 @@ export function ScrapedJobsTable() {
                         '-'
                       )}
                     </td>
-                    <td className='px-4 py-2 text-gray-500'>
+                    <td className='px-4 py-2 text-muted-foreground'>
                       {formatDate(hit.document.posted_at)}
                     </td>
                     <td className='px-2 py-2'>
                       <button
-                        className='p-1 text-gray-400 hover:text-red-600 transition-colors'
+                        className='p-1 text-muted-foreground hover:text-destructive transition-colors'
                         onClick={() => handleDeleteSingle(hit.document.id)}
                         title='Delete job'
                       >
@@ -584,7 +580,7 @@ export function ScrapedJobsTable() {
           {/* Pagination */}
           {results.found > 25 && (
             <div className='flex justify-between items-center'>
-              <span className='text-sm text-gray-500'>
+              <span className='text-sm text-muted-foreground'>
                 Page {search.page} of {Math.ceil(results.found / 25)}
               </span>
               <div className='flex gap-2'>
@@ -612,7 +608,7 @@ export function ScrapedJobsTable() {
 
       {/* Loading State */}
       {isLoading && !results && (
-        <div className='text-center text-gray-500 py-8'>Loading jobs...</div>
+        <div className='text-center text-muted-foreground py-8'>Loading jobs...</div>
       )}
 
       {/* Delete Confirmation Dialog */}

@@ -10,6 +10,8 @@ import { formatRelativeTime } from '../../lib/formatRelativeTime';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
 
 import { StatusBadge } from './StatusBadge';
 
@@ -132,7 +134,7 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
     pending_approval: 'bg-yellow-100 text-yellow-800',
     approved: 'bg-green-100 text-green-800',
     denied: 'bg-red-100 text-red-800',
-    closed: 'bg-gray-100 text-gray-800',
+    closed: 'bg-muted text-foreground',
   };
 
   if (isEditing && job.parsedJob) {
@@ -149,17 +151,17 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
             <div className="mb-4 flex items-center justify-between">
               <span
                 className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  statusColors[job.status] || 'bg-gray-100 text-gray-800'
+                  statusColors[job.status] || 'bg-muted text-foreground'
                 }`}
               >
                 {job.status.replace('_', ' ')}
               </span>
-              <span className="text-xs text-gray-500">Editing Job</span>
+              <span className="text-xs text-muted-foreground">Editing Job</span>
             </div>
 
             <div className="mb-4 grid grid-cols-2 gap-3">
               <div className="col-span-2">
-                <label className="text-xs font-medium text-gray-500">Title *</label>
+                <Label className="text-muted-foreground">Title *</Label>
                 <form.Field name="title">
                   {(field) => (
                     <Input
@@ -173,14 +175,14 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div className="col-span-2">
-                <label className="text-xs font-medium text-gray-500">Description</label>
+                <Label className="text-muted-foreground">Description</Label>
                 <form.Field name="description">
                   {(field) => (
-                    <textarea
+                    <Textarea
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="Job description"
-                      className="mt-1 w-full rounded border px-3 py-2 text-sm"
+                      className="mt-1"
                       rows={3}
                     />
                   )}
@@ -188,7 +190,7 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500">Company *</label>
+                <Label className="text-muted-foreground">Company *</Label>
                 <form.Field name="companyName">
                   {(field) => (
                     <Input
@@ -202,7 +204,7 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500">Contact Name</label>
+                <Label className="text-muted-foreground">Contact Name</Label>
                 <form.Field name="contactName">
                   {(field) => (
                     <Input
@@ -216,7 +218,7 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500">Contact Email</label>
+                <Label className="text-muted-foreground">Contact Email</Label>
                 <form.Field name="contactEmail">
                   {(field) => (
                     <Input
@@ -230,7 +232,7 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500">Contact Phone</label>
+                <Label className="text-muted-foreground">Contact Phone</Label>
                 <form.Field name="contactPhone">
                   {(field) => (
                     <Input
@@ -244,13 +246,13 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500">Contact Method</label>
+                <Label className="text-muted-foreground">Contact Method</Label>
                 <form.Field name="contactMethod">
                   {(field) => (
                     <select
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value as 'email' | 'phone')}
-                      className="mt-1 w-full rounded border px-3 py-2 text-sm"
+                      className="mt-1 w-full border px-3 py-2 text-sm bg-background"
                     >
                       <option value="phone">Phone</option>
                       <option value="email">Email</option>
@@ -260,7 +262,7 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500">City</label>
+                <Label className="text-muted-foreground">City</Label>
                 <form.Field name="locationCity">
                   {(field) => (
                     <Input
@@ -274,7 +276,7 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500">State</label>
+                <Label className="text-muted-foreground">State</Label>
                 <form.Field name="locationState">
                   {(field) => (
                     <Input
@@ -288,13 +290,13 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500">Work Arrangement</label>
+                <Label className="text-muted-foreground">Work Arrangement</Label>
                 <form.Field name="workArrangement">
                   {(field) => (
                     <select
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value as '' | 'remote' | 'on-site' | 'hybrid')}
-                      className="mt-1 w-full rounded border px-3 py-2 text-sm"
+                      className="mt-1 w-full border px-3 py-2 text-sm bg-background"
                     >
                       <option value="">Not specified</option>
                       <option value="remote">Remote</option>
@@ -306,13 +308,13 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500">Employment Type</label>
+                <Label className="text-muted-foreground">Employment Type</Label>
                 <form.Field name="employmentType">
                   {(field) => (
                     <select
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value as any)}
-                      className="mt-1 w-full rounded border px-3 py-2 text-sm"
+                      className="mt-1 w-full border px-3 py-2 text-sm bg-background"
                     >
                       <option value="">Not specified</option>
                       <option value="full-time">Full-time</option>
@@ -326,7 +328,7 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500">Salary Min</label>
+                <Label className="text-muted-foreground">Salary Min</Label>
                 <form.Field name="salaryMin">
                   {(field) => (
                     <Input
@@ -341,7 +343,7 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500">Salary Max</label>
+                <Label className="text-muted-foreground">Salary Max</Label>
                 <form.Field name="salaryMax">
                   {(field) => (
                     <Input
@@ -356,13 +358,13 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500">Salary Unit</label>
+                <Label className="text-muted-foreground">Salary Unit</Label>
                 <form.Field name="salaryUnit">
                   {(field) => (
                     <select
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value as any)}
-                      className="mt-1 w-full rounded border px-3 py-2 text-sm"
+                      className="mt-1 w-full border px-3 py-2 text-sm bg-background"
                     >
                       <option value="">Not specified</option>
                       <option value="hr">Per hour</option>
@@ -377,7 +379,7 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div className="col-span-2">
-                <label className="text-xs font-medium text-gray-500">Skills (comma-separated)</label>
+                <Label className="text-muted-foreground">Skills (comma-separated)</Label>
                 <form.Field name="skills">
                   {(field) => (
                     <Input
@@ -391,7 +393,7 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               </div>
 
               <div className="col-span-2">
-                <label className="text-xs font-medium text-gray-500">Requirements (comma-separated)</label>
+                <Label className="text-muted-foreground">Requirements (comma-separated)</Label>
                 <form.Field name="requirements">
                   {(field) => (
                     <Input
@@ -434,17 +436,17 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
               {job.parsedJob ? (
                 <span className="font-semibold">{job.parsedJob.title}</span>
               ) : (
-                <span className="text-gray-500 italic">Parsing...</span>
+                <span className="text-muted-foreground italic">Parsing...</span>
               )}
               <StatusBadge status={job.status} />
             </div>
 
             {job.parsedJob && (
               <>
-                <div className="mt-1 text-sm text-gray-600">
+                <div className="mt-1 text-sm text-muted-foreground">
                   {job.parsedJob.company.name}
                   {job.parsedJob.location?.city && (
-                    <span className="text-gray-400">
+                    <span className="text-muted-foreground">
                       {' '}
                       • {[job.parsedJob.location.city, job.parsedJob.location.state]
                         .filter(Boolean)
@@ -454,7 +456,7 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
                 </div>
 
                 {job.parsedJob.description && (
-                  <div className="mt-2 text-sm text-gray-600 line-clamp-2">
+                  <div className="mt-2 text-sm text-muted-foreground line-clamp-2">
                     {job.parsedJob.description}
                   </div>
                 )}
@@ -483,14 +485,14 @@ export function JobSubmissionCard({ job, showActions = false }: JobSubmissionCar
                 </div>
 
                 {job.parsedJob.skills && job.parsedJob.skills.length > 0 && (
-                  <div className="mt-2 text-xs text-gray-500">
+                  <div className="mt-2 text-xs text-muted-foreground">
                     Skills: {job.parsedJob.skills.join(', ')}
                   </div>
                 )}
               </>
             )}
 
-            <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
+            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
               <span>From: {job.sender?.phone || job.sender?.email || 'Unknown'}</span>
               <span>•</span>
               <span>{formatRelativeTime(job.createdAt)}</span>

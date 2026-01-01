@@ -13,11 +13,9 @@ import {
   MapPin,
 } from 'lucide-react';
 import { useState } from 'react';
-import { z } from 'zod';
 import { toast } from 'sonner';
 import { api } from '../../convex/_generated/api';
 import type { ProfileFormData } from '@/lib/schemas/profile';
-import { profileFormSchema } from '@/lib/schemas/profile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +28,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { FieldError } from '@/components/ui/field';
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from '@/components/ui/item';
 
 const OFFER_OPTIONS = [
   { emoji: '🔍', value: 'To find a job', description: 'Browse job opportunities' },
@@ -42,23 +48,6 @@ interface ProfileFormProps {
   user: User;
   onSuccess?: () => void;
   referredByCode?: string;
-}
-
-function getErrorMessage(error: unknown): string {
-  if (typeof error === 'string') return error;
-
-  if (error instanceof z.ZodError) {
-    const firstIssue = error.issues[0];
-    if (firstIssue) {
-      return firstIssue.message;
-    }
-  }
-
-  if (error && typeof error === 'object' && 'message' in error) {
-    return String(error.message);
-  }
-
-  return 'Validation error';
 }
 
 const checkRateLimit = (): boolean => {
@@ -228,38 +217,40 @@ export function ProfileForm({ user, onSuccess, referredByCode }: ProfileFormProp
                 </Label>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {OFFER_OPTIONS.map((option) => (
-                    <label
+                    <Item
                       key={option.value}
-                      className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-accent"
+                      asChild
+                      variant="outline"
+                      className="cursor-pointer hover:bg-accent"
                     >
-                      <Checkbox
-                        checked={field.state.value.includes(option.value)}
-                        onCheckedChange={(checked) => {
-                          const currentValues = field.state.value;
-                          if (checked) {
-                            field.handleChange([...currentValues, option.value]);
-                          } else {
-                            field.handleChange(
-                              currentValues.filter((v) => v !== option.value),
-                            );
-                          }
-                        }}
-                      />
-                      <span className="text-lg">{option.emoji}</span>
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{option.value}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {option.description}
-                        </div>
-                      </div>
-                    </label>
+                      <label>
+                        <Checkbox
+                          checked={field.state.value.includes(option.value)}
+                          onCheckedChange={(checked) => {
+                            const currentValues = field.state.value;
+                            if (checked) {
+                              field.handleChange([...currentValues, option.value]);
+                            } else {
+                              field.handleChange(
+                                currentValues.filter((v) => v !== option.value),
+                              );
+                            }
+                          }}
+                        />
+                        <ItemMedia>{option.emoji}</ItemMedia>
+                        <ItemContent>
+                          <ItemTitle>{option.value}</ItemTitle>
+                          <ItemDescription>{option.description}</ItemDescription>
+                        </ItemContent>
+                      </label>
+                    </Item>
                   ))}
                 </div>
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-sm text-destructive">
-                    {getErrorMessage(field.state.meta.errors[0])}
-                  </p>
-                )}
+                <FieldError
+                  errors={field.state.meta.errors.map((e) => ({
+                    message: typeof e === 'string' ? e : String(e),
+                  }))}
+                />
               </div>
             )}
           </form.Field>
@@ -290,11 +281,11 @@ export function ProfileForm({ user, onSuccess, referredByCode }: ProfileFormProp
                   onChange={(e) => field.handleChange(e.target.value)}
                   onBlur={field.handleBlur}
                 />
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-sm text-destructive">
-                    {getErrorMessage(field.state.meta.errors[0])}
-                  </p>
-                )}
+                <FieldError
+                  errors={field.state.meta.errors.map((e) => ({
+                    message: typeof e === 'string' ? e : String(e),
+                  }))}
+                />
               </div>
             )}
           </form.Field>
@@ -325,7 +316,7 @@ export function ProfileForm({ user, onSuccess, referredByCode }: ProfileFormProp
                     size="sm"
                     onClick={polishBioWithAI}
                     disabled={isPolishing || !field.state.value}
-                    className="h-8 gap-1.5 text-primary"
+                    className="text-primary"
                   >
                     <Sparkles className="h-3.5 w-3.5" />
                     {isPolishing ? 'Polishing...' : 'Polish with AI'}
@@ -339,35 +330,35 @@ export function ProfileForm({ user, onSuccess, referredByCode }: ProfileFormProp
                   onChange={(e) => field.handleChange(e.target.value)}
                   onBlur={field.handleBlur}
                 />
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-sm text-destructive">
-                    {getErrorMessage(field.state.meta.errors[0])}
-                  </p>
-                )}
+                <FieldError
+                  errors={field.state.meta.errors.map((e) => ({
+                    message: typeof e === 'string' ? e : String(e),
+                  }))}
+                />
               </div>
             )}
           </form.Field>
 
           {/* Optional Fields Toggle */}
-          <div>
-            <button
-              type="button"
-              onClick={() => setShowOptionalFields(!showOptionalFields)}
-              className="flex w-full items-center justify-between rounded-lg border border-dashed border-border p-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
-            >
-              <span>Additional information (optional)</span>
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${
-                  showOptionalFields || hasOptionalData ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
-          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowOptionalFields(!showOptionalFields)}
+            className="w-full justify-between border-dashed text-muted-foreground hover:text-foreground"
+          >
+            <span>Additional information (optional)</span>
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${
+                showOptionalFields || hasOptionalData ? 'rotate-180' : ''
+              }`}
+            />
+          </Button>
 
           {/* Optional Fields */}
           {(showOptionalFields || hasOptionalData) && (
-            <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
-              <form.Field name="location">
+            <Card className="bg-muted/30">
+              <CardContent className="space-y-4">
+                <form.Field name="location">
                 {(field) => (
                   <div className="space-y-2">
                     <Label htmlFor="location" className="flex items-center gap-2">
@@ -460,7 +451,8 @@ export function ProfileForm({ user, onSuccess, referredByCode }: ProfileFormProp
                   </div>
                 )}
               </form.Field>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Submit Button */}

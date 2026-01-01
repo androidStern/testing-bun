@@ -7,6 +7,7 @@ import type { Id } from '../../../convex/_generated/dataModel';
 import { formatRelativeTime } from '../../lib/formatRelativeTime';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
+import { Textarea } from '../ui/textarea';
 
 import { StatusBadge } from './StatusBadge';
 
@@ -91,12 +92,11 @@ export function MessageCard({ message, showActions = false }: MessageCardProps) 
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm">{message.phone}</span>
               <StatusBadge status={message.status} />
-              <span className="text-xs text-gray-500">Editing</span>
+              <span className="text-xs text-muted-foreground">Editing</span>
             </div>
-            <textarea
+            <Textarea
               value={editBody}
               onChange={(e) => setEditBody(e.target.value)}
-              className="w-full rounded border px-3 py-2 text-sm"
               rows={4}
               placeholder="Message body"
             />
@@ -123,15 +123,15 @@ export function MessageCard({ message, showActions = false }: MessageCardProps) 
               <span className="font-mono text-sm">{message.phone}</span>
               <StatusBadge status={message.status} />
               {message.sender && (
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-muted-foreground">
                   ({message.sender.name || message.sender.company || 'Unknown'})
                 </span>
               )}
             </div>
-            <div className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
+            <div className="mt-2 whitespace-pre-wrap text-sm text-foreground">
               {message.body}
             </div>
-            <div className="mt-2 text-xs text-gray-400">
+            <div className="mt-2 text-xs text-muted-foreground">
               {formatRelativeTime(message.createdAt)}
             </div>
           </div>

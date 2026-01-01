@@ -172,7 +172,7 @@ function ToolCallCard({ part }: { part: ToolPartData }) {
   }
 
   return (
-    <div className='bg-muted/50 rounded-lg p-3 text-sm'>
+    <div className='bg-muted/50 p-3 text-sm'>
       {renderSummary()}
 
       {/* Dev-only: expandable raw JSON */}
@@ -455,7 +455,7 @@ function JobCard({ job }: { job: JobMatch }) {
         )}
 
         {/* Match Reason */}
-        <div className='bg-muted/50 rounded-md p-3'>
+        <div className='bg-muted/50 p-3'>
           <p className='text-sm font-medium mb-1'>Why this matches:</p>
           <p className='text-sm text-muted-foreground'>{job.matchReason}</p>
         </div>

@@ -35,7 +35,7 @@ export function JobResultCard({ job, compact = false, className }: JobResultCard
     return (
       <div
         className={cn(
-          'flex items-center justify-between gap-3 rounded-lg border bg-card p-3',
+          'flex items-center justify-between gap-3 border bg-card p-3',
           className
         )}
       >
@@ -113,7 +113,7 @@ export function JobResultCard({ job, compact = false, className }: JobResultCard
 
         {/* Match Reason */}
         {job.matchReason && (
-          <div className="rounded-md bg-muted/50 p-3">
+          <div className="bg-muted/50 p-3">
             <p className="text-sm font-medium mb-1">Why this matches:</p>
             <p className="text-sm text-muted-foreground">{job.matchReason}</p>
           </div>
@@ -163,7 +163,7 @@ export function JobResultsList({
 }: JobResultsListProps) {
   if (jobs.length === 0) {
     return (
-      <div className={cn('rounded-lg border bg-muted/30 p-4 text-center', className)}>
+      <div className={cn('border bg-muted/30 p-4 text-center', className)}>
         <p className="text-muted-foreground">No matching jobs found.</p>
         {suggestions && suggestions.length > 0 && (
           <div className="mt-3">
@@ -183,7 +183,7 @@ export function JobResultsList({
     <div className={cn('space-y-4', className)}>
       {/* Summary */}
       {summary && (
-        <div className="rounded-lg border bg-card p-4">
+        <div className="border bg-card p-4">
           <p className="text-sm">{summary}</p>
         </div>
       )}
@@ -197,7 +197,7 @@ export function JobResultsList({
 
       {/* Suggestions */}
       {suggestions && suggestions.length > 0 && (
-        <div className="rounded-lg border bg-muted/30 p-4">
+        <div className="border bg-muted/30 p-4">
           <p className="text-sm font-medium mb-2">Suggestions to improve results:</p>
           <ul className="text-sm text-muted-foreground space-y-1">
             {suggestions.map(suggestion => (

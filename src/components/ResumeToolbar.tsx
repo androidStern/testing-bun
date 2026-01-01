@@ -1,5 +1,5 @@
 import { Download, Eye, Printer, Upload } from 'lucide-react'
-import { ExpandableTabs } from '@/components/ui/expandable-tabs'
+import { ExpandableTabs } from '@/components/resume/expandable-tabs'
 
 interface ResumeToolbarProps {
   onImport: () => void

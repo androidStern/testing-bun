@@ -72,13 +72,13 @@ export function SecondChanceAuditDetails({ typesenseId }: SecondChanceAuditDetai
   if (audit === undefined) {
     return (
       <div className='flex items-center justify-center py-8'>
-        <div className='text-gray-500'>Loading audit details...</div>
+        <div className='text-muted-foreground'>Loading audit details...</div>
       </div>
     )
   }
 
   if (audit === null) {
-    return <div className='py-4 text-center text-gray-500'>Job not found in Convex database</div>
+    return <div className='py-4 text-center text-muted-foreground'>Job not found in Convex database</div>
   }
 
   return (
@@ -87,12 +87,12 @@ export function SecondChanceAuditDetails({ typesenseId }: SecondChanceAuditDetai
       <div className='flex items-center gap-4'>
         <TierBadge score={audit.score} tier={audit.tier} />
         {audit.confidence !== undefined && (
-          <div className='text-sm text-gray-500'>
+          <div className='text-sm text-muted-foreground'>
             Confidence: {(audit.confidence * 100).toFixed(0)}%
           </div>
         )}
         {audit.scoredAt && (
-          <div className='text-sm text-gray-400'>
+          <div className='text-sm text-muted-foreground'>
             Scored: {new Date(audit.scoredAt).toLocaleString()}
           </div>
         )}
@@ -101,7 +101,7 @@ export function SecondChanceAuditDetails({ typesenseId }: SecondChanceAuditDetai
       {/* Signal Contributions */}
       {audit.debug && (
         <section className='space-y-2'>
-          <h4 className='font-medium text-sm text-gray-700'>Signal Contributions</h4>
+          <h4 className='font-medium text-sm text-foreground'>Signal Contributions</h4>
           <div className='space-y-1'>
             <ContributionBar
               color='bg-blue-500'
@@ -120,7 +120,7 @@ export function SecondChanceAuditDetails({ typesenseId }: SecondChanceAuditDetai
             />
           </div>
           {audit.debug.overrideApplied && (
-            <div className='mt-2 text-sm bg-yellow-50 border border-yellow-200 rounded px-3 py-2 text-yellow-800'>
+            <div className='mt-2 text-sm bg-yellow-50 border border-yellow-200 px-3 py-2 text-yellow-800'>
               Override applied: {audit.debug.overrideApplied}
             </div>
           )}
@@ -129,36 +129,36 @@ export function SecondChanceAuditDetails({ typesenseId }: SecondChanceAuditDetai
 
       {/* LLM Analysis */}
       <section className='space-y-2'>
-        <h4 className='font-medium text-sm text-gray-700'>LLM Analysis</h4>
-        <div className='bg-gray-50 rounded-lg p-3 space-y-2'>
+        <h4 className='font-medium text-sm text-foreground'>LLM Analysis</h4>
+        <div className='bg-muted p-3 space-y-2'>
           {audit.llmStance && (
             <div className='flex items-center gap-2'>
-              <span className='text-sm text-gray-500'>Stance:</span>
+              <span className='text-sm text-muted-foreground'>Stance:</span>
               <StanceBadge stance={audit.llmStance} />
             </div>
           )}
-          {audit.llmReasoning && <p className='text-sm text-gray-700'>{audit.llmReasoning}</p>}
+          {audit.llmReasoning && <p className='text-sm text-foreground'>{audit.llmReasoning}</p>}
           {!audit.llmStance && !audit.llmReasoning && (
-            <p className='text-sm text-gray-400 italic'>No LLM analysis available</p>
+            <p className='text-sm text-muted-foreground italic'>No LLM analysis available</p>
           )}
         </div>
       </section>
 
       {/* Employer Lookup */}
       <section className='space-y-2'>
-        <h4 className='font-medium text-sm text-gray-700'>Employer Lookup</h4>
-        <div className='bg-gray-50 rounded-lg p-3'>
+        <h4 className='font-medium text-sm text-foreground'>Employer Lookup</h4>
+        <div className='bg-muted p-3'>
           {audit.employerMatch ? (
             <div className='space-y-1 text-sm'>
               <div className='flex items-center gap-2'>
-                <span className='text-gray-500'>Match Type:</span>
+                <span className='text-muted-foreground'>Match Type:</span>
                 <span
                   className={
                     audit.employerMatch.matchType === 'exact'
                       ? 'text-green-600 font-medium'
                       : audit.employerMatch.matchType === 'fuzzy'
                         ? 'text-yellow-600'
-                        : 'text-gray-400'
+                        : 'text-muted-foreground'
                   }
                 >
                   {audit.employerMatch.matchType}
@@ -166,21 +166,21 @@ export function SecondChanceAuditDetails({ typesenseId }: SecondChanceAuditDetai
               </div>
               {audit.employerMatch.matchedName && (
                 <div className='flex items-center gap-2'>
-                  <span className='text-gray-500'>Matched Name:</span>
-                  <span className='text-gray-700'>{audit.employerMatch.matchedName}</span>
+                  <span className='text-muted-foreground'>Matched Name:</span>
+                  <span className='text-foreground'>{audit.employerMatch.matchedName}</span>
                 </div>
               )}
               {audit.employerMatch.similarity !== undefined && (
                 <div className='flex items-center gap-2'>
-                  <span className='text-gray-500'>Similarity:</span>
-                  <span className='text-gray-700'>
+                  <span className='text-muted-foreground'>Similarity:</span>
+                  <span className='text-foreground'>
                     {(audit.employerMatch.similarity * 100).toFixed(0)}%
                   </span>
                 </div>
               )}
             </div>
           ) : (
-            <p className='text-sm text-gray-400 italic'>No employer match data</p>
+            <p className='text-sm text-muted-foreground italic'>No employer match data</p>
           )}
         </div>
       </section>
@@ -188,21 +188,21 @@ export function SecondChanceAuditDetails({ typesenseId }: SecondChanceAuditDetai
       {/* O*NET Classification */}
       {audit.onetCode && (
         <section className='space-y-2'>
-          <h4 className='font-medium text-sm text-gray-700'>O*NET Classification</h4>
-          <div className='bg-gray-50 rounded-lg p-3 space-y-2'>
+          <h4 className='font-medium text-sm text-foreground'>O*NET Classification</h4>
+          <div className='bg-muted p-3 space-y-2'>
             <div className='flex items-center gap-2 flex-wrap'>
               <code className='text-purple-600 font-mono text-sm'>{audit.onetCode}</code>
               {getOnetMajorGroupTitle(audit.onetCode) && (
                 <>
-                  <span className='text-gray-400'>-</span>
-                  <span className='text-gray-700 text-sm'>
+                  <span className='text-muted-foreground'>-</span>
+                  <span className='text-foreground text-sm'>
                     {getOnetMajorGroupTitle(audit.onetCode)}
                   </span>
                 </>
               )}
             </div>
             {getOnetScoringRationale(audit.onetCode) && (
-              <p className='text-sm text-gray-500 italic'>
+              <p className='text-sm text-muted-foreground italic'>
                 {getOnetScoringRationale(audit.onetCode)}
               </p>
             )}
@@ -213,11 +213,11 @@ export function SecondChanceAuditDetails({ typesenseId }: SecondChanceAuditDetai
       {/* All Signals */}
       {audit.signals && audit.signals.length > 0 && (
         <section className='space-y-2'>
-          <h4 className='font-medium text-sm text-gray-700'>All Signals</h4>
-          <ul className='bg-gray-50 rounded-lg p-3 space-y-1'>
+          <h4 className='font-medium text-sm text-foreground'>All Signals</h4>
+          <ul className='bg-muted p-3 space-y-1'>
             {audit.signals.map((signal, i) => (
-              <li className='text-sm text-gray-700 flex items-start gap-2' key={i}>
-                <span className='text-gray-400'>-</span>
+              <li className='text-sm text-foreground flex items-start gap-2' key={i}>
+                <span className='text-muted-foreground'>-</span>
                 {signal}
               </li>
             ))}
@@ -228,8 +228,8 @@ export function SecondChanceAuditDetails({ typesenseId }: SecondChanceAuditDetai
       {/* Final Reasoning */}
       {audit.reasoning && (
         <section className='space-y-2'>
-          <h4 className='font-medium text-sm text-gray-700'>Final Reasoning</h4>
-          <p className='text-sm text-gray-700 bg-gray-50 rounded-lg p-3'>{audit.reasoning}</p>
+          <h4 className='font-medium text-sm text-foreground'>Final Reasoning</h4>
+          <p className='text-sm text-foreground bg-muted p-3'>{audit.reasoning}</p>
         </section>
       )}
     </div>
@@ -241,7 +241,7 @@ function TierBadge({ tier, score }: { tier?: string; score?: number }) {
     high: 'bg-green-100 text-green-800 border-green-200',
     low: 'bg-yellow-50 text-yellow-700 border-yellow-200',
     medium: 'bg-green-50 text-green-700 border-green-100',
-    unknown: 'bg-gray-50 text-gray-600 border-gray-200',
+    unknown: 'bg-muted/50 text-muted-foreground border-border',
     unlikely: 'bg-red-50 text-red-700 border-red-200',
   }
 
@@ -259,7 +259,7 @@ function StanceBadge({ stance }: { stance: string }) {
   const colors = {
     fair_chance: 'bg-green-100 text-green-800',
     likely_excludes: 'bg-red-100 text-red-800',
-    unknown: 'bg-gray-100 text-gray-700',
+    unknown: 'bg-muted text-foreground',
   }
 
   const colorClass = colors[stance as keyof typeof colors] || colors.unknown
@@ -278,11 +278,11 @@ function ContributionBar({ label, value, color }: { label: string; value: number
 
   return (
     <div className='flex items-center gap-3'>
-      <div className='w-24 text-sm text-gray-600'>{label}</div>
-      <div className='flex-1 h-4 bg-gray-200 rounded-full overflow-hidden'>
+      <div className='w-24 text-sm text-muted-foreground'>{label}</div>
+      <div className='flex-1 h-4 bg-muted overflow-hidden'>
         <div className={`h-full ${color} transition-all`} style={{ width: `${percentage}%` }} />
       </div>
-      <div className='w-10 text-right text-sm text-gray-500'>{value}</div>
+      <div className='w-10 text-right text-sm text-muted-foreground'>{value}</div>
     </div>
   )
 }

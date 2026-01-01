@@ -34,9 +34,14 @@ import type {
 } from '@/lib/schemas/resume';
 import { ResumePreview } from '@/components/ResumePreview';
 import { ResumeToolbar } from '@/components/ResumeToolbar';
-import { ExpandableTextarea } from '@/components/ui/expandable-textarea';
+import { ExpandableTextarea } from '@/components/resume/expandable-textarea';
 import { HeroVideoDialog } from '@/components/hero-video-dialog';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { FieldError } from '@/components/ui/field';
 import {
   createDefaultResumeFormValues,
   createEmptyEducation,
@@ -58,7 +63,7 @@ function SectionGuide({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="mt-4 border border-dashed border-primary/30 rounded-lg bg-primary/5">
+    <div className="mt-4 border border-dashed border-primary/30 bg-primary/5">
       <button
         className="w-full px-4 py-3 flex items-center justify-between text-left"
         onClick={() => setExpanded(!expanded)}
@@ -74,7 +79,7 @@ function SectionGuide({
       {expanded && (
         <div className="px-4 pb-4 animate-in fade-in slide-in-from-top-2">
           <div className="flex items-start gap-3 mb-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
+            <div className="p-2 bg-primary/10">
               <Lightbulb className="h-4 w-4 text-primary" />
             </div>
             <div>
@@ -124,7 +129,7 @@ function SectionToolbar({
     <div className="flex items-center gap-1">
       {showDictate && onDictate && (
         <button
-          className="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-primary/10 disabled:opacity-50 transition-colors min-w-[52px]"
+          className="flex flex-col items-center justify-center p-2 hover:bg-primary/10 disabled:opacity-50 transition-colors min-w-[52px]"
           disabled={isTranscribing}
           onClick={onDictate}
           type="button"
@@ -139,7 +144,7 @@ function SectionToolbar({
       )}
       {showPolish && onPolish && (
         <button
-          className="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-primary/10 disabled:opacity-50 transition-colors min-w-[52px]"
+          className="flex flex-col items-center justify-center p-2 hover:bg-primary/10 disabled:opacity-50 transition-colors min-w-[52px]"
           disabled={isPolishing}
           onClick={onPolish}
           type="button"
@@ -923,42 +928,44 @@ export function ResumeForm({ user }: ResumeFormProps) {
       <form.Subscribe selector={(state) => [state.isDirty, state.isSubmitting, state.canSubmit]}>
         {([isDirty, isSubmitting, canSubmit]) =>
           justSaved ? (
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-4rem)] max-w-[calc(56rem-2rem)] z-50 bg-card border border-border shadow-lg rounded-lg p-3 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-4rem)] max-w-[calc(56rem-2rem)] z-50 bg-card border border-border shadow-lg p-3 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
               <CheckCircle className="h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-500" />
               <span className="text-sm font-medium text-green-600 dark:text-green-500">Saved</span>
             </div>
           ) : isDirty ? (
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-4rem)] max-w-[calc(56rem-2rem)] z-50 bg-card border border-border shadow-lg rounded-lg p-3 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2">
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-4rem)] max-w-[calc(56rem-2rem)] z-50 bg-card border border-border shadow-lg p-3 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2">
               <div className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
                 <AlertCircle className="h-4 w-4 flex-shrink-0" />
                 <span className="text-sm font-medium">Unsaved changes</span>
               </div>
               <div className="flex items-center gap-2">
-                <button
-                  className="text-muted-foreground hover:text-foreground px-3 py-1.5 text-sm rounded-md hover:bg-muted transition-colors flex items-center gap-2"
+                <Button
+                  variant="ghost"
+                  size="sm"
                   disabled={isSubmitting}
                   onClick={() => form.reset()}
                   type="button"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   Discard
-                </button>
-                <button
-                  className="bg-primary text-primary-foreground px-4 py-1.5 text-sm rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center gap-2"
+                </Button>
+                <Button
+                  size="sm"
                   disabled={!canSubmit || isSubmitting}
                   onClick={() => form.handleSubmit()}
                   type="button"
                 >
                   <Save className="h-3.5 w-3.5" />
                   {isSubmitting ? 'Saving...' : 'Save'}
-                </button>
+                </Button>
               </div>
             </div>
           ) : null
         }
       </form.Subscribe>
 
-      <div className="max-w-4xl mx-auto bg-card rounded-lg shadow-sm sm:shadow-md p-4 sm:p-6 lg:p-8">
+      <Card className="max-w-4xl mx-auto shadow-sm sm:shadow-md">
+        <CardContent className="p-4 sm:p-6 lg:p-8">
         {/* Hidden file input for import */}
         <input
           accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -1000,20 +1007,21 @@ export function ResumeForm({ user }: ResumeFormProps) {
               <form.Field name="personalInfo.name">
                 {(field) => (
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1.5">
+                    <Label>
                       Full Name <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                    </Label>
+                    <Input
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="John Doe"
                       type="text"
                       value={field.state.value}
                     />
-                    {field.state.meta.errors.length > 0 && (
-                      <p className="mt-1 text-sm text-destructive">{String(field.state.meta.errors[0])}</p>
-                    )}
+                    <FieldError
+                      errors={field.state.meta.errors.map((e) => ({
+                        message: typeof e === 'string' ? e : String(e),
+                      }))}
+                    />
                   </div>
                 )}
               </form.Field>
@@ -1021,20 +1029,21 @@ export function ResumeForm({ user }: ResumeFormProps) {
               <form.Field name="personalInfo.email">
                 {(field) => (
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1.5">
+                    <Label>
                       Email <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                    </Label>
+                    <Input
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="john@example.com"
                       type="email"
                       value={field.state.value}
                     />
-                    {field.state.meta.errors.length > 0 && (
-                      <p className="mt-1 text-sm text-destructive">{String(field.state.meta.errors[0])}</p>
-                    )}
+                    <FieldError
+                      errors={field.state.meta.errors.map((e) => ({
+                        message: typeof e === 'string' ? e : String(e),
+                      }))}
+                    />
                   </div>
                 )}
               </form.Field>
@@ -1042,9 +1051,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
               <form.Field name="personalInfo.phone">
                 {(field) => (
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1.5">Phone</label>
-                    <input
-                      className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                    <Label>Phone</Label>
+                    <Input
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="(123) 456-7890"
@@ -1058,9 +1066,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
               <form.Field name="personalInfo.location">
                 {(field) => (
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1.5">Location</label>
-                    <input
-                      className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                    <Label>Location</Label>
+                    <Input
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="City, State"
@@ -1074,18 +1081,19 @@ export function ResumeForm({ user }: ResumeFormProps) {
               <form.Field name="personalInfo.linkedin">
                 {(field) => (
                   <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-foreground mb-1.5">LinkedIn</label>
-                    <input
-                      className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                    <Label>LinkedIn</Label>
+                    <Input
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="linkedin.com/in/johndoe"
                       type="text"
                       value={field.state.value || ''}
                     />
-                    {field.state.meta.errors.length > 0 && (
-                      <p className="mt-1 text-sm text-destructive">{String(field.state.meta.errors[0])}</p>
-                    )}
+                    <FieldError
+                      errors={field.state.meta.errors.map((e) => ({
+                        message: typeof e === 'string' ? e : String(e),
+                      }))}
+                    />
                   </div>
                 )}
               </form.Field>
@@ -1155,7 +1163,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
 
                   <div className="space-y-6">
                     {workExpField.state.value.map((experience, index) => (
-                      <div className="p-4 border border-border rounded-lg" key={experience.id}>
+                      <Card key={experience.id}>
+                        <CardContent>
                         <div className="flex justify-between items-center mb-4">
                           <span className="text-sm font-medium text-muted-foreground">Experience {index + 1}</span>
                           {workExpField.state.value.length > 1 && (
@@ -1174,9 +1183,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
                           <form.Field name={`workExperience[${index}].company`}>
                             {(field) => (
                               <div>
-                                <label className="block text-sm font-medium text-foreground mb-1.5">Company</label>
-                                <input
-                                  className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                                <Label>Company</Label>
+                                <Input
                                   onBlur={field.handleBlur}
                                   onChange={(e) => field.handleChange(e.target.value)}
                                   placeholder="Company Name"
@@ -1190,9 +1198,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
                           <form.Field name={`workExperience[${index}].position`}>
                             {(field) => (
                               <div>
-                                <label className="block text-sm font-medium text-foreground mb-1.5">Position</label>
-                                <input
-                                  className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                                <Label>Position</Label>
+                                <Input
                                   onBlur={field.handleBlur}
                                   onChange={(e) => field.handleChange(e.target.value)}
                                   placeholder="Job Title"
@@ -1206,9 +1213,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
                           <form.Field name={`workExperience[${index}].startDate`}>
                             {(field) => (
                               <div>
-                                <label className="block text-sm font-medium text-foreground mb-1.5">Start Date</label>
-                                <input
-                                  className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                                <Label>Start Date</Label>
+                                <Input
                                   onBlur={field.handleBlur}
                                   onChange={(e) => field.handleChange(e.target.value)}
                                   placeholder="MM/YYYY"
@@ -1222,9 +1228,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
                           <form.Field name={`workExperience[${index}].endDate`}>
                             {(field) => (
                               <div>
-                                <label className="block text-sm font-medium text-foreground mb-1.5">End Date</label>
-                                <input
-                                  className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                                <Label>End Date</Label>
+                                <Input
                                   onBlur={field.handleBlur}
                                   onChange={(e) => field.handleChange(e.target.value)}
                                   placeholder="MM/YYYY or Present"
@@ -1237,7 +1242,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
 
                           <div className="sm:col-span-2">
                             <div className="flex justify-between items-start gap-2 mb-1.5">
-                              <label className="block text-sm font-medium text-foreground">Description</label>
+                              <Label>Description</Label>
                               <SectionToolbar
                                 isPolishing={polishingField === `work-${experience.id}`}
                                 isRecording={
@@ -1279,7 +1284,7 @@ export function ResumeForm({ user }: ResumeFormProps) {
                           </div>
 
                           <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium text-foreground mb-1.5">Key Achievements</label>
+                            <Label>Key Achievements</Label>
                             <form.Field name={`workExperience[${index}].achievements`}>
                               {(field) => (
                                 <ExpandableTextarea
@@ -1294,7 +1299,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
                             </form.Field>
                           </div>
                         </div>
-                      </div>
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
                 </>
@@ -1327,7 +1333,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
 
                   <div className="space-y-6">
                     {eduField.state.value.map((education, index) => (
-                      <div className="p-4 border border-border rounded-lg" key={education.id}>
+                      <Card key={education.id}>
+                        <CardContent>
                         <div className="flex justify-between items-center mb-4">
                           <span className="text-sm font-medium text-muted-foreground">Education {index + 1}</span>
                           {eduField.state.value.length > 1 && (
@@ -1346,9 +1353,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
                           <form.Field name={`education[${index}].institution`}>
                             {(field) => (
                               <div>
-                                <label className="block text-sm font-medium text-foreground mb-1.5">Institution</label>
-                                <input
-                                  className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                                <Label>Institution</Label>
+                                <Input
                                   onBlur={field.handleBlur}
                                   onChange={(e) => field.handleChange(e.target.value)}
                                   placeholder="School or Institution Name"
@@ -1362,9 +1368,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
                           <form.Field name={`education[${index}].degree`}>
                             {(field) => (
                               <div>
-                                <label className="block text-sm font-medium text-foreground mb-1.5">Degree</label>
-                                <input
-                                  className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                                <Label>Degree</Label>
+                                <Input
                                   onBlur={field.handleBlur}
                                   onChange={(e) => field.handleChange(e.target.value)}
                                   placeholder="High School Diploma, GED, Associate Degree, etc."
@@ -1378,11 +1383,10 @@ export function ResumeForm({ user }: ResumeFormProps) {
                           <form.Field name={`education[${index}].field`}>
                             {(field) => (
                               <div>
-                                <label className="block text-sm font-medium text-foreground mb-1.5">
+                                <Label>
                                   Field of Study
-                                </label>
-                                <input
-                                  className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                                </Label>
+                                <Input
                                   onBlur={field.handleBlur}
                                   onChange={(e) => field.handleChange(e.target.value)}
                                   placeholder="General Studies, Business, Healthcare, etc."
@@ -1396,11 +1400,10 @@ export function ResumeForm({ user }: ResumeFormProps) {
                           <form.Field name={`education[${index}].graduationDate`}>
                             {(field) => (
                               <div>
-                                <label className="block text-sm font-medium text-foreground mb-1.5">
+                                <Label>
                                   Graduation Date
-                                </label>
-                                <input
-                                  className="bg-input text-foreground w-full px-3 py-2.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                                </Label>
+                                <Input
                                   onBlur={field.handleBlur}
                                   onChange={(e) => field.handleChange(e.target.value)}
                                   placeholder="MM/YYYY"
@@ -1413,9 +1416,9 @@ export function ResumeForm({ user }: ResumeFormProps) {
 
                           <div className="sm:col-span-2">
                             <div className="flex justify-between items-start gap-2 mb-1.5">
-                              <label className="block text-sm font-medium text-foreground">
+                              <Label>
                                 Additional Information
-                              </label>
+                              </Label>
                               <SectionToolbar
                                 isPolishing={polishingField === `edu-${education.id}`}
                                 isRecording={
@@ -1456,7 +1459,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
                             </form.Field>
                           </div>
                         </div>
-                      </div>
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
                 </>
@@ -1493,7 +1497,8 @@ export function ResumeForm({ user }: ResumeFormProps) {
             />
           </div>
         </form>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

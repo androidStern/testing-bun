@@ -144,15 +144,15 @@ function PendingJobsTab({ highlightedJobId }: { highlightedJobId: string | null 
     }
   }, [highlightedJobId, jobs])
 
-  if (isLoading) return <div className='text-gray-500'>Loading...</div>
-  if (error) return <div className='text-red-500'>Error loading jobs</div>
-  if (!jobs?.length) return <div className='text-gray-500'>No pending jobs</div>
+  if (isLoading) return <div className='text-muted-foreground'>Loading...</div>
+  if (error) return <div className='text-destructive'>Error loading jobs</div>
+  if (!jobs?.length) return <div className='text-muted-foreground'>No pending jobs</div>
 
   return (
     <div className='space-y-4'>
       {jobs.map(job => (
         <div
-          className={job._id === highlightedJobId ? 'ring-2 ring-blue-500 rounded-lg' : undefined}
+          className={job._id === highlightedJobId ? 'ring-2 ring-primary' : undefined}
           key={job._id}
           ref={job._id === highlightedJobId ? highlightedRef : undefined}
         >
@@ -176,15 +176,15 @@ function AllJobsTab({ highlightedJobId }: { highlightedJobId: string | null }) {
     }
   }, [highlightedJobId, jobs])
 
-  if (isLoading) return <div className='text-gray-500'>Loading...</div>
-  if (error) return <div className='text-red-500'>Error loading jobs</div>
-  if (!jobs?.length) return <div className='text-gray-500'>No jobs yet</div>
+  if (isLoading) return <div className='text-muted-foreground'>Loading...</div>
+  if (error) return <div className='text-destructive'>Error loading jobs</div>
+  if (!jobs?.length) return <div className='text-muted-foreground'>No jobs yet</div>
 
   return (
     <div className='space-y-4'>
       {jobs.map(job => (
         <div
-          className={job._id === highlightedJobId ? 'ring-2 ring-blue-500 rounded-lg' : undefined}
+          className={job._id === highlightedJobId ? 'ring-2 ring-primary' : undefined}
           key={job._id}
           ref={job._id === highlightedJobId ? highlightedRef : undefined}
         >
@@ -202,9 +202,9 @@ function PendingSendersTab() {
     error,
   } = useQuery(convexQuery(api.senders.list, { status: 'pending' }))
 
-  if (isLoading) return <div className='text-gray-500'>Loading...</div>
-  if (error) return <div className='text-red-500'>Error loading senders</div>
-  if (!senders?.length) return <div className='text-gray-500'>No pending senders</div>
+  if (isLoading) return <div className='text-muted-foreground'>Loading...</div>
+  if (error) return <div className='text-destructive'>Error loading senders</div>
+  if (!senders?.length) return <div className='text-muted-foreground'>No pending senders</div>
 
   return (
     <div className='space-y-4'>
@@ -223,9 +223,9 @@ function PendingSendersTab() {
 function AllSendersTab() {
   const { data: senders, isLoading, error } = useQuery(convexQuery(api.senders.list, {}))
 
-  if (isLoading) return <div className='text-gray-500'>Loading...</div>
-  if (error) return <div className='text-red-500'>Error loading senders</div>
-  if (!senders?.length) return <div className='text-gray-500'>No senders yet</div>
+  if (isLoading) return <div className='text-muted-foreground'>Loading...</div>
+  if (error) return <div className='text-destructive'>Error loading senders</div>
+  if (!senders?.length) return <div className='text-muted-foreground'>No senders yet</div>
 
   return (
     <div className='space-y-4'>
@@ -248,9 +248,9 @@ function PendingMessagesTab() {
     error,
   } = useQuery(convexQuery(api.inboundMessages.list, { status: 'pending_review' }))
 
-  if (isLoading) return <div className='text-gray-500'>Loading...</div>
-  if (error) return <div className='text-red-500'>Error loading messages</div>
-  if (!messages?.length) return <div className='text-gray-500'>No pending messages</div>
+  if (isLoading) return <div className='text-muted-foreground'>Loading...</div>
+  if (error) return <div className='text-destructive'>Error loading messages</div>
+  if (!messages?.length) return <div className='text-muted-foreground'>No pending messages</div>
 
   return (
     <div className='space-y-4'>
@@ -264,9 +264,9 @@ function PendingMessagesTab() {
 function AllMessagesTab() {
   const { data: messages, isLoading, error } = useQuery(convexQuery(api.inboundMessages.list, {}))
 
-  if (isLoading) return <div className='text-gray-500'>Loading...</div>
-  if (error) return <div className='text-red-500'>Error loading messages</div>
-  if (!messages?.length) return <div className='text-gray-500'>No messages yet</div>
+  if (isLoading) return <div className='text-muted-foreground'>Loading...</div>
+  if (error) return <div className='text-destructive'>Error loading messages</div>
+  if (!messages?.length) return <div className='text-muted-foreground'>No messages yet</div>
 
   return (
     <div className='space-y-4'>
@@ -288,9 +288,9 @@ function PendingEmployersTab() {
     error,
   } = useQuery(convexQuery(api.employers.list, { status: 'pending_review' as const }))
 
-  if (isLoading) return <div className='text-gray-500'>Loading...</div>
-  if (error) return <div className='text-red-500'>Error loading employers</div>
-  if (!employers?.length) return <div className='text-gray-500'>No pending employer accounts</div>
+  if (isLoading) return <div className='text-muted-foreground'>Loading...</div>
+  if (error) return <div className='text-destructive'>Error loading employers</div>
+  if (!employers?.length) return <div className='text-muted-foreground'>No pending employer accounts</div>
 
   return (
     <div className='space-y-4'>
@@ -304,9 +304,9 @@ function PendingEmployersTab() {
 function AllEmployersTab() {
   const { data: employers, isLoading, error } = useQuery(convexQuery(api.employers.list, {}))
 
-  if (isLoading) return <div className='text-gray-500'>Loading...</div>
-  if (error) return <div className='text-red-500'>Error loading employers</div>
-  if (!employers?.length) return <div className='text-gray-500'>No employer accounts yet</div>
+  if (isLoading) return <div className='text-muted-foreground'>Loading...</div>
+  if (error) return <div className='text-destructive'>Error loading employers</div>
+  if (!employers?.length) return <div className='text-muted-foreground'>No employer accounts yet</div>
 
   return (
     <div className='space-y-4'>

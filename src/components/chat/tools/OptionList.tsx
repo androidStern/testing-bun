@@ -70,7 +70,7 @@ export function OptionList({
   if (isConfirmed) {
     const confirmedOptions = options.filter(opt => confirmed.includes(opt.id))
     return (
-      <div className={cn('rounded-lg border bg-muted/30 p-4', className)}>
+      <div className={cn('border bg-muted/30 p-4', className)}>
         <p className="text-sm text-muted-foreground mb-2">{question}</p>
         <div className="flex flex-wrap gap-2">
           {confirmedOptions.map(opt => (
@@ -89,7 +89,7 @@ export function OptionList({
 
   // Render interactive state
   return (
-    <div className={cn('rounded-lg border bg-card p-4', className)}>
+    <div className={cn('border bg-card p-4', className)}>
       <p className="text-sm font-medium mb-3">{question}</p>
 
       <div className="flex flex-wrap gap-2" role="listbox" aria-multiselectable={selectionMode === 'multi'}>

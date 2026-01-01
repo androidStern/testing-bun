@@ -33,7 +33,7 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   const validStatus = status as Status;
-  const style = statusStyles[validStatus] ?? 'bg-gray-100 text-gray-800';
+  const style = statusStyles[validStatus] ?? 'bg-muted text-foreground';
   const label = statusLabels[validStatus] ?? status;
 
   return (

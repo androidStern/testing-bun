@@ -25,18 +25,18 @@ export function FilterSummaryBanner({ onCategoryClick }: FilterSummaryBannerProp
 
   if (parts.length === 0) {
     return (
-      <div className='rounded-lg border bg-muted/50 px-4 py-3 text-sm text-muted-foreground'>
+      <div className='border bg-muted/50 px-4 py-3 text-sm text-muted-foreground'>
         Showing all jobs
       </div>
     )
   }
 
   return (
-    <div className='rounded-lg border bg-muted/50 px-4 py-3'>
+    <div className='border bg-muted/50 px-4 py-3'>
       <div className='flex flex-wrap items-center gap-x-2 gap-y-1 text-sm'>
         {parts.map((part, index) => (
           <button
-            className='inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 hover:bg-accent transition-colors'
+            className='inline-flex items-center gap-1.5 px-2 py-0.5 hover:bg-accent transition-colors'
             key={part.category}
             onClick={() => onCategoryClick?.(part.category)}
             type='button'

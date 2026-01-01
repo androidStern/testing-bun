@@ -48,7 +48,7 @@ export function ReferralCard({ workosUserId }: ReferralCardProps) {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+          <div className="flex h-8 w-8 items-center justify-center bg-primary/10">
             <Link2 className="h-4 w-4 text-primary" />
           </div>
           <div>
