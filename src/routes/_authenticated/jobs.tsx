@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { getAuth } from '@workos/authkit-tanstack-react-start'
 
 import { JobMatcherChat } from '../../components/chat/JobMatcherChat'
-import { Toaster } from '../../components/ui/toaster'
 
 export const Route = createFileRoute('/_authenticated/jobs')({
   component: JobsPage,
@@ -24,7 +23,6 @@ function JobsPage() {
     <div className='min-h-screen bg-background'>
       {/* AI Job Matcher Chat - Full chat interface with built-in header */}
       <JobMatcherChat />
-      <Toaster />
     </div>
   )
 }

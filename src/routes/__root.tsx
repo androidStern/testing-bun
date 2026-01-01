@@ -1,7 +1,9 @@
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 import { getAuth } from '@workos/authkit-tanstack-react-start';
+import { ThemeProvider } from 'next-themes';
 import appCssUrl from '../app.css?url';
+import { Toaster } from '@/components/ui/sonner';
 import type { ConvexReactClient } from 'convex/react';
 import type { ReactNode } from 'react';
 import type { QueryClient } from '@tanstack/react-query';
@@ -65,13 +67,16 @@ function RootComponent() {
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
         {import.meta.env.DEV && <script src="//unpkg.com/react-grab/dist/index.global.js" />}
       </head>
       <body>
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+          <Toaster />
+        </ThemeProvider>
         <Scripts />
         {import.meta.env.DEV && <script defer src="//unpkg.com/@react-grab/claude-code/dist/client.global.js" />}
       </body>

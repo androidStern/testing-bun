@@ -21,14 +21,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface HomeLocationCardProps {
   workosUserId: string;
 }
 
 export function HomeLocationCard({ workosUserId }: HomeLocationCardProps) {
-  const { toast } = useToast();
   const [city, setCity] = useState<string | null>(null);
   const [cityLoading, setCityLoading] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -46,16 +45,13 @@ export function HomeLocationCard({ workosUserId }: HomeLocationCardProps) {
   const { mutate: updateLocation, isPending } = useMutation({
     mutationFn: setHomeLocationMutation,
     onSuccess: () => {
-      toast({
-        title: 'Location updated',
+      toast.success('Location updated', {
         description: 'Computing transit accessibility zones...',
       });
     },
     onError: (error) => {
-      toast({
-        title: 'Error',
+      toast.error('Error', {
         description: error.message,
-        variant: 'destructive',
       });
     },
   });
@@ -95,11 +91,9 @@ export function HomeLocationCard({ workosUserId }: HomeLocationCardProps) {
       setShowManualEntry(false);
       setManualAddress('');
     } catch (error) {
-      toast({
-        title: 'Location error',
+      toast.error('Location error', {
         description:
           error instanceof Error ? error.message : 'Could not find location',
-        variant: 'destructive',
       });
     } finally {
       setGeocoding(false);

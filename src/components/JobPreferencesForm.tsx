@@ -3,7 +3,7 @@ import { useForm } from '@tanstack/react-form'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Loader2, Save } from 'lucide-react'
 import { useEffect, useId } from 'react'
-import { useToast } from '~/hooks/use-toast'
+import { toast } from 'sonner'
 import { api } from '../../convex/_generated/api'
 import { Button } from './ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
@@ -12,7 +12,6 @@ import { Label } from './ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 
 export function JobPreferencesForm() {
-  const { toast } = useToast()
   const formId = useId()
 
   const { data: preferences, isLoading } = useQuery(convexQuery(api.jobPreferences.get, {}))
@@ -20,9 +19,8 @@ export function JobPreferencesForm() {
   const { mutate: upsert, isPending } = useMutation({
     mutationFn: useConvexMutation(api.jobPreferences.upsert),
     onSuccess: () => {
-      toast({
+      toast.success('Preferences saved', {
         description: 'Your job search preferences have been updated.',
-        title: 'Preferences saved',
       })
     },
   })

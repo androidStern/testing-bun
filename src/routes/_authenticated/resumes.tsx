@@ -4,7 +4,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { getAuth } from '@workos/authkit-tanstack-react-start'
 import { api } from '../../../convex/_generated/api'
 import { ResumeForm } from '../../components/ResumeForm'
-import { Toaster } from '../../components/ui/toaster'
 
 function ResumeError({ error, reset }: ErrorComponentProps) {
   return (
@@ -59,7 +58,6 @@ function ResumePage() {
       <div className='container mx-auto md:py-8 md:px-4 px-0'>
         <ResumeForm user={user} />
       </div>
-      <Toaster />
     </div>
   )
 }

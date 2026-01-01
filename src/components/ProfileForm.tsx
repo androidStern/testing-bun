@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { z } from 'zod';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { api } from '../../convex/_generated/api';
 import type { ProfileFormData } from '@/lib/schemas/profile';
 import { profileFormSchema } from '@/lib/schemas/profile';
@@ -88,7 +88,6 @@ const checkRateLimit = (): boolean => {
 export function ProfileForm({ user, onSuccess, referredByCode }: ProfileFormProps) {
   const [isPolishing, setIsPolishing] = useState(false);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
-  const { toast } = useToast();
   const polishWithAI = useAction(api.resumes.polishWithAI);
 
   const { data: existingProfile } = useSuspenseQuery(
@@ -98,17 +97,14 @@ export function ProfileForm({ user, onSuccess, referredByCode }: ProfileFormProp
   const { mutate: createProfile, isPending } = useMutation({
     mutationFn: useConvexMutation(api.profiles.create),
     onSuccess: () => {
-      toast({
-        title: 'Profile saved',
+      toast.success('Profile saved', {
         description: 'Your profile has been updated successfully.',
       });
       onSuccess?.();
     },
     onError: (error) => {
-      toast({
-        title: 'Failed to save profile',
+      toast.error('Failed to save profile', {
         description: error?.message || 'An unexpected error occurred.',
-        variant: 'destructive',
       });
     },
   });
@@ -148,10 +144,8 @@ export function ProfileForm({ user, onSuccess, referredByCode }: ProfileFormProp
 
   const polishBioWithAI = async () => {
     if (!checkRateLimit()) {
-      toast({
+      toast.error('Rate limit reached', {
         description: 'You have reached your limit. Please try again later.',
-        title: 'Rate limit reached',
-        variant: 'destructive',
       });
       return;
     }
@@ -183,16 +177,13 @@ export function ProfileForm({ user, onSuccess, referredByCode }: ProfileFormProp
         type: 'summary',
       });
       form.setFieldValue('bio', result.polishedText);
-      toast({
+      toast.success('Summary polished', {
         description: 'Your professional summary has been enhanced.',
-        title: 'Summary polished',
       });
     } catch (error) {
       console.error('Error polishing bio:', error);
-      toast({
+      toast.error('Error', {
         description: 'Failed to polish summary. Please try again.',
-        title: 'Error',
-        variant: 'destructive',
       });
     } finally {
       setIsPolishing(false);

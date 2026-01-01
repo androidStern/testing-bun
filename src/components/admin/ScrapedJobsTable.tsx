@@ -10,7 +10,7 @@ import { PlusCircle, Trash2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 import { api } from '../../../convex/_generated/api'
-import { useToast } from '../../hooks/use-toast'
+import { toast } from 'sonner'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -221,7 +221,6 @@ export function ScrapedJobsTable() {
   const [auditJobCompany, setAuditJobCompany] = useState<string>('')
   const [deleting, setDeleting] = useState(false)
 
-  const { toast } = useToast()
   const deleteJob = useAction(api.scrapedJobs.adminDeleteJob)
 
   // Sync input when URL changes externally (back/forward navigation)
@@ -366,9 +365,8 @@ export function ScrapedJobsTable() {
     try {
       if (deleteTarget === 'single' && singleDeleteId) {
         await deleteJob({ typesenseId: singleDeleteId })
-        toast({
+        toast.success('Job deleted', {
           description: 'The job has been removed from all systems.',
-          title: 'Job deleted',
         })
       } else if (deleteTarget === 'bulk') {
         const typesenseIds = Array.from(selectedIds)
@@ -383,19 +381,16 @@ export function ScrapedJobsTable() {
             failed++
           }
         }
-        toast({
+        toast.success('Jobs deleted', {
           description: `Deleted ${deleted} jobs${failed > 0 ? `, ${failed} failed` : ''}.`,
-          title: 'Jobs deleted',
         })
         setSelectedIds(new Set())
       }
       // Refetch search results
       await refetch()
     } catch (err) {
-      toast({
+      toast.error('Delete failed', {
         description: err instanceof Error ? err.message : 'Failed to delete job(s)',
-        title: 'Delete failed',
-        variant: 'destructive',
       })
     } finally {
       setDeleting(false)

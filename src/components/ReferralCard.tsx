@@ -2,7 +2,7 @@ import { convexQuery } from '@convex-dev/react-query';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link2, Copy, Check, Users } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { api } from '../../convex/_generated/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,6 @@ interface ReferralCardProps {
 
 export function ReferralCard({ workosUserId }: ReferralCardProps) {
   const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
 
   const { data: stats } = useSuspenseQuery(
     convexQuery(api.referrals.getMyReferralStats, { workosUserId }),
@@ -34,16 +33,13 @@ export function ReferralCard({ workosUserId }: ReferralCardProps) {
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      toast({
-        title: 'Link copied!',
+      toast.success('Link copied!', {
         description: 'Share it with friends to invite them.',
       });
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast({
-        title: 'Copy failed',
+      toast.error('Copy failed', {
         description: 'Please copy the link manually.',
-        variant: 'destructive',
       });
     }
   };

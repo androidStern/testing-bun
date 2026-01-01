@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import tsConfigPaths from 'vite-tsconfig-paths';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import viteReact from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import * as dotenv from 'dotenv';
 
 // Load .env.local (TanStack Start/Vite convention)
@@ -28,6 +29,7 @@ export default defineConfig({
     exclude: ['@tanstack/react-start-server', '@tanstack/start-server-core'],
   },
   plugins: [
+    tailwindcss(),
     tsConfigPaths({
       projects: ['./tsconfig.json'],
     }),

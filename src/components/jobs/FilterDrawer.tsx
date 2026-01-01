@@ -6,7 +6,7 @@ import { useEffect, useId } from 'react'
 
 
 import { api } from '../../../convex/_generated/api'
-import { useToast } from '../../hooks/use-toast'
+import { toast } from 'sonner'
 import { Button } from '../ui/button'
 import { Checkbox } from '../ui/checkbox'
 import {
@@ -58,7 +58,6 @@ const categoryInfo: Record<FilterCategory, CategoryInfo> = {
 }
 
 export function FilterDrawer({ category, onClose }: FilterDrawerProps) {
-  const { toast } = useToast()
   const formId = useId()
   const queryClient = useQueryClient()
 
@@ -70,9 +69,8 @@ export function FilterDrawer({ category, onClose }: FilterDrawerProps) {
       queryClient.invalidateQueries({
         queryKey: convexQuery(api.jobPreferences.get, {}).queryKey,
       })
-      toast({
+      toast.success('Saved', {
         description: 'Your preferences have been updated.',
-        title: 'Saved',
       })
       onClose()
     },
