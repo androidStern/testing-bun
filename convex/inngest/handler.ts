@@ -2,7 +2,7 @@
 
 import { InngestCommHandler } from "inngest";
 
-import { inngest, processApplication, processJobSubmission } from "./index";
+import { inngest, processApplication, processJobSubmission, computeIsochrones } from "./index";
 import type { ActionCtx } from "../_generated/server";
 
 /**
@@ -13,7 +13,7 @@ export function createInngestHandler(ctx: ActionCtx) {
   const handler = new InngestCommHandler<[Request, ActionCtx], Response>({
     frameworkName: "convex-node",
     client: inngest,
-    functions: [processJobSubmission, processApplication],
+    functions: [processJobSubmission, processApplication, computeIsochrones],
     handler: (req: Request, _actionCtx: ActionCtx) => ({
       body: () => req.json(),
       headers: (key: string) => req.headers.get(key),

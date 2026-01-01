@@ -63,6 +63,48 @@ export default defineSchema({
     .index('by_createdAt', ['createdAt'])
     .index('by_senderId', ['senderId']),
 
+  // Job search preferences - maps to Typesense facets
+  jobPreferences: defineTable({
+    // Commute preferences
+    maxCommuteMinutes: v.optional(v.union(v.literal(10), v.literal(30), v.literal(60))),
+    preferEasyApply: v.optional(v.boolean()),
+
+    // Second-chance employer preferences
+    preferSecondChance: v.optional(v.boolean()),
+
+    // Job type preferences
+    preferUrgent: v.optional(v.boolean()),
+
+    // Transit accessibility requirements
+    requireBusAccessible: v.optional(v.boolean()),
+    requirePublicTransit: v.optional(v.boolean()),
+    requireRailAccessible: v.optional(v.boolean()),
+    requireSecondChance: v.optional(v.boolean()),
+    shiftAfternoon: v.optional(v.boolean()),
+    shiftEvening: v.optional(v.boolean()),
+    shiftFlexible: v.optional(v.boolean()),
+
+    // Shift preferences
+    shiftMorning: v.optional(v.boolean()),
+    shiftOvernight: v.optional(v.boolean()),
+
+    updatedAt: v.number(),
+    workosUserId: v.string(),
+  }).index('by_workos_user_id', ['workosUserId']),
+
+  // Track active job searches (one per user)
+  jobSearches: defineTable({
+    completedAt: v.optional(v.number()),
+    initialPrompt: v.string(),
+    startedAt: v.number(),
+    status: v.union(v.literal('active'), v.literal('completed'), v.literal('cancelled')),
+    threadId: v.string(),
+    workosUserId: v.string(),
+  })
+    .index('by_workos_user_id', ['workosUserId'])
+    .index('by_workos_user_id_status', ['workosUserId', 'status'])
+    .index('by_thread_id', ['threadId']),
+
   // Job submissions - unified table for SMS and form submissions
   jobSubmissions: defineTable({
     approvedAt: v.optional(v.number()),
@@ -160,7 +202,19 @@ export default defineSchema({
     email: v.string(),
     firstName: v.optional(v.string()),
     headline: v.optional(v.string()),
+    // Home location for transit isochrone calculations
+    homeLat: v.optional(v.number()),
+    homeLon: v.optional(v.number()),
     instagramUrl: v.optional(v.string()),
+    // Transit isochrones (10/30/60 minute zones from home location)
+    isochrones: v.optional(
+      v.object({
+        computedAt: v.number(),
+        sixtyMinute: v.any(),
+        tenMinute: v.any(), // GeoJSON FeatureCollection
+        thirtyMinute: v.any(),
+      }),
+    ),
     lastName: v.optional(v.string()),
     linkedinUrl: v.optional(v.string()),
     location: v.optional(v.string()),
