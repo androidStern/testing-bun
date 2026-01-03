@@ -1,11 +1,22 @@
 'use client'
 
-import { Clock, DollarSign, ExternalLink, MapPin, Star } from 'lucide-react'
+import { Clock, DollarSign, ExternalLink, MapPin, Star, Sun, Moon } from 'lucide-react'
 
 import { Badge } from '../../ui/badge'
 import { Button } from '../../ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card'
 import { cn } from '../../../lib/utils'
+
+function getShiftIcon(shift: string) {
+  const lowerShift = shift.toLowerCase()
+  if (lowerShift.includes('morning') || lowerShift.includes('early') || lowerShift.includes('day')) {
+    return <Sun className="h-3 w-3" />
+  }
+  if (lowerShift.includes('evening') || lowerShift.includes('night') || lowerShift.includes('late')) {
+    return <Moon className="h-3 w-3" />
+  }
+  return null
+}
 
 export interface JobMatch {
   id: string
@@ -104,6 +115,7 @@ export function JobResultCard({ job, compact = false, className }: JobResultCard
             <div className="flex flex-wrap gap-1">
               {job.shifts.map(shift => (
                 <Badge key={shift} variant="outline" className="text-xs capitalize">
+                  {getShiftIcon(shift)}
                   {shift}
                 </Badge>
               ))}

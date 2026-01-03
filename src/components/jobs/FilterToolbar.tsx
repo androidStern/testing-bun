@@ -2,10 +2,12 @@
 
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
-import { Car, ChevronDown, Clock, Shield, Zap } from 'lucide-react'
+import { useAuth } from '@workos/authkit-tanstack-react-start/client'
+import { Car, ChevronDown, Clock, MapPin, Shield, Zap } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { api } from '../../../convex/_generated/api'
+import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import type { FilterCategory, JobPreferences } from './FilterSummaryBanner'
 
@@ -14,49 +16,76 @@ interface FilterButton {
   icon: ReactNode
   label: string
   value: string | null
+  source?: 'saved' | 'search'
 }
 
 interface FilterToolbarProps {
   onCategoryClick: (category: FilterCategory) => void
 }
 
-/**
- * FilterToolbar shows all 4 filter categories as buttons.
- * Unlike FilterSummaryBanner, this shows ALL categories (not just those with values set).
- */
 export function FilterToolbar({ onCategoryClick }: FilterToolbarProps) {
+  const { user } = useAuth()
   const { data: preferences } = useQuery(convexQuery(api.jobPreferences.get, {}))
+  const { data: profile } = useQuery(
+    convexQuery(api.profiles.getByWorkosUserId, user?.id ? { workosUserId: user.id } : 'skip'),
+  )
 
-  const buttons = generateFilterButtons(preferences)
+  const buttons = generateFilterButtons(preferences, profile)
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className='flex flex-wrap items-center gap-2'>
       {buttons.map(button => (
         <Button
-          key={button.category}
-          variant={button.value ? 'secondary' : 'outline'}
-          size="sm"
-          className="gap-1.5 h-8"
+          className='gap-1.5 h-8'
+          key={`${button.category}-${button.label}`}
           onClick={() => onCategoryClick(button.category)}
+          size='sm'
+          variant={button.value ? 'secondary' : 'outline'}
         >
           {button.icon}
-          <span className="hidden sm:inline">{button.label}</span>
+          <span className='hidden sm:inline'>{button.label}</span>
           {button.value && (
-            <span className="text-muted-foreground text-xs hidden md:inline">
-              {button.value}
-            </span>
+            <>
+              <span className='text-muted-foreground text-xs hidden md:inline'>{button.value}</span>
+              {button.source === 'saved' && (
+                <Badge className='h-4 px-1 text-[10px] hidden lg:inline-flex' variant='outline'>
+                  Saved
+                </Badge>
+              )}
+            </>
           )}
-          <ChevronDown className="h-3 w-3 opacity-50" />
+          <ChevronDown className='h-3 w-3 opacity-50' />
         </Button>
       ))}
     </div>
   )
 }
 
-function generateFilterButtons(prefs: JobPreferences | null | undefined): FilterButton[] {
+interface ProfileData {
+  location?: string
+  homeLat?: number
+  homeLon?: number
+  isochrones?: { computedAt: number } | null
+}
+
+function generateFilterButtons(
+  prefs: JobPreferences | null | undefined,
+  profile: ProfileData | null | undefined,
+): FilterButton[] {
   const buttons: FilterButton[] = []
 
-  // Fair Chance
+  const hasLocation = !!(profile?.homeLat && profile?.homeLon)
+  const locationName = profile?.location ?? (hasLocation ? 'Location set' : null)
+  const hasTransitZones = !!profile?.isochrones
+
+  buttons.push({
+    category: 'location',
+    icon: <MapPin className='h-4 w-4' />,
+    label: 'Location',
+    source: hasLocation ? 'saved' : undefined,
+    value: locationName,
+  })
+
   let fairChanceValue: string | null = null
   if (prefs?.requireSecondChance) {
     fairChanceValue = 'Required'
@@ -65,12 +94,12 @@ function generateFilterButtons(prefs: JobPreferences | null | undefined): Filter
   }
   buttons.push({
     category: 'fairChance',
-    icon: <Shield className="h-4 w-4" />,
+    icon: <Shield className='h-4 w-4' />,
     label: 'Fair Chance',
+    source: fairChanceValue ? 'saved' : undefined,
     value: fairChanceValue,
   })
 
-  // Commute
   let commuteValue: string | null = null
   if (prefs?.maxCommuteMinutes) {
     const transitParts: string[] = []
@@ -85,19 +114,22 @@ function generateFilterButtons(prefs: JobPreferences | null | undefined): Filter
         transitParts.push('transit')
       }
     }
-    const transitText = transitParts.length > 0 ? ` by ${transitParts.join('/')}` : ''
+    const transitText = transitParts.length > 0 ? ` ${transitParts.join('/')}` : ''
     commuteValue = `${prefs.maxCommuteMinutes}min${transitText}`
+    if (hasTransitZones) {
+      commuteValue += ' ✓'
+    }
   } else if (prefs?.requirePublicTransit) {
     commuteValue = 'Transit only'
   }
   buttons.push({
     category: 'commute',
-    icon: <Car className="h-4 w-4" />,
+    icon: <Car className='h-4 w-4' />,
     label: 'Commute',
+    source: commuteValue ? 'saved' : undefined,
     value: commuteValue,
   })
 
-  // Schedule
   let scheduleValue: string | null = null
   const shifts: string[] = []
   if (prefs?.shiftMorning) shifts.push('AM')
@@ -110,12 +142,12 @@ function generateFilterButtons(prefs: JobPreferences | null | undefined): Filter
   }
   buttons.push({
     category: 'schedule',
-    icon: <Clock className="h-4 w-4" />,
+    icon: <Clock className='h-4 w-4' />,
     label: 'Schedule',
+    source: scheduleValue ? 'saved' : undefined,
     value: scheduleValue,
   })
 
-  // Quick Apply
   let quickApplyValue: string | null = null
   const quickParts: string[] = []
   if (prefs?.preferUrgent) quickParts.push('Urgent')
@@ -125,8 +157,9 @@ function generateFilterButtons(prefs: JobPreferences | null | undefined): Filter
   }
   buttons.push({
     category: 'quickApply',
-    icon: <Zap className="h-4 w-4" />,
+    icon: <Zap className='h-4 w-4' />,
     label: 'Quick Apply',
+    source: quickApplyValue ? 'saved' : undefined,
     value: quickApplyValue,
   })
 

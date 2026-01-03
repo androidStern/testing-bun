@@ -1,52 +1,41 @@
-/**
- * Bridge between Convex Agent UIMessages and assistant-ui ThreadMessageLike format.
- *
- * Convex Agent extends AI SDK's UIMessage with:
- * - key: unique identifier
- * - order: message ordering
- * - stepOrder: step within a message
- * - status: 'streaming' | 'pending' | 'success' | 'error'
- * - agentName: optional agent identifier
- * - text: combined text content
- * - _creationTime: timestamp
- *
- * assistant-ui ThreadMessageLike expects:
- * - role: 'assistant' | 'user' | 'system'
- * - content: string | array of parts
- * - id: optional string
- * - createdAt: optional Date
- * - status: MessageStatus object
- */
-
 import type { ThreadMessageLike } from '@assistant-ui/react'
 import type { UIMessage } from '@convex-dev/agent/react'
 
 type ConvexUIMessage = UIMessage
 
-/**
- * Converts a Convex Agent UIMessage to assistant-ui ThreadMessageLike format.
- */
-export function convertConvexMessage(msg: ConvexUIMessage, idx: number): ThreadMessageLike {
-  // Convert parts from AI SDK format to assistant-ui format
+let convertCounter = 0
+
+export function convertConvexMessage(msg: ConvexUIMessage): ThreadMessageLike {
+  const callId = ++convertCounter
   const content = convertParts(msg.parts)
 
-  // Base message properties
+  console.log(
+    `[DUPE-DEBUG] convertConvexMessage #${callId}: id=${msg.id} key=${msg.key} order=${msg.order} stepOrder=${msg.stepOrder} role=${msg.role} partsIn=${msg.parts?.length} partsOut=${content.length}`,
+  )
+
+  // Access message-level metadata (passed to saveMessage, returned on UIMessage.metadata)
+  // For user messages with string content, providerMetadata isn't on parts - it's on msg.metadata
+  const msgMeta = msg.metadata as
+    | { providerMetadata?: { custom?: { isSyntheticSelection?: boolean } } }
+    | undefined
+  const isSyntheticSelection = msgMeta?.providerMetadata?.custom?.isSyntheticSelection === true
+
   const baseMessage = {
-    id: msg.key,
-    role: msg.role as 'assistant' | 'user' | 'system',
-    createdAt: new Date(msg._creationTime),
-    // Cast content to satisfy the union type - we know our ContentPart structure is correct
     content: content as ThreadMessageLike['content'],
+    createdAt: new Date(msg._creationTime),
+    id: msg.id, // Use actual Convex _id so it can be passed as promptMessageId
     metadata: {
       custom: {
         agentName: msg.agentName,
+        isSyntheticSelection,
+        key: msg.key,
         order: msg.order,
         stepOrder: msg.stepOrder,
       },
     },
+    role: msg.role as 'assistant' | 'user' | 'system',
   }
 
-  // Only add status for assistant messages (assistant-ui requirement)
   if (msg.role === 'assistant') {
     return {
       ...baseMessage,
@@ -69,19 +58,19 @@ function mapStatus(status: string, msg?: ConvexUIMessage): ThreadMessageLike['st
     case 'pending':
       return { type: 'running' }
     case 'success':
-      return { type: 'complete', reason: 'stop' }
+      return { reason: 'stop', type: 'complete' }
     case 'error':
     case 'failed': {
       // Try to extract error message from the message
       const errorMessage = extractErrorMessage(msg)
       return {
-        type: 'incomplete',
-        reason: 'error',
         error: errorMessage,
+        reason: 'error',
+        type: 'incomplete',
       }
     }
     default:
-      return { type: 'complete', reason: 'stop' }
+      return { reason: 'stop', type: 'complete' }
   }
 }
 
@@ -138,34 +127,30 @@ const INTERNAL_PART_TYPES = new Set([
   'step-finish',
   'source',
   'file',
+  'tool-result', // Skip - causes phantom tool-calls when saved separately; results come via output field on tool-{name} parts
 ])
 
-/**
- * Converts AI SDK UIMessage parts to assistant-ui content parts.
- */
 function convertParts(parts: ConvexUIMessage['parts']): readonly ContentPart[] {
   if (!parts || parts.length === 0) {
     return []
   }
 
-  const result: ContentPart[] = []
+  const result: Array<ContentPart> = []
 
   for (const part of parts) {
-    // Skip internal/implementation parts
     if (INTERNAL_PART_TYPES.has(part.type)) {
+      console.log(`[DUPE-DEBUG] convertParts: SKIPPING internal type=${part.type}`)
       continue
     }
 
-    // Handle text parts
     if (part.type === 'text') {
       result.push({
-        type: 'text',
         text: part.text,
+        type: 'text',
       } as const)
       continue
     }
 
-    // Handle tool call parts (AI SDK uses 'tool-{toolName}' prefix pattern)
     if (part.type.startsWith('tool-') || 'toolName' in part) {
       const toolPart = part as {
         type: string
@@ -176,32 +161,36 @@ function convertParts(parts: ConvexUIMessage['parts']): readonly ContentPart[] {
         state?: string
       }
 
-      // Extract tool name from type (e.g., 'tool-searchJobs' -> 'searchJobs')
       const toolName = toolPart.toolName ?? part.type.replace('tool-', '')
+      const toolCallId = toolPart.toolCallId
+      if (!toolCallId) {
+        throw new Error(`Missing toolCallId for tool: ${toolName}`)
+      }
+
+      console.log(
+        `[DUPE-DEBUG] convertParts: ADDING tool-call type=${part.type} toolName=${toolName} toolCallId=${toolCallId} state=${toolPart.state}`,
+      )
 
       result.push({
-        type: 'tool-call',
-        toolCallId: toolPart.toolCallId ?? `${toolName}-${Date.now()}`,
-        toolName,
         args: (toolPart.input ?? {}) as Readonly<Record<string, unknown>>,
         result: toolPart.output,
+        toolCallId,
+        toolName,
+        type: 'tool-call',
       } as const)
       continue
     }
 
-    // Handle reasoning parts - convert to text
     if (part.type === 'reasoning') {
       const reasoningPart = part as { type: 'reasoning'; text: string }
       result.push({
-        type: 'text',
         text: `[Thinking] ${reasoningPart.text}`,
+        type: 'text',
       } as const)
       continue
     }
 
-    // Skip unknown parts silently - they're likely internal implementation details
-    // Log for debugging but don't pollute the UI
-    console.debug('[convexAgentBridge] Skipping unknown part type:', part.type)
+    console.log(`[DUPE-DEBUG] convertParts: SKIPPING unknown type=${part.type}`)
   }
 
   return result

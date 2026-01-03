@@ -9,16 +9,18 @@ import { useCallback, useMemo, useState } from 'react'
 
 import { Thread } from '@/components/assistant-ui/thread'
 import { api } from '../../../convex/_generated/api'
+import type { JobPreferences } from '../jobs/FilterSummaryBanner'
 import { Button } from '../ui/button'
 import { ChatHeader } from './ChatHeader'
 import { JobMatcherRuntimeProvider } from './JobMatcherRuntimeProvider'
 import {
-  ResumeToolUI,
+  CollectLocationToolUI,
   PreferencesToolUI,
-  SearchJobsToolUI,
   QuestionToolUI,
+  ResumeToolUI,
+  SearchJobsToolUI,
+  ShowPlanToolUI,
 } from './tools'
-import type { JobPreferences } from '../jobs/FilterSummaryBanner'
 
 /**
  * JobMatcherChat - Main chat interface for the job matcher.
@@ -35,9 +37,11 @@ export function JobMatcherChat() {
   const [lastSearchPrefs, setLastSearchPrefs] = useState<JobPreferences | null>(null)
 
   // Check for existing active search
-  const { data: activeSearch, isLoading: searchLoading, refetch: refetchSearch } = useQuery(
-    convexQuery(api.jobMatcher.queries.getActiveSearch, {})
-  )
+  const {
+    data: activeSearch,
+    isLoading: searchLoading,
+    refetch: refetchSearch,
+  } = useQuery(convexQuery(api.jobMatcher.queries.getActiveSearch, {}))
 
   // Get current preferences for filter change detection
   const { data: currentPrefs } = useQuery(convexQuery(api.jobPreferences.get, {}))
@@ -80,7 +84,7 @@ export function JobMatcherChat() {
       setActiveThreadId(newThreadId)
       refetchSearch()
     },
-    [refetchSearch]
+    [refetchSearch],
   )
 
   const handleNewChat = useCallback(async () => {
@@ -100,8 +104,8 @@ export function JobMatcherChat() {
   // Loading state
   if (searchLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className='flex items-center justify-center py-12'>
+        <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
       </div>
     )
   }
@@ -109,37 +113,35 @@ export function JobMatcherChat() {
   // No active thread - show welcome screen
   if (!threadId) {
     return (
-      <div className="flex flex-col h-[calc(100vh-8rem)]">
+      <div className='flex flex-col h-dvh'>
         <ChatHeader
-          onForceSearch={handleForceSearch}
-          isSearching={isForceSearching}
-          hasActiveThread={false}
           filtersChanged={false}
+          hasActiveThread={false}
+          isSearching={isForceSearching}
+          onForceSearch={handleForceSearch}
         />
 
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl flex flex-col">
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <MessageSquare className="h-6 w-6" />
-                <h1 className="text-3xl font-semibold">AI JOB SEARCH</h1>
+        <div className='flex-1 flex items-center justify-center p-4'>
+          <div className='w-full max-w-2xl flex flex-col'>
+            <div className='mb-4'>
+              <div className='flex items-center gap-2 mb-2'>
+                <MessageSquare className='h-6 w-6' />
+                <h1 className='text-3xl font-semibold'>AI JOB SEARCH</h1>
               </div>
             </div>
 
-            <JobMatcherRuntimeProvider threadId={null} onThreadCreated={handleThreadCreated}>
-              <ComposerPrimitive.Root className="flex flex-col gap-3">
+            <JobMatcherRuntimeProvider onThreadCreated={handleThreadCreated} threadId={null}>
+              <ComposerPrimitive.Root className='flex flex-col gap-3'>
                 <ComposerPrimitive.Input
                   asChild
                   placeholder="I'll help you find jobs that match your skills and preferences. Start by telling me what you're looking for, or click 'Search Now' to find matches based on your profile."
                 >
-                  <textarea
-                    className="w-full min-h-40 border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
-                  />
+                  <textarea className='w-full min-h-40 border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none' />
                 </ComposerPrimitive.Input>
-                <div className="flex gap-2 justify-end">
+                <div className='flex gap-2 justify-end'>
                   <ComposerPrimitive.Send asChild>
-                    <Button size="lg" className="gap-2">
-                      <Send className="h-4 w-4" />
+                    <Button className='gap-2' size='lg'>
+                      <Send className='h-4 w-4' />
                       Search Now
                     </Button>
                   </ComposerPrimitive.Send>
@@ -154,25 +156,25 @@ export function JobMatcherChat() {
 
   // Active thread - show chat interface with generated Thread component
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
+    <div className='flex flex-col h-dvh'>
       <ChatHeader
+        filtersChanged={filtersChanged}
+        hasActiveThread={true}
+        isSearching={isForceSearching}
         onForceSearch={handleForceSearch}
         onNewChat={handleNewChat}
         onRedoSearch={handleRedoSearch}
-        isSearching={isForceSearching}
-        hasActiveThread={true}
-        filtersChanged={filtersChanged}
       />
 
-      <JobMatcherRuntimeProvider threadId={threadId} onThreadCreated={handleThreadCreated}>
-        {/* Register custom tool UIs */}
+      <JobMatcherRuntimeProvider onThreadCreated={handleThreadCreated} threadId={threadId}>
+        <ShowPlanToolUI />
         <ResumeToolUI />
         <PreferencesToolUI />
+        <CollectLocationToolUI />
         <SearchJobsToolUI />
         <QuestionToolUI />
 
-        {/* Use the generated Thread component with proper styling */}
-        <div className="flex-1 overflow-hidden">
+        <div className='flex-1 overflow-hidden min-h-0'>
           <Thread />
         </div>
       </JobMatcherRuntimeProvider>

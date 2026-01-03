@@ -2,20 +2,22 @@
 
 import { makeAssistantToolUI } from '@assistant-ui/react'
 import {
+  Briefcase,
+  Bus,
+  ChevronDown,
+  Clock,
   FileText,
+  Heart,
+  MapPin,
   Search,
   Settings,
-  ChevronDown,
-  MapPin,
-  Clock,
-  Bus,
   Train,
-  Briefcase,
   Zap,
-  Heart,
 } from 'lucide-react'
 import { useState } from 'react'
-
+import { Plan } from '@/components/tool-ui/plan'
+import { Badge } from '@/components/ui/badge'
+import { Card } from '@/components/ui/card'
 import {
   Carousel,
   CarouselContent,
@@ -23,12 +25,11 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { ToolCard } from './ToolProgress'
-import { OptionList, type OptionItem } from './OptionList'
-import { JobResultCard } from '../results/JobResultCard'
 import { cn } from '@/lib/utils'
+import { JobResultCard } from '../results/JobResultCard'
+import { type LocationResult, LocationSetupCard } from './LocationSetupCard'
+import { type OptionItem, OptionList } from './OptionList'
+import { ToolCard } from './ToolProgress'
 
 // Type definitions for tool arguments and results
 interface ResumeResult {
@@ -136,7 +137,6 @@ interface QuestionArgs {
  * Tool UI for getMyResume - shows resume loading/summary
  */
 export const ResumeToolUI = makeAssistantToolUI<Record<string, never>, ResumeResult | null>({
-  toolName: 'getMyResume',
   render: ({ result, status }) => {
     const isRunning = status.type === 'running'
 
@@ -144,9 +144,9 @@ export const ResumeToolUI = makeAssistantToolUI<Record<string, never>, ResumeRes
     if (isRunning) {
       return (
         <ToolCard
-          icon={<FileText className="h-4 w-4" />}
-          title="Reading your resume..."
-          status="running"
+          icon={<FileText className='h-4 w-4' />}
+          status='running'
+          title='Reading your resume...'
         />
       )
     }
@@ -155,10 +155,10 @@ export const ResumeToolUI = makeAssistantToolUI<Record<string, never>, ResumeRes
     if (result === null) {
       return (
         <ToolCard
-          icon={<FileText className="h-4 w-4" />}
-          title="No resume found"
-          status="complete"
-          detail="Searching with general criteria"
+          detail='Searching with general criteria'
+          icon={<FileText className='h-4 w-4' />}
+          status='complete'
+          title='No resume found'
         />
       )
     }
@@ -172,29 +172,29 @@ export const ResumeToolUI = makeAssistantToolUI<Record<string, never>, ResumeRes
 
     return (
       <ToolCard
-        icon={<FileText className="h-4 w-4" />}
-        title="Resume loaded"
-        status="complete"
         detail={detail}
+        icon={<FileText className='h-4 w-4' />}
+        status='complete'
+        title='Resume loaded'
       />
     )
   },
+  toolName: 'getMyResume',
 })
 
 /**
  * Tool UI for getMyJobPreferences - shows preference summary
  */
 export const PreferencesToolUI = makeAssistantToolUI<Record<string, never>, PreferencesResult>({
-  toolName: 'getMyJobPreferences',
   render: ({ result, status }) => {
     const isRunning = status.type === 'running'
 
     if (isRunning) {
       return (
         <ToolCard
-          icon={<Settings className="h-4 w-4" />}
-          title="Loading your preferences..."
-          status="running"
+          icon={<Settings className='h-4 w-4' />}
+          status='running'
+          title='Loading your preferences...'
         />
       )
     }
@@ -220,13 +220,14 @@ export const PreferencesToolUI = makeAssistantToolUI<Record<string, never>, Pref
 
     return (
       <ToolCard
-        icon={<Settings className="h-4 w-4" />}
-        title="Preferences loaded"
-        status="complete"
         detail={detail}
+        icon={<Settings className='h-4 w-4' />}
+        status='complete'
+        title='Preferences loaded'
       />
     )
   },
+  toolName: 'getMyJobPreferences',
 })
 
 /**
@@ -264,50 +265,48 @@ function SearchDetailsSection({ context }: { context: SearchContext }) {
   if (!hasFilters) return null
 
   return (
-    <div className="border-t border-border/50">
+    <div className='border-t border-border/50'>
       <button
+        className='flex w-full items-center justify-between px-4 py-2 text-sm text-muted-foreground hover:bg-muted/30 transition-colors'
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between px-4 py-2 text-sm text-muted-foreground hover:bg-muted/30 transition-colors"
+        type='button'
       >
         <span>Search filters</span>
         <ChevronDown
-          className={cn(
-            'h-4 w-4 transition-transform duration-200',
-            isOpen && 'rotate-180'
-          )}
+          className={cn('h-4 w-4 transition-transform duration-200', isOpen && 'rotate-180')}
         />
       </button>
 
       {isOpen && (
-        <div className="px-4 pb-3 space-y-2">
+        <div className='px-4 pb-3 space-y-2'>
           {/* Location */}
           {locationDisplay && (
-            <div className="flex items-center gap-2 text-sm">
-              <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className='flex items-center gap-2 text-sm'>
+              <MapPin className='h-3.5 w-3.5 text-muted-foreground' />
               <span>{locationDisplay}</span>
             </div>
           )}
 
           {/* Commute zone indicator */}
           {context.location.withinCommuteZone && (
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className='flex items-center gap-2 text-sm'>
+              <Clock className='h-3.5 w-3.5 text-muted-foreground' />
               <span>{context.location.maxCommuteMinutes ?? 30} min max commute</span>
             </div>
           )}
 
           {/* Transit requirements */}
           {(context.filters.busRequired || context.filters.railRequired) && (
-            <div className="flex items-center gap-2 text-sm">
+            <div className='flex items-center gap-2 text-sm'>
               {context.filters.busRequired && (
-                <Badge variant="secondary" className="gap-1 text-xs">
-                  <Bus className="h-3 w-3" />
+                <Badge className='gap-1 text-xs' variant='secondary'>
+                  <Bus className='h-3 w-3' />
                   Bus
                 </Badge>
               )}
               {context.filters.railRequired && (
-                <Badge variant="secondary" className="gap-1 text-xs">
-                  <Train className="h-3 w-3" />
+                <Badge className='gap-1 text-xs' variant='secondary'>
+                  <Train className='h-3 w-3' />
                   Rail
                 </Badge>
               )}
@@ -316,10 +315,10 @@ function SearchDetailsSection({ context }: { context: SearchContext }) {
 
           {/* Shifts */}
           {context.filters.shifts.length > 0 && (
-            <div className="flex items-center gap-2 text-sm flex-wrap">
-              <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className='flex items-center gap-2 text-sm flex-wrap'>
+              <Briefcase className='h-3.5 w-3.5 text-muted-foreground' />
               {context.filters.shifts.map(shift => (
-                <Badge key={shift} variant="outline" className="text-xs capitalize">
+                <Badge className='text-xs capitalize' key={shift} variant='outline'>
                   {shift}
                 </Badge>
               ))}
@@ -328,8 +327,8 @@ function SearchDetailsSection({ context }: { context: SearchContext }) {
 
           {/* Second chance preference */}
           {(context.filters.secondChanceRequired || context.filters.secondChancePreferred) && (
-            <div className="flex items-center gap-2 text-sm">
-              <Heart className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className='flex items-center gap-2 text-sm'>
+              <Heart className='h-3.5 w-3.5 text-muted-foreground' />
               <span>
                 {context.filters.secondChanceRequired
                   ? 'Fair Chance employers only'
@@ -340,13 +339,17 @@ function SearchDetailsSection({ context }: { context: SearchContext }) {
 
           {/* Urgent/Easy apply */}
           {(context.filters.urgentOnly || context.filters.easyApplyOnly) && (
-            <div className="flex items-center gap-2 text-sm">
-              <Zap className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className='flex items-center gap-2 text-sm'>
+              <Zap className='h-3.5 w-3.5 text-muted-foreground' />
               {context.filters.urgentOnly && (
-                <Badge variant="secondary" className="text-xs">Urgent hiring</Badge>
+                <Badge className='text-xs' variant='secondary'>
+                  Urgent hiring
+                </Badge>
               )}
               {context.filters.easyApplyOnly && (
-                <Badge variant="secondary" className="text-xs">Easy apply</Badge>
+                <Badge className='text-xs' variant='secondary'>
+                  Easy apply
+                </Badge>
               )}
             </div>
           )}
@@ -360,7 +363,6 @@ function SearchDetailsSection({ context }: { context: SearchContext }) {
  * Tool UI for searchJobs - shows search progress and job cards in a unified card
  */
 export const SearchJobsToolUI = makeAssistantToolUI<SearchJobsArgs, SearchResult>({
-  toolName: 'searchJobs',
   render: ({ args, result, status }) => {
     const isRunning = status.type === 'running'
     const query = args?.query ?? '...'
@@ -369,10 +371,10 @@ export const SearchJobsToolUI = makeAssistantToolUI<SearchJobsArgs, SearchResult
     if (isRunning) {
       return (
         <ToolCard
-          icon={<Search className="h-4 w-4" />}
-          title={`Searching: "${query}"`}
-          status="running"
           detail={formatFilters(args?.filters)}
+          icon={<Search className='h-4 w-4' />}
+          status='running'
+          title={`Searching: "${query}"`}
         />
       )
     }
@@ -384,13 +386,13 @@ export const SearchJobsToolUI = makeAssistantToolUI<SearchJobsArgs, SearchResult
     // No results
     if (jobs.length === 0) {
       return (
-        <Card className="mb-4 overflow-hidden">
-          <div className="p-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Search className="h-4 w-4" />
-              <span className="text-sm">No jobs found</span>
+        <Card className='mb-4 overflow-hidden'>
+          <div className='p-4'>
+            <div className='flex items-center gap-2 text-muted-foreground'>
+              <Search className='h-4 w-4' />
+              <span className='text-sm'>No jobs found</span>
             </div>
-            <p className="mt-2 text-lg font-medium">"{searchContext?.query ?? query}"</p>
+            <p className='mt-2 text-lg font-medium'>"{searchContext?.query ?? query}"</p>
           </div>
           {searchContext && <SearchDetailsSection context={searchContext} />}
         </Card>
@@ -399,24 +401,25 @@ export const SearchJobsToolUI = makeAssistantToolUI<SearchJobsArgs, SearchResult
 
     // Results card with carousel
     return (
-      <Card className="mb-4 overflow-hidden">
+      <Card className='mb-4 overflow-hidden'>
         {/* Header with query and count */}
-        <div className="p-4 pb-3">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <p className="text-lg font-semibold leading-tight truncate">
+        <div className='p-4 pb-3'>
+          <div className='flex items-start justify-between gap-4'>
+            <div className='min-w-0 flex-1'>
+              <p className='text-lg font-semibold leading-tight truncate'>
                 "{searchContext?.query ?? query}"
               </p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className='text-sm text-muted-foreground mt-1'>
                 Found {jobs.length} job{jobs.length !== 1 ? 's' : ''}
                 {searchContext && searchContext.totalFound > jobs.length && (
-                  <span className="text-muted-foreground/70">
-                    {' '}(of {searchContext.totalFound} total)
+                  <span className='text-muted-foreground/70'>
+                    {' '}
+                    (of {searchContext.totalFound} total)
                   </span>
                 )}
               </p>
             </div>
-            <Search className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
+            <Search className='h-5 w-5 text-primary flex-shrink-0 mt-1' />
           </div>
         </div>
 
@@ -424,59 +427,62 @@ export const SearchJobsToolUI = makeAssistantToolUI<SearchJobsArgs, SearchResult
         {searchContext && <SearchDetailsSection context={searchContext} />}
 
         {/* Jobs carousel */}
-        <div className="relative px-10 py-4 bg-muted/20">
-          <Carousel opts={{ align: 'start' }} className="w-full">
+        <div className='relative px-10 py-4 bg-muted/20'>
+          <Carousel className='w-full' opts={{ align: 'start' }}>
             <CarouselContent>
               {jobs.map(job => (
                 <CarouselItem
+                  className='basis-[280px] sm:basis-[280px] md:basis-[300px]'
                   key={job.id}
-                  className="basis-[280px] sm:basis-[280px] md:basis-[300px]"
                 >
                   <JobResultCard
-                    className="h-full"
+                    className='h-full'
                     job={{
-                      id: job.id,
-                      title: job.title,
                       company: job.company,
+                      id: job.id,
+                      isSecondChance: job.isSecondChance,
                       location: job.location,
                       salary: job.salary,
-                      isSecondChance: job.isSecondChance,
                       shifts: job.shifts,
+                      title: job.title,
                       url: job.url,
                     }}
                   />
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="left-0 -translate-x-full" />
-            <CarouselNext className="right-0 translate-x-full" />
+            <CarouselPrevious className='left-0 -translate-x-full' />
+            <CarouselNext className='right-0 translate-x-full' />
           </Carousel>
         </div>
       </Card>
     )
   },
+  toolName: 'searchJobs',
 })
 
 /**
  * Tool UI for askQuestion - shows OptionList for Q&A
  */
 export const QuestionToolUI = makeAssistantToolUI<QuestionArgs, { selectedOption: string }>({
-  toolName: 'askQuestion',
   render: ({ args, result, status, addResult }) => {
-    // If we have a result, show confirmed state
-    if (result) {
-      const confirmedOptions = args?.options?.filter(opt =>
-        result.selectedOption === opt.id ||
-        (Array.isArray(result.selectedOption) && result.selectedOption.includes(opt.id))
-      ) ?? []
+    // Only show confirmed state when user has actually selected an option
+    // (tool returns args immediately, but selectedOption only exists after user interaction)
+    if (result?.selectedOption) {
+      const confirmedOptions =
+        args?.options?.filter(
+          opt =>
+            result.selectedOption === opt.id ||
+            (Array.isArray(result.selectedOption) && result.selectedOption.includes(opt.id)),
+        ) ?? []
 
       const confirmed = confirmedOptions.map(o => o.id)
 
       return (
         <OptionList
-          question={args?.question ?? ''}
-          options={args?.options ?? []}
           confirmed={confirmed}
+          options={args?.options ?? []}
+          question={args?.question ?? ''}
         />
       )
     }
@@ -484,20 +490,20 @@ export const QuestionToolUI = makeAssistantToolUI<QuestionArgs, { selectedOption
     // Interactive state
     return (
       <OptionList
-        question={args?.question ?? ''}
-        options={args?.options ?? []}
         allowFreeText={args?.allowFreeText ?? true}
-        onConfirm={(selection) => {
+        onConfirm={selection => {
           if (selection.length > 0) {
             addResult({ selectedOption: selection[0] })
           }
         }}
+        options={args?.options ?? []}
+        question={args?.question ?? ''}
       />
     )
   },
+  toolName: 'askQuestion',
 })
 
-// Helper function to format filters for display
 function formatFilters(filters?: SearchJobsArgs['filters']): string | undefined {
   if (!filters) return undefined
 
@@ -512,12 +518,121 @@ function formatFilters(filters?: SearchJobsArgs['filters']): string | undefined 
   return parts.length > 0 ? `Filters: ${parts.join(', ')}` : undefined
 }
 
-/**
- * Export all tool UIs as an array for easy registration
- */
+interface ShowPlanArgs {
+  id: string
+  title: string
+  description?: string
+  todos: Array<{
+    id: string
+    label: string
+    status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+    description?: string
+  }>
+}
+
+export const ShowPlanToolUI = makeAssistantToolUI<ShowPlanArgs, ShowPlanArgs>({
+  render: ({ args, result, status }) => {
+    const plan = result ?? args
+    console.log(
+      '[MSGDUPE] ShowPlanToolUI RENDER: planId=' +
+        (plan?.id ?? 'none') +
+        ' title=' +
+        (plan?.title ?? 'none') +
+        ' todosCount=' +
+        (plan?.todos?.length ?? 0) +
+        ' status=' +
+        JSON.stringify(status),
+    )
+
+    if (!plan?.todos) {
+      console.log('[MSGDUPE] ShowPlanToolUI returning null - no todos')
+      return null
+    }
+
+    return (
+      <Plan
+        description={plan.description}
+        id={plan.id}
+        showProgress
+        title={plan.title}
+        todos={plan.todos}
+      />
+    )
+  },
+  toolName: 'showPlan',
+})
+
+interface CollectLocationArgs {
+  reason: string
+}
+
+interface CollectLocationResult {
+  skipped?: boolean
+  location?: {
+    lat: number
+    lon: number
+    city: string
+  }
+  transportMode?: 'car' | 'transit' | 'flexible'
+  maxCommuteMinutes?: 10 | 30 | 60
+  hasTransitZones?: boolean
+  savedToProfile?: boolean
+}
+
+export const CollectLocationToolUI = makeAssistantToolUI<
+  CollectLocationArgs,
+  CollectLocationResult
+>({
+  render: ({ args, result, addResult }) => {
+    if (result?.skipped) {
+      return (
+        <ToolCard
+          detail='Searching all locations'
+          icon={<MapPin className='h-4 w-4' />}
+          status='complete'
+          title='Location skipped'
+        />
+      )
+    }
+
+    if (result?.location) {
+      return (
+        <ToolCard
+          detail={[
+            result.location.city,
+            result.transportMode === 'transit' && result.maxCommuteMinutes
+              ? `${result.maxCommuteMinutes}min by transit`
+              : result.transportMode === 'car'
+                ? 'Driving'
+                : result.transportMode === 'flexible'
+                  ? 'Flexible'
+                  : null,
+            result.hasTransitZones ? 'Transit zones ready' : null,
+          ]
+            .filter(Boolean)
+            .join(' • ')}
+          icon={<MapPin className='h-4 w-4' />}
+          status='complete'
+          title='Location set'
+        />
+      )
+    }
+
+    return (
+      <LocationSetupCard
+        onComplete={(locationResult: LocationResult) => addResult(locationResult)}
+        reason={args?.reason ?? 'To find jobs near you'}
+      />
+    )
+  },
+  toolName: 'collectLocation',
+})
+
 export const jobMatcherToolUIs = [
   ResumeToolUI,
   PreferencesToolUI,
   SearchJobsToolUI,
   QuestionToolUI,
+  ShowPlanToolUI,
+  CollectLocationToolUI,
 ]

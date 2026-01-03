@@ -1,23 +1,23 @@
-'use node';
+'use node'
 
-import { inngest } from './client';
-import { internal } from '../_generated/api';
-import type { ActionCtx } from '../_generated/server';
-import type { Id } from '../_generated/dataModel';
+import { internal } from '../_generated/api'
+import type { Id } from '../_generated/dataModel'
+import type { ActionCtx } from '../_generated/server'
 import {
   fetchIsochrones,
-  pollIsochrones,
-  parseIsochrones,
   type GeoJSONFeatureCollection,
-} from '../lib/geoapify';
+  parseIsochrones,
+  pollIsochrones,
+} from '../lib/geoapify'
+import { inngest } from './client'
 
 // Extended handler args type with middleware-injected convex context
 interface HandlerArgs {
-  event: { data: { profileId: string; lat: number; lon: number } };
+  event: { data: { profileId: string; lat: number; lon: number } }
   step: {
-    run: <T>(name: string, fn: () => Promise<T>) => Promise<T>;
-  };
-  convex: ActionCtx;
+    run: <T>(name: string, fn: () => Promise<T>) => Promise<T>
+  }
+  convex: ActionCtx
 }
 
 /**
@@ -30,55 +30,57 @@ interface HandlerArgs {
  */
 export const computeIsochrones = inngest.createFunction(
   {
-    id: 'compute-isochrones',
     concurrency: { limit: 5 }, // Matches Geoapify 5 req/sec limit
+    id: 'compute-isochrones',
     retries: 10,
   },
   { event: 'isochrones/compute' },
-  async (args) => {
+  async args => {
     // Cast to get middleware-injected convex context
-    const { event, step, convex } = args as unknown as HandlerArgs;
-    const { profileId, lat, lon } = event.data;
+    const { event, step, convex } = args as unknown as HandlerArgs
+    const { profileId, lat, lon } = event.data
 
     // Step 1: Initial fetch (may return immediately or async job)
     const initial = await step.run('fetch-isochrones', async () => {
-      return fetchIsochrones(lat, lon);
-    });
+      return fetchIsochrones(lat, lon)
+    })
 
-    let data: GeoJSONFeatureCollection;
+    let data: GeoJSONFeatureCollection
 
     if (initial.done && initial.data) {
-      data = initial.data;
+      data = initial.data
     } else if (initial.jobId) {
       // Step 2: Poll for async result (Inngest retries this step on failure)
       data = await step.run('poll-isochrones', async () => {
-        return pollIsochrones(initial.jobId!);
-      });
+        return pollIsochrones(initial.jobId!)
+      })
     } else {
-      throw new Error('Unexpected Geoapify response: no data or jobId');
+      throw new Error('Unexpected Geoapify response: no data or jobId')
     }
 
     // Step 3: Parse and save to Convex
-    const isochrones = parseIsochrones(data);
+    const isochrones = parseIsochrones(data)
 
     await step.run('save-isochrones', async () => {
       await convex.runMutation(internal.profiles.saveIsochrones, {
-        profileId: profileId as Id<'profiles'>,
         isochrones: {
           ...isochrones,
           computedAt: Date.now(),
         },
-      });
-    });
+        originLat: lat,
+        originLon: lon,
+        profileId: profileId as Id<'profiles'>,
+      })
+    })
 
     return {
-      success: true,
       profileId,
       ranges: {
+        sixtyMinute: !!isochrones.sixtyMinute,
         tenMinute: !!isochrones.tenMinute,
         thirtyMinute: !!isochrones.thirtyMinute,
-        sixtyMinute: !!isochrones.sixtyMinute,
       },
-    };
+      success: true,
+    }
   },
-);
+)

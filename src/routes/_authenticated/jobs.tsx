@@ -20,7 +20,7 @@ export const Route = createFileRoute('/_authenticated/jobs')({
 
 function JobsPage() {
   return (
-    <div className='min-h-screen bg-background'>
+    <div className='bg-background'>
       {/* AI Job Matcher Chat - Full chat interface with built-in header */}
       <JobMatcherChat />
     </div>

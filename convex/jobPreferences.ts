@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 
-import { internalQuery, mutation, query } from './_generated/server'
+import { internalMutation, internalQuery, mutation, query } from './_generated/server'
 
 // Validator for the job preferences document (reused in return types)
 const jobPreferencesDocValidator = v.object({
@@ -53,9 +53,7 @@ export const getByWorkosUserIdInternal = internalQuery({
 // Upsert preferences
 export const upsert = mutation({
   args: {
-    maxCommuteMinutes: v.optional(
-      v.union(v.literal(10), v.literal(30), v.literal(60), v.null())
-    ),
+    maxCommuteMinutes: v.optional(v.union(v.literal(10), v.literal(30), v.literal(60), v.null())),
     preferEasyApply: v.optional(v.boolean()),
     preferSecondChance: v.optional(v.boolean()),
     preferUrgent: v.optional(v.boolean()),
@@ -81,10 +79,39 @@ export const upsert = mutation({
     const data = {
       ...args,
       // Convert null to undefined so the field is removed from the document
-      maxCommuteMinutes:
-        args.maxCommuteMinutes === null ? undefined : args.maxCommuteMinutes,
+      maxCommuteMinutes: args.maxCommuteMinutes === null ? undefined : args.maxCommuteMinutes,
       updatedAt: Date.now(),
       workosUserId: identity.subject,
+    }
+
+    if (existing) {
+      await ctx.db.patch(existing._id, data)
+      return existing._id
+    }
+
+    return await ctx.db.insert('jobPreferences', data)
+  },
+  returns: v.id('jobPreferences'),
+})
+
+export const upsertInternal = internalMutation({
+  args: {
+    maxCommuteMinutes: v.optional(v.union(v.literal(10), v.literal(30), v.literal(60))),
+    requirePublicTransit: v.optional(v.boolean()),
+    workosUserId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { workosUserId, ...updates } = args
+
+    const existing = await ctx.db
+      .query('jobPreferences')
+      .withIndex('by_workos_user_id', q => q.eq('workosUserId', workosUserId))
+      .unique()
+
+    const data = {
+      ...updates,
+      updatedAt: Date.now(),
+      workosUserId,
     }
 
     if (existing) {

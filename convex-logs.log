@@ -1,0 +1,223 @@
+
+
+
+
+
+
+
+
+
+1/3/2026, 2:15:38 PM [CONVEX A(jobMatcher/actions:startSearch)] [LOG] '[JobMatcher] Starting search for user=user_01KCAFXC49Z691PF6MYZ0E3HRF, prompt="find me a job"'
+1/3/2026, 2:15:38 PM [CONVEX A(jobMatcher/actions:startSearch)] [LOG] '[JobMatcher] Created thread=m579ws9mc4qtv9s4gp5gdnrrrd7ygbfr'
+1/3/2026, 2:15:39 PM [CONVEX A(jobMatcher/actions:startSearch)] [LOG] '[Tool:showPlan] "Finding jobs for you" with 4 steps'
+1/3/2026, 2:15:40 PM [CONVEX A(jobMatcher/actions:startSearch)] [LOG] '[Tool:getMyResume] skills=false, summary=false, exp=1, edu=1'
+1/3/2026, 2:15:40 PM [CONVEX A(jobMatcher/actions:startSearch)] [LOG] '[Tool:getMyJobPreferences] home=true, transit=true, commute=30min'
+1/3/2026, 2:15:41 PM [CONVEX A(jobMatcher/actions:startSearch)] [LOG] '[Tool:askQuestion] question="What kind of work do you want?...", options=6'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] submitToolResult START: toolCallId=functions.askQuestion:3 toolName=askQuestion'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] Found 10 messages in thread'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[0] _id=ks767rpegwtt82shdnb1xrybsd7ygb3y order=0 stepOrder=9 parts=[text::]'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[1] _id=ks70xaan3hxa5xf4x02aj86fgn7ygjda order=0 stepOrder=8 parts=[tool-result:askQuestion:functions.askQuestion:3]'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[2] _id=ks7cqednm5mmer478jrr5g40jn7yhr34 order=0 stepOrder=7 parts=[tool-call:askQuestion:functions.askQuestion:3]'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[3] _id=ks73f0y0ep49pd6n72ax51j86n7yhr08 order=0 stepOrder=6 parts=[tool-result:getMyJobPreferences:functions.getMyJobPreferences:2]'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[4] _id=ks7b0bg9fe4svz9z2cjznkzfth7yhasx order=0 stepOrder=5 parts=[tool-call:getMyJobPreferences:functions.getMyJobPreferences:2]'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[5] _id=ks70fzn7pnafva0mhsyqkeyr2d7yhevs order=0 stepOrder=4 parts=[tool-result:getMyResume:functions.getMyResume:1]'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[6] _id=ks73cxqgseaysjd5ghq6ggxq4x7yhx42 order=0 stepOrder=3 parts=[tool-call:getMyResume:functions.getMyResume:1]'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[7] _id=ks75984wyysss3xghbr46pywrh7yhw2p order=0 stepOrder=2 parts=[tool-result:showPlan:functions.showPlan:0]'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[8] _id=ks725ftc0kb0aka4mj8nzmf7097yg3ha order=0 stepOrder=1 parts=[tool-call:showPlan:functions.showPlan:0]'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[9] _id=ks74wsaz0e77vzmf8mzrca1hjh7yhhsv order=0 stepOrder=0 parts=[]'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] Found toolCallMessage: _id=ks7cqednm5mmer478jrr5g40jn7yhr34 order=0 stepOrder=7'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] Saved tool-result message: messageId=ks705c5fz79kwr8q32eq9m9zn97yhtbg'
+1/3/2026, 2:15:48 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] Continuing thread, streaming with promptMessageId=ks705c5fz79kwr8q32eq9m9zn97yhtbg'
+1/3/2026, 2:15:48 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'retail'
+    }
+  },
+  toolCallId: 'functions.askQuestion:3',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:49 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'retail'
+    }
+  },
+  toolCallId: 'functions.askQuestion:3',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:49 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[Tool:showPlan] "Finding jobs for you" with 4 steps'
+1/3/2026, 2:15:49 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'retail'
+    }
+  },
+  toolCallId: 'functions.askQuestion:3',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:50 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[Tool:askQuestion] question="What shifts work for you?...", options=4'
+1/3/2026, 2:15:50 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'retail'
+    }
+  },
+  toolCallId: 'functions.askQuestion:3',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:50 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'retail'
+    }
+  },
+  toolCallId: 'functions.askQuestion:3',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:51 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] submitToolResult DONE'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] submitToolResult START: toolCallId=functions.askQuestion:5 toolName=askQuestion'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] Found 16 messages in thread'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[0] _id=ks7dydj7frk8yrm8c58jtg6x3h7yhd0g order=0 stepOrder=15 parts=[text::]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[1] _id=ks75zgeytztqd918n0hjn75anx7yg6be order=0 stepOrder=14 parts=[tool-result:askQuestion:functions.askQuestion:5]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[2] _id=ks70yth6d98hmg67mn9x8vhna17ygq94 order=0 stepOrder=13 parts=[tool-call:askQuestion:functions.askQuestion:5]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[3] _id=ks79qpsqmyxssydzrne7zwy6qn7yh73f order=0 stepOrder=12 parts=[tool-result:showPlan:functions.showPlan:4]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[4] _id=ks7ewehkstmvyn6erbsyz4yjzh7yhpv7 order=0 stepOrder=11 parts=[tool-call:showPlan:functions.showPlan:4]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[5] _id=ks705c5fz79kwr8q32eq9m9zn97yhtbg order=0 stepOrder=10 parts=[tool-result:askQuestion:functions.askQuestion:3]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[6] _id=ks767rpegwtt82shdnb1xrybsd7ygb3y order=0 stepOrder=9 parts=[text::]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[7] _id=ks70xaan3hxa5xf4x02aj86fgn7ygjda order=0 stepOrder=8 parts=[tool-result:askQuestion:functions.askQuestion:3]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[8] _id=ks7cqednm5mmer478jrr5g40jn7yhr34 order=0 stepOrder=7 parts=[tool-call:askQuestion:functions.askQuestion:3]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[9] _id=ks73f0y0ep49pd6n72ax51j86n7yhr08 order=0 stepOrder=6 parts=[tool-result:getMyJobPreferences:functions.getMyJobPreferences:2]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[10] _id=ks7b0bg9fe4svz9z2cjznkzfth7yhasx order=0 stepOrder=5 parts=[tool-call:getMyJobPreferences:functions.getMyJobPreferences:2]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[11] _id=ks70fzn7pnafva0mhsyqkeyr2d7yhevs order=0 stepOrder=4 parts=[tool-result:getMyResume:functions.getMyResume:1]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[12] _id=ks73cxqgseaysjd5ghq6ggxq4x7yhx42 order=0 stepOrder=3 parts=[tool-call:getMyResume:functions.getMyResume:1]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[13] _id=ks75984wyysss3xghbr46pywrh7yhw2p order=0 stepOrder=2 parts=[tool-result:showPlan:functions.showPlan:0]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[14] _id=ks725ftc0kb0aka4mj8nzmf7097yg3ha order=0 stepOrder=1 parts=[tool-call:showPlan:functions.showPlan:0]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] msg[15] _id=ks74wsaz0e77vzmf8mzrca1hjh7yhhsv order=0 stepOrder=0 parts=[]'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] Found toolCallMessage: _id=ks70yth6d98hmg67mn9x8vhna17ygq94 order=0 stepOrder=13'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] Saved tool-result message: messageId=ks7e6h5gb5r4sftb5wgf037wgs7yhskm'
+1/3/2026, 2:15:55 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] Continuing thread, streaming with promptMessageId=ks7e6h5gb5r4sftb5wgf037wgs7yhskm'
+1/3/2026, 2:15:55 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'retail'
+    }
+  },
+  toolCallId: 'functions.askQuestion:3',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:55 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'flexible'
+    }
+  },
+  toolCallId: 'functions.askQuestion:5',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:55 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'retail'
+    }
+  },
+  toolCallId: 'functions.askQuestion:3',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:55 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'flexible'
+    }
+  },
+  toolCallId: 'functions.askQuestion:5',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:56 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[Tool:searchJobs] query="retail", limit=5'
+1/3/2026, 2:15:57 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[Tool:searchJobs] → found=7, returned=5 jobs'
+1/3/2026, 2:15:57 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'retail'
+    }
+  },
+  toolCallId: 'functions.askQuestion:3',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:57 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'flexible'
+    }
+  },
+  toolCallId: 'functions.askQuestion:5',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:57 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[Tool:showPlan] "Finding jobs for you" with 4 steps'
+1/3/2026, 2:15:57 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'retail'
+    }
+  },
+  toolCallId: 'functions.askQuestion:3',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:57 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'flexible'
+    }
+  },
+  toolCallId: 'functions.askQuestion:5',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:58 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'retail'
+    }
+  },
+  toolCallId: 'functions.askQuestion:3',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:58 PM [CONVEX Q(jobMatcher/messages:listThreadMessages)] [WARN] 'Tool result without preceding tool call.. adding anyways' {
+  type: 'tool-result',
+  output: {
+    type: 'json',
+    value: {
+      selectedOption: 'flexible'
+    }
+  },
+  toolCallId: 'functions.askQuestion:5',
+  toolName: 'askQuestion'
+}
+1/3/2026, 2:15:58 PM [CONVEX A(jobMatcher/actions:submitToolResult)] [LOG] '[DUPE-DEBUG] submitToolResult DONE'

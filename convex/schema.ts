@@ -210,8 +210,10 @@ export default defineSchema({
     isochrones: v.optional(
       v.object({
         computedAt: v.number(),
+        originLat: v.number(),
+        originLon: v.number(),
         sixtyMinute: v.any(),
-        tenMinute: v.any(), // GeoJSON FeatureCollection
+        tenMinute: v.any(),
         thirtyMinute: v.any(),
       }),
     ),

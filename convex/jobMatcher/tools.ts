@@ -503,8 +503,8 @@ export const askQuestion = createTool({
         }),
       )
       .min(1)
-      .max(5)
-      .describe('2-5 quick-reply options. Each MUST have id and label properties.'),
+      .max(8)
+      .describe('2-8 quick-reply options. Each MUST have id and label properties.'),
     question: z.string().describe('The question to ask the user'),
   }),
   description: `Ask the user a clarifying question with quick-reply buttons.
@@ -521,21 +521,126 @@ Use this to gather missing information before searching:
 - Location preferences
 
 The user can click an option OR type their own answer.
-After receiving their response, proceed with the job search.`,
+After receiving their response, proceed with the job search.
+
+**DO NOT write any text message when calling this tool.**
+The UI displays the question and options automatically.
+Just call the tool with no accompanying text.`,
   handler: async (ctx, args) => {
-    // This tool is a passthrough - the UI handles rendering
-    // The return value shows up in the tool result
-    const allowFreeText = args.allowFreeText ?? true
     console.log(
-      `[Tool:askQuestion] question="${args.question.substring(0, 40)}...", options=${args.options.length}, freeText=${allowFreeText}`,
+      `[Tool:askQuestion] question="${args.question.substring(0, 40)}...", options=${args.options.length}`,
     )
-    return { ...args, allowFreeText }
+    return null
+  },
+})
+
+/**
+ * Display an action plan to show the user what you're doing
+ */
+export const showPlan = createTool({
+  args: z.object({
+    description: z.string().optional().describe('Brief description of the plan'),
+    id: z.string().describe('Unique identifier for this plan'),
+    title: z.string().describe('Title of the plan'),
+    todos: z
+      .array(
+        z.object({
+          description: z.string().optional().describe('Additional details'),
+          id: z.string().describe('Unique identifier for this todo'),
+          label: z.string().describe('Display text for this step'),
+          status: z
+            .enum(['pending', 'in_progress', 'completed', 'cancelled'])
+            .describe('Current status'),
+        }),
+      )
+      .min(1)
+      .describe('List of steps in the plan'),
+  }),
+  description: `Display your action plan to the user with progress tracking.
+
+Call this at the START of every new search to show what you're doing:
+- Loading your profile (in_progress)
+- Checking what info we need (pending)
+- Setting up search (pending)
+- Finding matching jobs (pending)
+
+Update the plan by calling this tool again with updated statuses.`,
+  handler: async (ctx, args) => {
+    console.log(`[Tool:showPlan] "${args.title}" with ${args.todos.length} steps`)
+    return args
+  },
+})
+
+/**
+ * Collect user's location and transport preferences in one multi-step UI
+ */
+export const collectLocation = createTool({
+  args: z.object({
+    reason: z.string().describe('Why we need their location (shown to user)'),
+  }),
+  description: `Show location setup UI to collect user's home location and transport preferences.
+
+This is a MULTI-STEP UI that collects:
+1. Home location (browser geolocation or manual address entry)
+2. Transport mode (car, public transit, or flexible)
+3. Max commute time (if public transit selected)
+
+The UI AUTOMATICALLY waits for transit zone computation if needed.
+User can skip entirely, resulting in search with no geo filtering.
+
+Returns complete location context including whether transit zones are ready.
+If user skips, returns { skipped: true }.
+
+IMPORTANT: Only call this if the user does NOT already have a home location set.
+Check getMyJobPreferences().hasHomeLocation first.
+
+**DO NOT write any text message when calling this tool.**
+The UI displays the location setup form automatically.
+Just call the tool with no accompanying text.`,
+  handler: async (ctx, args) => {
+    console.log(`[Tool:collectLocation] reason="${args.reason}"`)
+    return { ...args, status: 'awaiting_input' as const }
+  },
+})
+
+/**
+ * Save user preferences to their profile
+ */
+export const saveUserPreference = createTool({
+  args: z.object({
+    maxCommuteMinutes: z
+      .union([z.literal(10), z.literal(30), z.literal(60)])
+      .optional()
+      .describe('Max commute time in minutes (for transit users)'),
+    requirePublicTransit: z.boolean().optional().describe('Whether user requires public transit'),
+  }),
+  description: `Save user preferences to their profile for future searches.
+
+Call this when the user chooses "Save for future searches" after setting preferences.
+Only saves the fields that are provided.`,
+  handler: async (ctx, args) => {
+    if (!ctx.userId) throw new Error('Not authenticated')
+
+    console.log(
+      `[Tool:saveUserPreference] transit=${args.requirePublicTransit}, commute=${args.maxCommuteMinutes}`,
+    )
+
+    await ctx.runMutation(internal.jobPreferences.upsertInternal, {
+      maxCommuteMinutes: args.maxCommuteMinutes,
+      requirePublicTransit: args.requirePublicTransit,
+      workosUserId: ctx.userId,
+    })
+
+    return { preferences: args, saved: true }
   },
 })
 
 export const tools = {
   askQuestion,
+  collectLocation,
   getMyJobPreferences,
   getMyResume,
+  saveUserPreference,
   searchJobs,
+  showPlan,
 }

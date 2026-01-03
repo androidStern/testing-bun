@@ -26,6 +26,8 @@ const profileDocValidator = v.object({
   isochrones: v.optional(
     v.object({
       computedAt: v.number(),
+      originLat: v.number(),
+      originLon: v.number(),
       sixtyMinute: v.any(),
       tenMinute: v.any(),
       thirtyMinute: v.any(),
@@ -205,13 +207,13 @@ export const update = zodMutation({
   },
 })
 
-// Set user's home location and trigger isochrone computation
 export const setHomeLocation = zodMutation({
   args: z.object({
     lat: z.number(),
+    locationName: z.string().optional(),
     lon: z.number(),
   }),
-  handler: async (ctx, { lat, lon }) => {
+  handler: async (ctx, { lat, lon, locationName }) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error('Not authenticated')
 
@@ -225,8 +227,8 @@ export const setHomeLocation = zodMutation({
     await ctx.db.patch(profile._id, {
       homeLat: lat,
       homeLon: lon,
-      // Clear stale isochrones - will be recomputed
       isochrones: undefined,
+      location: locationName,
     })
 
     // Trigger isochrone computation via Inngest
@@ -241,7 +243,6 @@ export const setHomeLocation = zodMutation({
   returns: z.null(),
 })
 
-// Internal mutation called by Inngest to save computed isochrones
 export const saveIsochrones = internalMutation({
   args: {
     isochrones: v.object({
@@ -250,10 +251,30 @@ export const saveIsochrones = internalMutation({
       tenMinute: v.any(),
       thirtyMinute: v.any(),
     }),
+    originLat: v.number(),
+    originLon: v.number(),
     profileId: v.id('profiles'),
   },
-  handler: async (ctx, { profileId, isochrones }) => {
-    await ctx.db.patch(profileId, { isochrones })
+  handler: async (ctx, { profileId, originLat, originLon, isochrones }) => {
+    const profile = await ctx.db.get(profileId)
+
+    if (!profile) {
+      console.log('[saveIsochrones] Profile not found, skipping')
+      return null
+    }
+
+    if (profile.homeLat !== originLat || profile.homeLon !== originLon) {
+      console.log('[saveIsochrones] Stale computation (location changed), skipping')
+      return null
+    }
+
+    await ctx.db.patch(profileId, {
+      isochrones: {
+        ...isochrones,
+        originLat,
+        originLon,
+      },
+    })
     return null
   },
   returns: v.null(),

@@ -1,278 +1,281 @@
-import Typesense from "typesense";
-import type { CollectionCreateSchema } from "typesense/lib/Typesense/Collections";
-import type { SnagajobJob } from "../scrapers/snagajob";
-import type { TransitScore } from "../transit-scorer";
-import type { ShiftResult } from "./enrichment/shift-extractor";
-import type { SecondChanceScore } from "./enrichment/second-chance-scorer";
+import Typesense from 'typesense'
+import type Client from 'typesense/lib/Typesense/Client'
+import type { CollectionCreateSchema } from 'typesense/lib/Typesense/Collections'
+import type { SnagajobJob } from '../scrapers/snagajob'
+import type { TransitScore } from '../transit-scorer'
+import type { SecondChanceScore } from './enrichment/second-chance-scorer'
+import type { ShiftResult } from './enrichment/shift-extractor'
 
-let client: Typesense.Client | null = null;
+let client: Client | null = null
 
-export function getTypesense(): Typesense.Client {
+export function getTypesense(): Client {
   if (!client) {
-    const typesenseUrl = process.env.TYPESENSE_URL;
-    const apiKey = process.env.TYPESENSE_API_KEY;
+    const typesenseUrl = process.env.TYPESENSE_URL
+    const apiKey = process.env.TYPESENSE_API_KEY
 
     if (!typesenseUrl) {
-      throw new Error("TYPESENSE_URL environment variable is required");
+      throw new Error('TYPESENSE_URL environment variable is required')
     }
     if (!apiKey) {
-      throw new Error("TYPESENSE_API_KEY environment variable is required");
+      throw new Error('TYPESENSE_API_KEY environment variable is required')
     }
 
-    const url = new URL(typesenseUrl);
+    const url = new URL(typesenseUrl)
     client = new Typesense.Client({
+      apiKey,
+      connectionTimeoutSeconds: 10,
       nodes: [
         {
           host: url.hostname,
           port: parseInt(url.port) || 8108,
-          protocol: url.protocol.replace(":", "") as "http" | "https",
+          protocol: url.protocol.replace(':', '') as 'http' | 'https',
         },
       ],
-      apiKey,
-      connectionTimeoutSeconds: 10,
-    });
+    })
   }
-  return client;
+  return client
 }
 
-export const JOBS_COLLECTION = "jobs";
+export const JOBS_COLLECTION = 'jobs'
 
 export const jobsSchema: CollectionCreateSchema = {
-  name: JOBS_COLLECTION,
+  default_sorting_field: 'posted_at',
   fields: [
-    { name: "id", type: "string" },
-    { name: "external_id", type: "string" },
-    { name: "source", type: "string", facet: true },
-    { name: "title", type: "string" },
-    { name: "company", type: "string", facet: true },
-    { name: "description", type: "string", optional: true },
-    { name: "location", type: "geopoint", optional: true },
-    { name: "city", type: "string", facet: true, optional: true },
-    { name: "state", type: "string", facet: true, optional: true },
-    { name: "salary_min", type: "int32", optional: true },
-    { name: "salary_max", type: "int32", optional: true },
-    { name: "salary_type", type: "string", optional: true },
+    { name: 'id', type: 'string' },
+    { name: 'external_id', type: 'string' },
+    { facet: true, name: 'source', type: 'string' },
+    { name: 'title', type: 'string' },
+    { facet: true, name: 'company', type: 'string' },
+    { name: 'description', optional: true, type: 'string' },
+    { name: 'location', optional: true, type: 'geopoint' },
+    { facet: true, name: 'city', optional: true, type: 'string' },
+    { facet: true, name: 'state', optional: true, type: 'string' },
+    { name: 'salary_min', optional: true, type: 'int32' },
+    { name: 'salary_max', optional: true, type: 'int32' },
+    { name: 'salary_type', optional: true, type: 'string' },
 
     // Transit (from existing transit-scorer.ts)
-    { name: "transit_score", type: "int32", optional: true },
-    { name: "transit_distance", type: "float", optional: true },
-    { name: "bus_accessible", type: "bool", facet: true, optional: true },
-    { name: "rail_accessible", type: "bool", facet: true, optional: true },
+    { name: 'transit_score', optional: true, type: 'int32' },
+    { name: 'transit_distance', optional: true, type: 'float' },
+    { facet: true, name: 'bus_accessible', optional: true, type: 'bool' },
+    { facet: true, name: 'rail_accessible', optional: true, type: 'bool' },
 
     // Recovery-specific enrichment
-    { name: "shift_morning", type: "bool", facet: true, optional: true },
-    { name: "shift_afternoon", type: "bool", facet: true, optional: true },
-    { name: "shift_evening", type: "bool", facet: true, optional: true },
-    { name: "shift_overnight", type: "bool", facet: true, optional: true },
-    { name: "shift_flexible", type: "bool", facet: true, optional: true },
-    { name: "second_chance", type: "bool", facet: true, optional: true },
-    { name: "second_chance_score", type: "int32", optional: true },
-    { name: "second_chance_tier", type: "string", facet: true, optional: true },
-    { name: "second_chance_confidence", type: "float", optional: true },
+    { facet: true, name: 'shift_morning', optional: true, type: 'bool' },
+    { facet: true, name: 'shift_afternoon', optional: true, type: 'bool' },
+    { facet: true, name: 'shift_evening', optional: true, type: 'bool' },
+    { facet: true, name: 'shift_overnight', optional: true, type: 'bool' },
+    { facet: true, name: 'shift_flexible', optional: true, type: 'bool' },
+    { facet: true, name: 'second_chance', optional: true, type: 'bool' },
+    { name: 'second_chance_score', optional: true, type: 'int32' },
+    { facet: true, name: 'second_chance_tier', optional: true, type: 'string' },
+    { name: 'second_chance_confidence', optional: true, type: 'float' },
 
     // Job metadata
-    { name: "job_type", type: "string", facet: true, optional: true },
-    { name: "is_urgent", type: "bool", facet: true, optional: true },
-    { name: "is_easy_apply", type: "bool", facet: true, optional: true },
-    { name: "url", type: "string" },
-    { name: "posted_at", type: "int64" },
+    { facet: true, name: 'job_type', optional: true, type: 'string' },
+    { facet: true, name: 'is_urgent', optional: true, type: 'bool' },
+    { facet: true, name: 'is_easy_apply', optional: true, type: 'bool' },
+    { name: 'url', type: 'string' },
+    { name: 'posted_at', type: 'int64' },
   ],
-  default_sorting_field: "posted_at",
-};
+  name: JOBS_COLLECTION,
+}
 
 export async function ensureJobsCollection(): Promise<void> {
-  const typesense = getTypesense();
+  const typesense = getTypesense()
 
   try {
-    const existing = await typesense.collections(JOBS_COLLECTION).retrieve();
-    console.log("[Typesense] Collection 'jobs' already exists");
+    const existing = await typesense.collections(JOBS_COLLECTION).retrieve()
+    console.log("[Typesense] Collection 'jobs' already exists")
 
     // Check for missing fields and add them (skip reserved fields)
-    const existingFieldNames = new Set(existing.fields?.map((f) => f.name) || []);
-    const schemaFields = jobsSchema.fields || [];
-    const reservedFields = new Set(['id']); // Typesense reserved fields
+    const existingFieldNames = new Set(existing.fields?.map((f: { name: string }) => f.name) || [])
+    const schemaFields = jobsSchema.fields || []
+    const reservedFields = new Set(['id']) // Typesense reserved fields
 
     for (const field of schemaFields) {
       if (!existingFieldNames.has(field.name) && !reservedFields.has(field.name)) {
         try {
           await typesense.collections(JOBS_COLLECTION).update({
             fields: [field as any],
-          });
-          console.log(`[Typesense] Added missing field '${field.name}'`);
+          })
+          console.log(`[Typesense] Added missing field '${field.name}'`)
         } catch (err: any) {
-          console.error(`[Typesense] Failed to add field '${field.name}':`, err?.message);
+          console.error(`[Typesense] Failed to add field '${field.name}':`, err?.message)
         }
       }
     }
   } catch (err: any) {
     if (err?.httpStatus === 404) {
-      console.log("[Typesense] Creating 'jobs' collection...");
-      await typesense.collections().create(jobsSchema);
-      console.log("[Typesense] Collection 'jobs' created");
+      console.log("[Typesense] Creating 'jobs' collection...")
+      await typesense.collections().create(jobsSchema)
+      console.log("[Typesense] Collection 'jobs' created")
     } else {
-      throw err;
+      throw err
     }
   }
 }
 
 export interface EnrichedJob extends SnagajobJob {
-  transit?: TransitScore;
-  shifts?: ShiftResult;
-  secondChanceScore?: SecondChanceScore;
+  transit?: TransitScore
+  shifts?: ShiftResult
+  secondChanceScore?: SecondChanceScore
 }
 
 export interface TypesenseJobDocument {
-  id: string;
-  external_id: string;
-  source: string;
-  title: string;
-  company: string;
-  description?: string;
-  location?: [number, number]; // [lat, lng]
-  city?: string;
-  state?: string;
-  salary_min?: number;
-  salary_max?: number;
-  salary_type?: string;
-  transit_score?: number;
-  transit_distance?: number;
-  bus_accessible?: boolean;
-  rail_accessible?: boolean;
-  shift_morning?: boolean;
-  shift_afternoon?: boolean;
-  shift_evening?: boolean;
-  shift_overnight?: boolean;
-  shift_flexible?: boolean;
-  second_chance?: boolean;
-  second_chance_score?: number;
-  second_chance_tier?: string;
-  second_chance_confidence?: number;
-  job_type?: string;
-  is_urgent?: boolean;
-  is_easy_apply?: boolean;
-  url: string;
-  posted_at: number;
+  id: string
+  external_id: string
+  source: string
+  title: string
+  company: string
+  description?: string
+  location?: [number, number] // [lat, lng]
+  city?: string
+  state?: string
+  salary_min?: number
+  salary_max?: number
+  salary_type?: string
+  transit_score?: number
+  transit_distance?: number
+  bus_accessible?: boolean
+  rail_accessible?: boolean
+  shift_morning?: boolean
+  shift_afternoon?: boolean
+  shift_evening?: boolean
+  shift_overnight?: boolean
+  shift_flexible?: boolean
+  second_chance?: boolean
+  second_chance_score?: number
+  second_chance_tier?: string
+  second_chance_confidence?: number
+  job_type?: string
+  is_urgent?: boolean
+  is_easy_apply?: boolean
+  url: string
+  posted_at: number
 }
 
 export function toTypesenseDocument(
   job: EnrichedJob,
-  source: string = "snagajob"
+  source: string = 'snagajob',
 ): TypesenseJobDocument {
   const doc: TypesenseJobDocument = {
-    id: `${source}-${job.id}`,
+    company: job.company,
     external_id: job.id,
+    id: `${source}-${job.id}`,
+    posted_at: job.postedDate ? new Date(job.postedDate).getTime() : Date.now(),
     source,
     title: job.title,
-    company: job.company,
-    url: job.applyUrl || "",
-    posted_at: job.postedDate
-      ? new Date(job.postedDate).getTime()
-      : Date.now(),
-  };
+    url: job.applyUrl || '',
+  }
 
   // Location
   if (job.latitude && job.longitude) {
-    doc.location = [job.latitude, job.longitude];
+    doc.location = [job.latitude, job.longitude]
   }
-  if (job.city) doc.city = job.city;
-  if (job.state) doc.state = job.state;
+  if (job.city) doc.city = job.city
+  if (job.state) doc.state = job.state
 
   // Description
   if (job.descriptionText) {
-    doc.description = job.descriptionText.substring(0, 10000); // Truncate long descriptions
+    doc.description = job.descriptionText.substring(0, 10000) // Truncate long descriptions
   }
 
   // Salary
-  if (job.payMin) doc.salary_min = Math.round(job.payMin);
-  if (job.payMax) doc.salary_max = Math.round(job.payMax);
+  if (job.payMin) doc.salary_min = Math.round(job.payMin)
+  if (job.payMax) doc.salary_max = Math.round(job.payMax)
   if (job.payType) {
     // payType from snagajob API is numeric (1=hourly, etc)
     const payTypeMap: Record<string | number, string> = {
-      1: "hourly",
-      2: "salary",
-      3: "daily",
-      "hourly": "hourly",
-      "salary": "salary",
-      "daily": "daily",
-    };
-    doc.salary_type = payTypeMap[job.payType] || String(job.payType);
+      1: 'hourly',
+      2: 'salary',
+      3: 'daily',
+      daily: 'daily',
+      hourly: 'hourly',
+      salary: 'salary',
+    }
+    doc.salary_type = payTypeMap[job.payType] || String(job.payType)
   }
 
   // Transit enrichment
   if (job.transit) {
     // Convert letter grade to numeric score (0-100)
     const scoreMap: Record<string, number> = {
+      A: 85,
       'A+': 100,
-      'A': 85,
-      'B': 70,
-      'C': 50,
-      'D': 25,
-    };
-    doc.transit_score = scoreMap[job.transit.score] ?? 0;
-    doc.transit_distance = job.transit.distanceMiles;
-    doc.bus_accessible = !job.transit.nearbyRail && job.transit.nearbyStops > 0;
-    doc.rail_accessible = job.transit.nearbyRail;
+      B: 70,
+      C: 50,
+      D: 25,
+    }
+    doc.transit_score = scoreMap[job.transit.score] ?? 0
+    doc.transit_distance = job.transit.distanceMiles
+    doc.bus_accessible = !job.transit.nearbyRail && job.transit.nearbyStops > 0
+    doc.rail_accessible = job.transit.nearbyRail
   }
 
   // Shift enrichment
   if (job.shifts) {
-    doc.shift_morning = job.shifts.morning;
-    doc.shift_afternoon = job.shifts.afternoon;
-    doc.shift_evening = job.shifts.evening;
-    doc.shift_overnight = job.shifts.overnight;
-    doc.shift_flexible = job.shifts.flexible;
+    doc.shift_morning = job.shifts.morning
+    doc.shift_afternoon = job.shifts.afternoon
+    doc.shift_evening = job.shifts.evening
+    doc.shift_overnight = job.shifts.overnight
+    doc.shift_flexible = job.shifts.flexible
   }
 
   // Second chance enrichment (multi-signal scoring)
   if (job.secondChanceScore) {
-    doc.second_chance_score = job.secondChanceScore.score;
-    doc.second_chance_tier = job.secondChanceScore.tier;
-    doc.second_chance_confidence = job.secondChanceScore.confidence;
+    doc.second_chance_score = job.secondChanceScore.score
+    doc.second_chance_tier = job.secondChanceScore.tier
+    doc.second_chance_confidence = job.secondChanceScore.confidence
     // Derive legacy boolean from tier for backwards compatibility
-    doc.second_chance = job.secondChanceScore.tier === 'high' || job.secondChanceScore.tier === 'medium';
+    doc.second_chance =
+      job.secondChanceScore.tier === 'high' || job.secondChanceScore.tier === 'medium'
   }
 
   // Job metadata
-  if (job.jobType) doc.job_type = job.jobType;
-  doc.is_urgent = job.isUrgent;
-  doc.is_easy_apply = job.isEasyApply;
+  if (job.jobType) doc.job_type = job.jobType
+  doc.is_urgent = job.isUrgent
+  doc.is_easy_apply = job.isEasyApply
 
-  return doc;
+  return doc
 }
 
-export async function indexJob(job: EnrichedJob, source: string = "snagajob"): Promise<void> {
-  const typesense = getTypesense();
-  const doc = toTypesenseDocument(job, source);
-  await typesense.collections(JOBS_COLLECTION).documents().upsert(doc);
+export async function indexJob(job: EnrichedJob, source: string = 'snagajob'): Promise<void> {
+  const typesense = getTypesense()
+  const doc = toTypesenseDocument(job, source)
+  await typesense.collections(JOBS_COLLECTION).documents().upsert(doc)
 }
 
-export async function indexJobs(jobs: EnrichedJob[], source: string = "snagajob"): Promise<{ success: number; failed: number }> {
-  const typesense = getTypesense();
-  const docs = jobs.map((job) => toTypesenseDocument(job, source));
+export async function indexJobs(
+  jobs: EnrichedJob[],
+  source: string = 'snagajob',
+): Promise<{ success: number; failed: number }> {
+  const typesense = getTypesense()
+  const docs = jobs.map(job => toTypesenseDocument(job, source))
 
   const results = await typesense
     .collections(JOBS_COLLECTION)
     .documents()
-    .import(docs, { action: "upsert" });
+    .import(docs, { action: 'upsert' })
 
-  let success = 0;
-  let failed = 0;
+  let success = 0
+  let failed = 0
 
   for (const result of results) {
     if (result.success) {
-      success++;
+      success++
     } else {
-      failed++;
-      console.error("[Typesense] Failed to index job:", result.error);
+      failed++
+      console.error('[Typesense] Failed to index job:', result.error)
     }
   }
 
   // Throw if ALL jobs failed to index - indicates a systemic problem
   if (failed > 0 && failed === results.length) {
-    throw new Error(`All ${failed} jobs failed to index to Typesense`);
+    throw new Error(`All ${failed} jobs failed to index to Typesense`)
   }
 
-  return { success, failed };
+  return { failed, success }
 }
 
 /**
@@ -280,9 +283,9 @@ export async function indexJobs(jobs: EnrichedJob[], source: string = "snagajob"
  * Document ID format: `${source}-${externalId}`
  */
 export async function deleteJobDocument(typesenseId: string): Promise<void> {
-  const typesense = getTypesense();
-  await typesense.collections(JOBS_COLLECTION).documents(typesenseId).delete();
-  console.log(`[Typesense] Deleted job: ${typesenseId}`);
+  const typesense = getTypesense()
+  await typesense.collections(JOBS_COLLECTION).documents(typesenseId).delete()
+  console.log(`[Typesense] Deleted job: ${typesenseId}`)
 }
 
 /**
@@ -290,28 +293,28 @@ export async function deleteJobDocument(typesenseId: string): Promise<void> {
  * Returns counts of successful and failed deletions
  */
 export async function deleteJobDocuments(
-  typesenseIds: string[]
+  typesenseIds: string[],
 ): Promise<{ success: number; failed: number; errors: string[] }> {
-  const typesense = getTypesense();
-  let success = 0;
-  let failed = 0;
-  const errors: string[] = [];
+  const typesense = getTypesense()
+  let success = 0
+  let failed = 0
+  const errors: string[] = []
 
   for (const id of typesenseIds) {
     try {
-      await typesense.collections(JOBS_COLLECTION).documents(id).delete();
-      success++;
+      await typesense.collections(JOBS_COLLECTION).documents(id).delete()
+      success++
     } catch (err: any) {
       if (err?.httpStatus === 404) {
         // Already deleted, count as success
-        success++;
+        success++
       } else {
-        failed++;
-        errors.push(`${id}: ${err.message}`);
+        failed++
+        errors.push(`${id}: ${err.message}`)
       }
     }
   }
 
-  console.log(`[Typesense] Deleted ${success}/${typesenseIds.length} jobs`);
-  return { success, failed, errors };
+  console.log(`[Typesense] Deleted ${success}/${typesenseIds.length} jobs`)
+  return { errors, failed, success }
 }

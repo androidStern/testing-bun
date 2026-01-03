@@ -1,12 +1,10 @@
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
 import { Car, Clock, Shield, Zap } from 'lucide-react'
-
-import { api } from '../../../convex/_generated/api'
 import type { ReactNode } from 'react'
+import { api } from '../../../convex/_generated/api'
 
-
-export type FilterCategory = 'fairChance' | 'commute' | 'schedule' | 'quickApply'
+export type FilterCategory = 'location' | 'fairChance' | 'commute' | 'schedule' | 'quickApply'
 
 interface SummaryPart {
   icon: ReactNode
@@ -43,9 +41,7 @@ export function FilterSummaryBanner({ onCategoryClick }: FilterSummaryBannerProp
           >
             <span className='text-muted-foreground'>{part.icon}</span>
             <span>{part.text}</span>
-            {index < parts.length - 1 && (
-              <span className='ml-1 text-muted-foreground/50'>•</span>
-            )}
+            {index < parts.length - 1 && <span className='ml-1 text-muted-foreground/50'>•</span>}
           </button>
         ))}
       </div>
@@ -69,9 +65,7 @@ export interface JobPreferences {
   shiftOvernight?: boolean
 }
 
-function generateFilterSummary(
-  prefs: JobPreferences | null | undefined
-): Array<SummaryPart> {
+function generateFilterSummary(prefs: JobPreferences | null | undefined): Array<SummaryPart> {
   if (!prefs) return []
 
   const parts: Array<SummaryPart> = []
@@ -79,15 +73,15 @@ function generateFilterSummary(
   // Fair Chance
   if (prefs.requireSecondChance) {
     parts.push({
+      category: 'fairChance',
       icon: <Shield className='h-4 w-4' />,
       text: 'Fair chance only',
-      category: 'fairChance',
     })
   } else if (prefs.preferSecondChance) {
     parts.push({
+      category: 'fairChance',
       icon: <Shield className='h-4 w-4' />,
       text: 'Fair chance preferred',
-      category: 'fairChance',
     })
   }
 
@@ -107,15 +101,15 @@ function generateFilterSummary(
     }
     const transitText = transitParts.length > 0 ? ` ${transitParts.join(' ')}` : ''
     parts.push({
+      category: 'commute',
       icon: <Car className='h-4 w-4' />,
       text: `${prefs.maxCommuteMinutes} min${transitText}`,
-      category: 'commute',
     })
   } else if (prefs.requirePublicTransit) {
     parts.push({
+      category: 'commute',
       icon: <Car className='h-4 w-4' />,
       text: 'Transit accessible',
-      category: 'commute',
     })
   }
 
@@ -128,12 +122,11 @@ function generateFilterSummary(
   if (prefs.shiftFlexible) shifts.push('Flexible')
 
   if (shifts.length > 0) {
-    const shiftText =
-      shifts.length <= 2 ? shifts.join(' & ') : `${shifts.length} shift types`
+    const shiftText = shifts.length <= 2 ? shifts.join(' & ') : `${shifts.length} shift types`
     parts.push({
+      category: 'schedule',
       icon: <Clock className='h-4 w-4' />,
       text: shiftText,
-      category: 'schedule',
     })
   }
 
@@ -144,9 +137,9 @@ function generateFilterSummary(
 
   if (quickParts.length > 0) {
     parts.push({
+      category: 'quickApply',
       icon: <Zap className='h-4 w-4' />,
       text: quickParts.join(' & '),
-      category: 'quickApply',
     })
   }
 

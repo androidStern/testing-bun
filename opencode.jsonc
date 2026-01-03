@@ -14,9 +14,16 @@
     },
   },
   "model": "anthropic/claude-opus-4-5",
+  "mcp": {
+    "playwriter": {
+      "type": "local",
+      "command": ["npx", "playwriter@latest"],
+    },
+  },
   "permission": {
     "bash": {
       "*": "deny",
+      "wc *": "allow",
       "cat *": "allow",
       "find *": "allow",
       "npx *": "ask",
