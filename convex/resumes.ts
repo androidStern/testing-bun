@@ -5,12 +5,14 @@ import { zCustomMutation } from 'convex-helpers/server/zod4'
 import {
   educationFromDictationSchema,
   resumeExtractionSchema,
+  resumeFormSchema,
   resumeMutationSchema,
   summaryFromDictationSchema,
   workExperienceFromDictationSchema,
 } from '../src/lib/schemas/resume'
 
 import { action, internalQuery, mutation, query } from './_generated/server'
+import { authMutation } from './functions'
 
 const zodMutation = zCustomMutation(mutation, NoOp)
 
@@ -36,6 +38,10 @@ export const getByWorkosUserIdInternal = internalQuery({
   returns: v.any(),
 })
 
+/**
+ * @deprecated Use `upsertOwn` instead. This mutation accepts workosUserId as an argument
+ * which is a security risk. Kept for backwards compatibility during migration.
+ */
 export const upsert = zodMutation({
   args: resumeMutationSchema,
   handler: async (ctx, args) => {
@@ -57,6 +63,37 @@ export const upsert = zodMutation({
         ...args,
         createdAt: now,
         updatedAt: now,
+      })
+    }
+  },
+})
+
+export const upsertOwn = zodMutation({
+  args: resumeFormSchema,
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error('Not authenticated')
+    const workosUserId = identity.subject
+
+    const existing = await ctx.db
+      .query('resumes')
+      .withIndex('by_workos_user_id', q => q.eq('workosUserId', workosUserId))
+      .first()
+
+    const now = Date.now()
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        ...args,
+        updatedAt: now,
+      })
+      return existing._id
+    } else {
+      return await ctx.db.insert('resumes', {
+        ...args,
+        createdAt: now,
+        updatedAt: now,
+        workosUserId,
       })
     }
   },

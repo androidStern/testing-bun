@@ -58,7 +58,7 @@ export function JobMatcherRuntimeProvider({
 
   const handleAddToolResult = useCallback(
     async (options: AddToolResultOptions) => {
-      const interactiveTools = ['collectLocation', 'askQuestion']
+      const interactiveTools = ['collectLocation', 'collectResume', 'askQuestion']
       if (threadId && interactiveTools.includes(options.toolName)) {
         await submitToolResultAction({
           result: options.result,

@@ -9,12 +9,12 @@ import { useCallback, useMemo, useState } from 'react'
 import { Thread } from '@/components/assistant-ui/thread'
 import { api } from '../../../convex/_generated/api'
 import type { JobPreferences } from '../jobs/FilterSummaryBanner'
+import { ResumeUploadCard } from '../resume/ResumeUploadCard'
 import { Button } from '../ui/button'
 import { ChatHeader } from './ChatHeader'
 import { JobMatcherRuntimeProvider } from './JobMatcherRuntimeProvider'
 import { PlanHeader } from './PlanHeader'
 import { ResumeIncompleteCard } from './ResumeIncompleteCard'
-import { ResumeUploadCard } from './ResumeUploadCard'
 
 const RESUME_MIN_LENGTH = 100
 
@@ -62,6 +62,7 @@ function getResumeSubstantiveLength(resume: ResumeDoc | null | undefined): numbe
 
 import {
   CollectLocationToolUI,
+  CollectResumeToolUI,
   PreferencesToolUI,
   QuestionToolUI,
   ResumeToolUI,
@@ -229,9 +230,8 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
           <div className='flex flex-1 items-center justify-center p-4'>
             {resumeGateReason === 'missing' ? (
               <ResumeUploadCard
-                onComplete={handleResumeFlowComplete}
-                pendingSearch={pendingMessage}
-                workosUserId={user.id}
+                onComplete={() => handleResumeFlowComplete()}
+                pendingSearch={pendingMessage ?? undefined}
               />
             ) : (
               <ResumeIncompleteCard
@@ -316,6 +316,7 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
         <ResumeToolUI />
         <PreferencesToolUI />
         <CollectLocationToolUI />
+        <CollectResumeToolUI />
         <SearchJobsToolUI />
         <QuestionToolUI />
 

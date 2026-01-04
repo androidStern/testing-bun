@@ -8,9 +8,7 @@ import { tools } from './tools'
 
 // Model provider: 'kimi' | 'openai'
 // Set JOB_MATCHER_MODEL_PROVIDER env var to switch (default: kimi)
-const MODEL_PROVIDER = (process.env.JOB_MATCHER_MODEL_PROVIDER ?? 'kimi') as
-  | 'kimi'
-  | 'openai'
+const MODEL_PROVIDER = (process.env.JOB_MATCHER_MODEL_PROVIDER ?? 'kimi') as 'kimi' | 'openai'
 
 const groq = createGroq({
   apiKey: process.env.GROQ_API_KEY,
@@ -95,6 +93,8 @@ export const jobMatcherAgent = new Agent(components.agent, {
   ========================
   - ONE askQuestion per turn max. If called, it must be LAST. Do not write text after it.
   - ONE collectLocation per turn max. If called, it must be LAST. Do not write text after it.
+  - ONE collectResume per turn max. If called, it must be LAST. Do not write text after it.
+  - Only call collectResume when user explicitly asks to upload (e.g., clicks "Yes, I can upload one").
   - ONE searchJobs per turn max.
   - Never call searchJobs AFTER askQuestion in the same turn.
   - The only allowed combo with askQuestion + searchJobs is:
@@ -186,6 +186,29 @@ export const jobMatcherAgent = new Agent(components.agent, {
   Assistant -> searchJobs({
     query: "hiring now entry level",
     limit: 5
+  })
+  </example>
+
+  <example id="1b-cold-start-user-wants-to-upload">
+  Context: <user-context> shows Resume: NOT UPLOADED. Location is set.
+  User: "help me find a job"
+
+  Assistant -> askQuestion({
+    purpose: "discovery",
+    preamble: "A resume helps me match you better. You can skip it and I'll still search.",
+    question: "Do you want to add a resume?",
+    options: [
+      { id: "upload_yes", label: "Yes, I can upload one" },
+      { id: "upload_no", label: "Skip for now" },
+      { id: "no_resume", label: "I don't have a resume" }
+    ],
+    allowFreeText: false
+  })
+
+  User clicks: "Yes, I can upload one"
+
+  Assistant -> collectResume({
+    reason: "Upload your resume and I'll find jobs that match your experience."
   })
 
   Assistant -> askQuestion({

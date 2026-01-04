@@ -15,7 +15,7 @@ import TODOWRITE_DESCRIPTION from './todowrite.txt'
  * Uses jsonSchema() to separate API schema from validation logic.
  */
 const noArgsSchema = jsonSchema<Record<string, never>>(
-  { type: 'object', properties: {} },
+  { properties: {}, type: 'object' },
   {
     validate: (value: unknown) => {
       if (
@@ -25,7 +25,7 @@ const noArgsSchema = jsonSchema<Record<string, never>>(
       ) {
         return { success: true, value: {} as Record<string, never> }
       }
-      return { success: false, error: new Error('Expected null or empty object') }
+      return { error: new Error('Expected null or empty object'), success: false }
     },
   },
 )
@@ -584,7 +584,22 @@ User can skip, resulting in no geo filtering.`,
   inputSchema: z.object({
     reason: z.string().describe('Why we need their location (shown to user)'),
   }),
-  // NO execute function - waits for user input
+})
+
+export const collectResume = tool({
+  description: `Show resume upload UI when user explicitly asks to upload a resume.
+
+RULES:
+- Only call when user explicitly requests to upload (e.g., "I want to upload my resume", "Yes, I can upload one").
+- Do NOT call proactively to gate the user.
+- If called, it must be the FINAL tool call. STOP after calling.
+- Do NOT write text after calling this - the UI handles everything.
+
+The UI allows PDF/DOCX upload with drag-and-drop. User can skip if they change their mind.
+After upload, the resume is automatically included in the next turn's <user-context>.`,
+  inputSchema: z.object({
+    reason: z.string().describe('Why uploading helps (shown as card description)'),
+  }),
 })
 
 /**
@@ -680,6 +695,7 @@ export const todoRead = createTool({
 export const tools = {
   askQuestion,
   collectLocation,
+  collectResume,
   getMyJobPreferences,
   getMyResume,
   saveUserPreference,

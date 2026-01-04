@@ -15,6 +15,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { useState } from 'react'
+import { ResumeUploadCard, type ResumeUploadResult } from '@/components/resume/ResumeUploadCard'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import {
@@ -591,10 +592,57 @@ export const CollectLocationToolUI = makeAssistantToolUI<
   toolName: 'collectLocation',
 })
 
+interface CollectResumeArgs {
+  reason: string
+}
+
+interface CollectResumeResult {
+  uploaded?: boolean
+  skipped?: boolean
+}
+
+export const CollectResumeToolUI = makeAssistantToolUI<CollectResumeArgs, CollectResumeResult>({
+  render: ({ args, result, addResult }) => {
+    if (result?.skipped) {
+      return (
+        <ToolCard
+          detail='Continuing without resume'
+          icon={<FileText className='h-4 w-4' />}
+          status='complete'
+          title='Resume skipped'
+        />
+      )
+    }
+
+    if (result?.uploaded) {
+      return (
+        <ToolCard
+          detail='Ready for better job matches'
+          icon={<FileText className='h-4 w-4' />}
+          status='complete'
+          title='Resume uploaded'
+        />
+      )
+    }
+
+    return (
+      <ResumeUploadCard
+        onComplete={(uploadResult: ResumeUploadResult) =>
+          addResult({ skipped: !uploadResult.uploaded, uploaded: uploadResult.uploaded })
+        }
+        onSkip={() => addResult({ skipped: true })}
+        reason={args?.reason}
+      />
+    )
+  },
+  toolName: 'collectResume',
+})
+
 export const jobMatcherToolUIs = [
   ResumeToolUI,
   PreferencesToolUI,
   SearchJobsToolUI,
   QuestionToolUI,
   CollectLocationToolUI,
+  CollectResumeToolUI,
 ]
