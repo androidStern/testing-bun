@@ -1,6 +1,5 @@
 'use client'
 
-import { ComposerPrimitive } from '@assistant-ui/react'
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
 import { useAction } from 'convex/react'
@@ -14,6 +13,53 @@ import { Button } from '../ui/button'
 import { ChatHeader } from './ChatHeader'
 import { JobMatcherRuntimeProvider } from './JobMatcherRuntimeProvider'
 import { PlanHeader } from './PlanHeader'
+import { ResumeIncompleteCard } from './ResumeIncompleteCard'
+import { ResumeUploadCard } from './ResumeUploadCard'
+
+const RESUME_MIN_LENGTH = 100
+
+type ResumeDoc = {
+  summary?: string
+  skills?: string
+  workExperience?: Array<{
+    position?: string
+    company?: string
+    description?: string
+    achievements?: string
+  }>
+  education?: Array<{
+    institution?: string
+    degree?: string
+    field?: string
+    description?: string
+  }>
+}
+
+function getResumeSubstantiveLength(resume: ResumeDoc | null | undefined): number {
+  if (!resume) return 0
+
+  const parts: string[] = []
+
+  if (resume.summary) parts.push(resume.summary)
+  if (resume.skills) parts.push(resume.skills)
+
+  for (const exp of resume.workExperience ?? []) {
+    if (exp.position) parts.push(exp.position)
+    if (exp.company) parts.push(exp.company)
+    if (exp.description) parts.push(exp.description)
+    if (exp.achievements) parts.push(exp.achievements)
+  }
+
+  for (const edu of resume.education ?? []) {
+    if (edu.institution) parts.push(edu.institution)
+    if (edu.degree) parts.push(edu.degree)
+    if (edu.field) parts.push(edu.field)
+    if (edu.description) parts.push(edu.description)
+  }
+
+  return parts.join('').length
+}
+
 import {
   CollectLocationToolUI,
   PreferencesToolUI,
@@ -21,6 +67,16 @@ import {
   ResumeToolUI,
   SearchJobsToolUI,
 } from './tools'
+
+interface JobMatcherChatProps {
+  user: {
+    id: string
+    email?: string
+    firstName?: string | null
+    lastName?: string | null
+  }
+  initialPrompt?: string
+}
 
 /**
  * JobMatcherChat - Main chat interface for the job matcher.
@@ -31,19 +87,26 @@ import {
  * - Quick-reply buttons for Q&A
  * - Inline job results
  * - Persistent chat history via Convex Agent
+ * - Resume upload gate on first message (if no resume exists)
  */
-export function JobMatcherChat() {
+export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
   const [lastSearchPrefs, setLastSearchPrefs] = useState<JobPreferences | null>(null)
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null)
+  const [resumeGateReason, setResumeGateReason] = useState<'missing' | 'incomplete' | null>(null)
+  const [inputValue, setInputValue] = useState(initialPrompt ?? '')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Check for existing active search
+  const { data: existingResume } = useQuery(
+    convexQuery(api.resumes.getByWorkosUserId, { workosUserId: user.id }),
+  )
+
   const {
     data: activeSearch,
     isLoading: searchLoading,
     refetch: refetchSearch,
   } = useQuery(convexQuery(api.jobMatcher.queries.getActiveSearch, {}))
 
-  // Get current preferences for filter change detection
   const { data: currentPrefs } = useQuery(convexQuery(api.jobPreferences.get, {}))
 
   // Detect if filters have changed since last search
@@ -55,9 +118,9 @@ export function JobMatcherChat() {
   // Use active search's thread ID if available
   const threadId = activeThreadId ?? activeSearch?.threadId ?? null
 
-  // Actions
   const forceSearchAction = useAction(api.jobMatcher.actions.forceSearch)
   const cancelSearchAction = useAction(api.jobMatcher.actions.cancelSearch)
+  const startSearchAction = useAction(api.jobMatcher.actions.startSearch)
 
   // Track if we're in the middle of a force search
   const [isForceSearching, setIsForceSearching] = useState(false)
@@ -96,10 +159,53 @@ export function JobMatcherChat() {
     }
   }, [activeSearch, cancelSearchAction, refetchSearch])
 
-  // Redo search with updated filters
   const handleRedoSearch = useCallback(async () => {
     await handleForceSearch()
   }, [handleForceSearch])
+
+  const startSearch = useCallback(
+    async (text: string) => {
+      setIsSubmitting(true)
+      try {
+        const result = await startSearchAction({ prompt: text })
+        setActiveThreadId(result.threadId)
+        setInputValue('')
+        await refetchSearch()
+      } finally {
+        setIsSubmitting(false)
+      }
+    },
+    [startSearchAction, refetchSearch],
+  )
+
+  const handleWelcomeSubmit = useCallback(async () => {
+    const text = inputValue.trim()
+    if (!text) return
+
+    if (!existingResume) {
+      setPendingMessage(text)
+      setResumeGateReason('missing')
+      return
+    }
+
+    const substantiveLength = getResumeSubstantiveLength(existingResume)
+    if (substantiveLength < RESUME_MIN_LENGTH) {
+      setPendingMessage(text)
+      setResumeGateReason('incomplete')
+      return
+    }
+
+    await startSearch(text)
+  }, [inputValue, existingResume, startSearch])
+
+  const handleResumeFlowComplete = useCallback(async () => {
+    const message = pendingMessage
+    setPendingMessage(null)
+    setResumeGateReason(null)
+    if (message) {
+      await startSearch(message)
+    }
+  }, [pendingMessage, startSearch])
 
   // Loading state
   if (searchLoading) {
@@ -110,8 +216,34 @@ export function JobMatcherChat() {
     )
   }
 
-  // No active thread - show welcome screen
   if (!threadId) {
+    if (pendingMessage) {
+      return (
+        <div className='flex flex-col h-dvh'>
+          <ChatHeader
+            filtersChanged={false}
+            hasActiveThread={false}
+            isSearching={isForceSearching}
+            onForceSearch={handleForceSearch}
+          />
+          <div className='flex flex-1 items-center justify-center p-4'>
+            {resumeGateReason === 'missing' ? (
+              <ResumeUploadCard
+                onComplete={handleResumeFlowComplete}
+                pendingSearch={pendingMessage}
+                workosUserId={user.id}
+              />
+            ) : (
+              <ResumeIncompleteCard
+                onComplete={handleResumeFlowComplete}
+                pendingSearch={pendingMessage}
+              />
+            )}
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className='flex flex-col h-dvh'>
         <ChatHeader
@@ -121,33 +253,45 @@ export function JobMatcherChat() {
           onForceSearch={handleForceSearch}
         />
 
-        <div className='flex-1 flex items-center justify-center p-4'>
-          <div className='w-full max-w-2xl flex flex-col'>
+        <div className='flex flex-1 items-center justify-center p-4'>
+          <div className='flex w-full max-w-2xl flex-col'>
             <div className='mb-4'>
-              <div className='flex items-center gap-2 mb-2'>
+              <div className='mb-2 flex items-center gap-2'>
                 <MessageSquare className='h-6 w-6' />
                 <h1 className='text-3xl font-semibold'>AI JOB SEARCH</h1>
               </div>
             </div>
 
-            <JobMatcherRuntimeProvider onThreadCreated={handleThreadCreated} threadId={null}>
-              <ComposerPrimitive.Root className='flex flex-col gap-3'>
-                <ComposerPrimitive.Input
-                  asChild
-                  placeholder="I'll help you find jobs that match your skills and preferences. Start by telling me what you're looking for, or click 'Search Now' to find matches based on your profile."
+            <div className='flex flex-col gap-3'>
+              <textarea
+                className='w-full min-h-40 resize-none border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                disabled={isSubmitting}
+                onChange={e => setInputValue(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleWelcomeSubmit()
+                  }
+                }}
+                placeholder="I'll help you find jobs that match your skills and preferences. Start by telling me what you're looking for, or click 'Search Now' to find matches based on your profile."
+                value={inputValue}
+              />
+              <div className='flex justify-end gap-2'>
+                <Button
+                  className='gap-2'
+                  disabled={isSubmitting || !inputValue.trim()}
+                  onClick={handleWelcomeSubmit}
+                  size='lg'
                 >
-                  <textarea className='w-full min-h-40 border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none' />
-                </ComposerPrimitive.Input>
-                <div className='flex gap-2 justify-end'>
-                  <ComposerPrimitive.Send asChild>
-                    <Button className='gap-2' size='lg'>
-                      <Send className='h-4 w-4' />
-                      Search Now
-                    </Button>
-                  </ComposerPrimitive.Send>
-                </div>
-              </ComposerPrimitive.Root>
-            </JobMatcherRuntimeProvider>
+                  {isSubmitting ? (
+                    <Loader2 className='h-4 w-4 animate-spin' />
+                  ) : (
+                    <Send className='h-4 w-4' />
+                  )}
+                  Search Now
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -172,7 +172,7 @@ export function ResumePreview({ formData }: ResumePreviewProps) {
           <TabsTrigger value='ats-tips'>ATS Tips</TabsTrigger>
         </TabsList>
         <TabsContent value='preview'>
-          <Card className='p-8 bg-white'>
+          <Card className='p-8 bg-white text-gray-900'>
             <div className='max-w-[800px] mx-auto space-y-6' ref={resumeRef}>
               {/* Header */}
               <div className='text-center space-y-2'>
@@ -283,7 +283,7 @@ export function ResumePreview({ formData }: ResumePreviewProps) {
                   <h2 className='text-lg font-semibold border-b border-gray-300 pb-2'>Skills</h2>
                   <div className='flex flex-wrap gap-2'>
                     {formatSkills(formData.skills).map((skill, index) => (
-                      <span className='bg-muted px-3 py-1 text-sm' key={index}>
+                      <span className='bg-gray-100 px-3 py-1 text-sm text-gray-900' key={index}>
                         {skill}
                       </span>
                     ))}

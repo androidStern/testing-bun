@@ -1,4 +1,5 @@
 import { Download, Eye, Printer, Upload } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { ExpandableTabs } from '@/components/resume/expandable-tabs'
 
 interface ResumeToolbarProps {
@@ -8,6 +9,7 @@ interface ResumeToolbarProps {
   onPrint: () => void
   isImporting?: boolean
   isDownloading?: boolean
+  backButton?: ReactNode
 }
 
 export function ResumeToolbar({
@@ -17,13 +19,14 @@ export function ResumeToolbar({
   onPrint,
   isImporting = false,
   isDownloading = false,
+  backButton,
 }: ResumeToolbarProps) {
   const tabs = [
-    { title: isImporting ? 'Importing...' : 'Import', icon: Upload },
-    { title: 'Preview', icon: Eye },
+    { icon: Upload, title: isImporting ? 'Importing...' : 'Import' },
+    { icon: Eye, title: 'Preview' },
     { type: 'separator' as const },
-    { title: isDownloading ? 'Downloading...' : 'Download', icon: Download },
-    { title: 'Print', icon: Printer },
+    { icon: Download, title: isDownloading ? 'Downloading...' : 'Download' },
+    { icon: Printer, title: 'Print' },
   ]
 
   const handleTabChange = (index: number | null) => {
@@ -48,11 +51,14 @@ export function ResumeToolbar({
 
   return (
     <div className='sticky top-0 z-40 flex justify-end py-3'>
-      <ExpandableTabs
-        tabs={tabs}
-        onChange={handleTabChange}
-        className='bg-card border-border shadow-lg'
-      />
+      <div className='flex flex-col items-end gap-1'>
+        {backButton}
+        <ExpandableTabs
+          className='bg-card border-border shadow-lg'
+          onChange={handleTabChange}
+          tabs={tabs}
+        />
+      </div>
     </div>
   )
 }
