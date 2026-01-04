@@ -763,15 +763,25 @@ export const adminDeleteJobs = adminAction({
 // ============================================================================
 
 /**
- * Internal query to get all job IDs (for nuking)
+ * Internal query to get a batch of job IDs (for nuking)
  */
-export const listAll = internalQuery({
-  args: {},
-  handler: async ctx => {
-    const jobs = await ctx.db.query('scrapedJobs').collect()
-    return jobs.map(j => ({ _id: j._id }))
+export const listBatch = internalQuery({
+  args: { cursor: v.union(v.string(), v.null()) },
+  handler: async (ctx, { cursor }) => {
+    const results = await ctx.db
+      .query('scrapedJobs')
+      .paginate({ cursor: cursor ?? null, numItems: 500 })
+    return {
+      cursor: results.continueCursor,
+      ids: results.page.map(j => j._id),
+      isDone: results.isDone,
+    }
   },
-  returns: v.array(v.object({ _id: v.id('scrapedJobs') })),
+  returns: v.object({
+    cursor: v.string(),
+    ids: v.array(v.id('scrapedJobs')),
+    isDone: v.boolean(),
+  }),
 })
 
 /**
@@ -781,7 +791,9 @@ export const deleteJobsBatch = internalMutation({
   args: { ids: v.array(v.id('scrapedJobs')) },
   handler: async (ctx, { ids }) => {
     for (const id of ids) {
-      await ctx.db.delete(id)
+      try {
+        await ctx.db.delete(id)
+      } catch {}
     }
     return null
   },
@@ -801,19 +813,19 @@ export const nukeAllJobs = adminAction({
       throw new Error('SCRAPE_PIPELINE_URL or SCRAPE_PIPELINE_SECRET not configured')
     }
 
-    // 1. Get all scrapedJobs from Convex
-    const allJobs = await ctx.runQuery(internal.scrapedJobs.listAll)
-    const allIds = allJobs.map(j => j._id)
-
-    // 2. Delete from Convex in batches (if any exist)
     let convexDeleted = 0
-    if (allIds.length > 0) {
-      const BATCH_SIZE = 100
-      for (let i = 0; i < allIds.length; i += BATCH_SIZE) {
-        const batch = allIds.slice(i, i + BATCH_SIZE)
-        await ctx.runMutation(internal.scrapedJobs.deleteJobsBatch, { ids: batch })
-        convexDeleted += batch.length
+    let paginationCursor: string | null = null
+    let isDone = false
+
+    while (!isDone) {
+      const result: { ids: Id<'scrapedJobs'>[]; cursor: string; isDone: boolean } =
+        await ctx.runQuery(internal.scrapedJobs.listBatch, { cursor: paginationCursor })
+      if (result.ids.length > 0) {
+        await ctx.runMutation(internal.scrapedJobs.deleteJobsBatch, { ids: result.ids })
+        convexDeleted += result.ids.length
       }
+      isDone = result.isDone
+      paginationCursor = result.cursor
     }
 
     // 3. Call pipeline to nuke Typesense + Redis

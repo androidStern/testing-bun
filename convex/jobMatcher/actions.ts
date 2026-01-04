@@ -6,6 +6,7 @@ import { internal } from '../_generated/api'
 import { action } from '../_generated/server'
 
 import { jobMatcherAgent } from './agent'
+import { buildUserContext } from './context'
 
 /**
  * Start a new job search or continue an existing one
@@ -25,7 +26,31 @@ export const startSearch = action({
       `[JobMatcher] Starting search for user=${userId}, prompt="${args.prompt.substring(0, 50)}${args.prompt.length > 50 ? '...' : ''}"`,
     )
 
-    // If continuing existing thread
+    const [resume, preferences, profile] = await Promise.all([
+      ctx.runQuery(internal.resumes.getByWorkosUserIdInternal, { workosUserId: userId }),
+      ctx.runQuery(internal.jobPreferences.getByWorkosUserIdInternal, { workosUserId: userId }),
+      ctx.runQuery(internal.profiles.getByWorkosUserIdInternal, { workosUserId: userId }),
+    ])
+
+    const userContext = buildUserContext({
+      preferences: preferences
+        ? {
+            maxCommuteMinutes: preferences.maxCommuteMinutes ?? undefined,
+            preferSecondChance: preferences.preferSecondChance ?? undefined,
+            requireSecondChance: preferences.requireSecondChance ?? undefined,
+            shiftAfternoon: preferences.shiftAfternoon ?? undefined,
+            shiftEvening: preferences.shiftEvening ?? undefined,
+            shiftFlexible: preferences.shiftFlexible ?? undefined,
+            shiftMorning: preferences.shiftMorning ?? undefined,
+            shiftOvernight: preferences.shiftOvernight ?? undefined,
+          }
+        : null,
+      profile,
+      resume,
+      searchCount: 0,
+      sessionStarted: new Date(),
+    })
+
     if (args.threadId) {
       console.log(`[JobMatcher] Continuing thread=${args.threadId}`)
 
@@ -34,27 +59,29 @@ export const startSearch = action({
         userId,
       })
 
-      // Stream agent response - tool results (including job cards) are rendered by the UI
-      await thread.streamText({ prompt: args.prompt }, { saveStreamDeltas: true })
+      await thread.streamText(
+        { prompt: args.prompt, system: userContext },
+        { saveStreamDeltas: true },
+      )
 
       return { isNew: false, threadId: args.threadId }
     }
 
-    // Create new thread
     const { thread, threadId } = await jobMatcherAgent.createThread(ctx, {
       userId,
     })
     console.log(`[JobMatcher] Created thread=${threadId}`)
 
-    // Record the search
     await ctx.runMutation(internal.jobMatcher.queries.createSearchRecord, {
       initialPrompt: args.prompt,
       threadId,
       workosUserId: userId,
     })
 
-    // Stream agent response - tool results (including job cards) are rendered by the UI
-    await thread.streamText({ prompt: args.prompt }, { saveStreamDeltas: true })
+    await thread.streamText(
+      { prompt: args.prompt, system: userContext },
+      { saveStreamDeltas: true },
+    )
 
     return { isNew: true, threadId }
   },
@@ -64,9 +91,6 @@ export const startSearch = action({
   }),
 })
 
-/**
- * Send a follow-up message to an existing search
- */
 export const sendMessage = action({
   args: {
     message: v.string(),
@@ -76,13 +100,42 @@ export const sendMessage = action({
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error('Not authenticated')
 
-    const { thread } = await jobMatcherAgent.continueThread(ctx, {
-      threadId: args.threadId,
-      userId: identity.subject,
+    const userId = identity.subject
+
+    const [resume, preferences, profile] = await Promise.all([
+      ctx.runQuery(internal.resumes.getByWorkosUserIdInternal, { workosUserId: userId }),
+      ctx.runQuery(internal.jobPreferences.getByWorkosUserIdInternal, { workosUserId: userId }),
+      ctx.runQuery(internal.profiles.getByWorkosUserIdInternal, { workosUserId: userId }),
+    ])
+
+    const userContext = buildUserContext({
+      preferences: preferences
+        ? {
+            maxCommuteMinutes: preferences.maxCommuteMinutes ?? undefined,
+            preferSecondChance: preferences.preferSecondChance ?? undefined,
+            requireSecondChance: preferences.requireSecondChance ?? undefined,
+            shiftAfternoon: preferences.shiftAfternoon ?? undefined,
+            shiftEvening: preferences.shiftEvening ?? undefined,
+            shiftFlexible: preferences.shiftFlexible ?? undefined,
+            shiftMorning: preferences.shiftMorning ?? undefined,
+            shiftOvernight: preferences.shiftOvernight ?? undefined,
+          }
+        : null,
+      profile,
+      resume,
+      searchCount: 0,
+      sessionStarted: new Date(),
     })
 
-    // Stream agent response - tool results (including job cards) are rendered by the UI
-    await thread.streamText({ prompt: args.message }, { saveStreamDeltas: true })
+    const { thread } = await jobMatcherAgent.continueThread(ctx, {
+      threadId: args.threadId,
+      userId,
+    })
+
+    await thread.streamText(
+      { prompt: args.message, system: userContext },
+      { saveStreamDeltas: true },
+    )
 
     return null
   },
@@ -121,27 +174,16 @@ export const submitToolResult = action({
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error('Not authenticated')
 
+    const userId = identity.subject
+
     console.log(
-      `[DUPE-DEBUG] submitToolResult START: toolCallId=${args.toolCallId} toolName=${args.toolName}`,
+      `[submitToolResult] toolCallId=${args.toolCallId} toolName=${args.toolName}`,
     )
 
+    // Find the message containing the tool call
     const allMessages = await jobMatcherAgent.listMessages(ctx, {
       paginationOpts: { cursor: null, numItems: 100 },
       threadId: args.threadId,
-    })
-
-    console.log(`[DUPE-DEBUG] Found ${allMessages.page.length} messages in thread`)
-    allMessages.page.forEach((msg, i) => {
-      const content = msg.message?.content
-      const parts = Array.isArray(content)
-        ? content.map(p => {
-            const part = p as { type?: string; toolCallId?: string; toolName?: string }
-            return `${part.type}:${part.toolName || ''}:${part.toolCallId || ''}`
-          })
-        : []
-      console.log(
-        `[DUPE-DEBUG] msg[${i}] _id=${msg._id} order=${msg.order} stepOrder=${msg.stepOrder} parts=[${parts.join(', ')}]`,
-      )
     })
 
     const toolCallMessage = allMessages.page.find(msg => {
@@ -155,15 +197,43 @@ export const submitToolResult = action({
     })
 
     if (!toolCallMessage) {
-      console.log(`[DUPE-DEBUG] ERROR: Tool call not found: ${args.toolCallId}`)
       throw new Error(`Tool call not found: ${args.toolCallId}`)
     }
 
-    console.log(
-      `[DUPE-DEBUG] Found toolCallMessage: _id=${toolCallMessage._id} order=${toolCallMessage.order} stepOrder=${toolCallMessage.stepOrder}`,
-    )
+    console.log(`[submitToolResult] Found tool call message: ${toolCallMessage._id}`)
 
-    // Save the tool-result message (stays at same order as the tool-call)
+    // Fetch fresh context
+    const [resume, preferences, profile] = await Promise.all([
+      ctx.runQuery(internal.resumes.getByWorkosUserIdInternal, { workosUserId: userId }),
+      ctx.runQuery(internal.jobPreferences.getByWorkosUserIdInternal, { workosUserId: userId }),
+      ctx.runQuery(internal.profiles.getByWorkosUserIdInternal, { workosUserId: userId }),
+    ])
+
+    const userContext = buildUserContext({
+      preferences: preferences
+        ? {
+            maxCommuteMinutes: preferences.maxCommuteMinutes ?? undefined,
+            preferSecondChance: preferences.preferSecondChance ?? undefined,
+            requireSecondChance: preferences.requireSecondChance ?? undefined,
+            shiftAfternoon: preferences.shiftAfternoon ?? undefined,
+            shiftEvening: preferences.shiftEvening ?? undefined,
+            shiftFlexible: preferences.shiftFlexible ?? undefined,
+            shiftMorning: preferences.shiftMorning ?? undefined,
+            shiftOvernight: preferences.shiftOvernight ?? undefined,
+          }
+        : null,
+      profile,
+      resume,
+      searchCount: 0,
+      sessionStarted: new Date(),
+    })
+
+    const { thread } = await jobMatcherAgent.continueThread(ctx, {
+      threadId: args.threadId,
+      userId,
+    })
+
+    // Save the tool-result message
     await jobMatcherAgent.saveMessage(ctx, {
       message: {
         content: [
@@ -176,45 +246,21 @@ export const submitToolResult = action({
         ],
         role: 'tool',
       },
-      promptMessageId: toolCallMessage._id,
       threadId: args.threadId,
     })
 
-    console.log(`[DUPE-DEBUG] Saved tool-result message`)
+    console.log(`[submitToolResult] Saved tool-result, continuing from original message: ${toolCallMessage._id}`)
 
-    // Format the user's selection for display in conversation history
-    const resultValue = args.result as { selectedOption?: string; selectedOptions?: string[] }
-    const selectionText = resultValue.selectedOptions
-      ? resultValue.selectedOptions.join(', ')
-      : resultValue.selectedOption ?? JSON.stringify(args.result)
+    // Continue with generateText using ORIGINAL tool-call message ID
+    // This matches the official human-in-the-loop pattern and avoids
+    // the saveStreamDeltas bug (Issue #185) that causes duplicate rendering
+    await jobMatcherAgent.generateText(
+      ctx,
+      { threadId: args.threadId, userId },
+      { promptMessageId: toolCallMessage._id, system: userContext },
+    )
 
-    // Save a synthetic user message to increment order (creates proper turn boundary)
-    // This fixes the duplicate tool UI bug caused by all messages having order=0
-    // The providerMetadata marker allows the frontend to render this as a compact chip
-    const { messageId: userMessageId } = await jobMatcherAgent.saveMessage(ctx, {
-      message: {
-        content: selectionText,
-        role: 'user',
-      },
-      metadata: {
-        providerMetadata: {
-          custom: { isSyntheticSelection: true },
-        },
-      },
-      threadId: args.threadId,
-    })
-
-    console.log(`[DUPE-DEBUG] Saved synthetic user message: messageId=${userMessageId}`)
-
-    const { thread } = await jobMatcherAgent.continueThread(ctx, {
-      threadId: args.threadId,
-      userId: identity.subject,
-    })
-
-    // Continue from the user message (new order) to properly separate conversation turns
-    console.log(`[DUPE-DEBUG] Continuing thread from user message: promptMessageId=${userMessageId}`)
-    await thread.streamText({ promptMessageId: userMessageId }, { saveStreamDeltas: true })
-    console.log(`[DUPE-DEBUG] submitToolResult DONE`)
+    console.log(`[submitToolResult] Done`)
 
     return null
   },
@@ -235,7 +281,31 @@ export const forceSearch = action({
 
     console.log(`[JobMatcher] Force search for user=${userId}`)
 
-    // If continuing existing thread
+    const [resume, preferences, profile] = await Promise.all([
+      ctx.runQuery(internal.resumes.getByWorkosUserIdInternal, { workosUserId: userId }),
+      ctx.runQuery(internal.jobPreferences.getByWorkosUserIdInternal, { workosUserId: userId }),
+      ctx.runQuery(internal.profiles.getByWorkosUserIdInternal, { workosUserId: userId }),
+    ])
+
+    const userContext = buildUserContext({
+      preferences: preferences
+        ? {
+            maxCommuteMinutes: preferences.maxCommuteMinutes ?? undefined,
+            preferSecondChance: preferences.preferSecondChance ?? undefined,
+            requireSecondChance: preferences.requireSecondChance ?? undefined,
+            shiftAfternoon: preferences.shiftAfternoon ?? undefined,
+            shiftEvening: preferences.shiftEvening ?? undefined,
+            shiftFlexible: preferences.shiftFlexible ?? undefined,
+            shiftMorning: preferences.shiftMorning ?? undefined,
+            shiftOvernight: preferences.shiftOvernight ?? undefined,
+          }
+        : null,
+      profile,
+      resume,
+      searchCount: 0,
+      sessionStarted: new Date(),
+    })
+
     if (args.threadId) {
       console.log(`[JobMatcher] Force search on existing thread=${args.threadId}`)
 
@@ -244,27 +314,29 @@ export const forceSearch = action({
         userId,
       })
 
-      // Stream agent response - tool results (including job cards) are rendered by the UI
-      await thread.streamText({ prompt: forcePrompt }, { saveStreamDeltas: true })
+      await thread.streamText(
+        { prompt: forcePrompt, system: userContext },
+        { saveStreamDeltas: true },
+      )
 
       return { isNew: false, threadId: args.threadId }
     }
 
-    // Create new thread
     const { thread, threadId } = await jobMatcherAgent.createThread(ctx, {
       userId,
     })
     console.log(`[JobMatcher] Created thread=${threadId} for force search`)
 
-    // Record the search
     await ctx.runMutation(internal.jobMatcher.queries.createSearchRecord, {
       initialPrompt: forcePrompt,
       threadId,
       workosUserId: userId,
     })
 
-    // Stream agent response - tool results (including job cards) are rendered by the UI
-    await thread.streamText({ prompt: forcePrompt }, { saveStreamDeltas: true })
+    await thread.streamText(
+      { prompt: forcePrompt, system: userContext },
+      { saveStreamDeltas: true },
+    )
 
     return { isNew: true, threadId }
   },

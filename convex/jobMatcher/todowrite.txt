@@ -1,0 +1,76 @@
+Update the visible session plan (HUD) to show the user what you're working on.
+
+Todos are for USER CLARITY at key moments, not for tracking every micro-step.
+
+## When to Use This Tool
+
+Use todoWrite ONLY at these moments:
+
+1. **Start of a job-search mission** - When you're about to search for the first time in a session
+2. **Major pivot** - User significantly changes direction (different industry, different requirements)
+3. **Starting application help** - User picks a job and wants help applying (tailoring resume, next steps)
+
+## When NOT to Use This Tool
+
+Do NOT use todoWrite for:
+- Simple Q&A ("What's a fair-chance employer?")
+- Mid-search refinements ("Show me more warehouse jobs")
+- Every tool call or micro-step
+- Conversational turns
+- Discovery questions before the first search
+
+## Guidelines
+
+- Keep it to 3-5 items maximum
+- Update at milestones only, not every turn
+- Complete existing todos before adding new ones
+- Use short, scannable task names (3-8 words)
+- Cancel tasks that become irrelevant when user pivots
+
+## Task States
+
+- pending: Task not yet started
+- in_progress: Currently working on (only ONE at a time)
+- completed: Task finished
+- cancelled: Task no longer needed
+
+## Examples
+
+### CORRECT: Session start
+User: "Help me find warehouse jobs"
+*Calls todoWrite with:*
+- Confirm job direction (in_progress)
+- Get location if needed (pending)
+- Search matching jobs (pending)
+- Present results with next steps (pending)
+
+### CORRECT: Major pivot
+User: "Actually, let's try food service instead"
+*Updates todos - cancels warehouse tasks, adds food service tasks*
+
+### CORRECT: Application phase
+User: "I want to apply to the Amazon warehouse job"
+*Calls todoWrite with:*
+- Review job requirements (in_progress)
+- Tailor resume highlights (pending)
+- Prepare application tips (pending)
+
+### WRONG: Every search refinement
+User: "Show me jobs with morning shifts only"
+*Calls todoWrite* ← Don't do this. Just do the search.
+
+### WRONG: Simple questions
+User: "What does second-chance employer mean?"
+*Calls todoWrite* ← Don't do this. Just answer.
+
+### WRONG: After every tool call
+*Calls searchJobs*
+*Calls todoWrite to mark search complete*
+*Calls askQuestion*
+*Calls todoWrite to mark question asked*
+← This is spammy. Only update at milestones.
+
+## Key Principle
+
+The todo list is a heads-up display for the user, not your internal task tracker.
+Use it sparingly so it stays meaningful.

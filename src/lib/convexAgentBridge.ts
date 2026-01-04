@@ -3,31 +3,21 @@ import type { UIMessage } from '@convex-dev/agent/react'
 
 type ConvexUIMessage = UIMessage
 
-let convertCounter = 0
-
 export function convertConvexMessage(msg: ConvexUIMessage): ThreadMessageLike {
-  const callId = ++convertCounter
   const content = convertParts(msg.parts)
-
-  console.log(
-    `[DUPE-DEBUG] convertConvexMessage #${callId}: id=${msg.id} key=${msg.key} order=${msg.order} stepOrder=${msg.stepOrder} role=${msg.role} partsIn=${msg.parts?.length} partsOut=${content.length}`,
-  )
-
-  // Access message-level metadata (passed to saveMessage, returned on UIMessage.metadata)
-  // For user messages with string content, providerMetadata isn't on parts - it's on msg.metadata
-  const msgMeta = msg.metadata as
-    | { providerMetadata?: { custom?: { isSyntheticSelection?: boolean } } }
-    | undefined
-  const isSyntheticSelection = msgMeta?.providerMetadata?.custom?.isSyntheticSelection === true
 
   const baseMessage = {
     content: content as ThreadMessageLike['content'],
     createdAt: new Date(msg._creationTime),
-    id: msg.id, // Use actual Convex _id so it can be passed as promptMessageId
+    // Use `key` as the stable identifier. The `id` field differs between
+    // pending DB records and streaming updates (stream:xxx prefix), which
+    // causes assistant-ui to create duplicate branches. `key` is stable
+    // across both states. Store original id in metadata for promptMessageId.
+    id: msg.key,
     metadata: {
       custom: {
         agentName: msg.agentName,
-        isSyntheticSelection,
+        convexId: msg.id, // Original Convex _id for promptMessageId
         key: msg.key,
         order: msg.order,
         stepOrder: msg.stepOrder,
@@ -139,7 +129,6 @@ function convertParts(parts: ConvexUIMessage['parts']): readonly ContentPart[] {
 
   for (const part of parts) {
     if (INTERNAL_PART_TYPES.has(part.type)) {
-      console.log(`[DUPE-DEBUG] convertParts: SKIPPING internal type=${part.type}`)
       continue
     }
 
@@ -167,10 +156,6 @@ function convertParts(parts: ConvexUIMessage['parts']): readonly ContentPart[] {
         throw new Error(`Missing toolCallId for tool: ${toolName}`)
       }
 
-      console.log(
-        `[DUPE-DEBUG] convertParts: ADDING tool-call type=${part.type} toolName=${toolName} toolCallId=${toolCallId} state=${toolPart.state}`,
-      )
-
       result.push({
         args: (toolPart.input ?? {}) as Readonly<Record<string, unknown>>,
         result: toolPart.output,
@@ -189,8 +174,6 @@ function convertParts(parts: ConvexUIMessage['parts']): readonly ContentPart[] {
       } as const)
       continue
     }
-
-    console.log(`[DUPE-DEBUG] convertParts: SKIPPING unknown type=${part.type}`)
   }
 
   return result

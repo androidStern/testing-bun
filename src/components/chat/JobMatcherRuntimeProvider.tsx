@@ -9,17 +9,10 @@ import {
 } from '@assistant-ui/react'
 import { useUIMessages } from '@convex-dev/agent/react'
 import { useAction } from 'convex/react'
-import { type ReactNode, useCallback, useEffect, useMemo, useRef } from 'react'
+import { type ReactNode, useCallback, useMemo } from 'react'
 
 import { api } from '../../../convex/_generated/api'
 import { convertConvexMessage, isMessageStreaming } from '../../lib/convexAgentBridge'
-
-let debugCounter = 0
-function debugLog(tag: string, data: unknown) {
-  const id = ++debugCounter
-  const ts = new Date().toISOString()
-  console.log(`[DUPE-DEBUG-${id}] [${ts}] [${tag}]`, JSON.stringify(data, null, 2))
-}
 
 interface JobMatcherRuntimeProviderProps {
   threadId: string | null
@@ -47,34 +40,6 @@ export function JobMatcherRuntimeProvider({
     { initialNumItems: 50, stream: true },
   )
 
-  const prevMsgCount = useRef(0)
-  useEffect(() => {
-    if (!messages?.length) return
-    if (messages.length === prevMsgCount.current) return
-    prevMsgCount.current = messages.length
-
-    debugLog('RAW_MESSAGES', {
-      count: messages.length,
-      messages: messages.map(m => ({
-        id: m.id,
-        key: m.key,
-        order: m.order,
-        parts: m.parts?.map(p => ({
-          state: 'state' in p ? p.state : undefined,
-          toolCallId: 'toolCallId' in p ? p.toolCallId : undefined,
-          toolName: 'toolName' in p ? p.toolName : undefined,
-          type: p.type,
-        })),
-        partsCount: m.parts?.length,
-        role: m.role,
-        status: m.status,
-        stepOrder: m.stepOrder,
-        text: m.text?.substring(0, 50),
-      })),
-      threadId,
-    })
-  }, [messages, threadId])
-
   const startSearchAction = useAction(api.jobMatcher.actions.startSearch)
   const sendMessageAction = useAction(api.jobMatcher.actions.sendMessage)
   const submitToolResultAction = useAction(api.jobMatcher.actions.submitToolResult)
@@ -91,50 +56,16 @@ export function JobMatcherRuntimeProvider({
     messages: messages ?? [],
   })
 
-  const prevConvCount = useRef(0)
-  useEffect(() => {
-    if (!convertedMessages?.length) return
-    if (convertedMessages.length === prevConvCount.current) return
-    prevConvCount.current = convertedMessages.length
-
-    debugLog('CONVERTED_MESSAGES', {
-      count: convertedMessages.length,
-      messages: convertedMessages.map(m => ({
-        content: Array.isArray(m.content)
-          ? m.content.map(c => ({
-              toolCallId: 'toolCallId' in c ? c.toolCallId : undefined,
-              toolName: 'toolName' in c ? c.toolName : undefined,
-              type: c.type,
-            }))
-          : [],
-        contentCount: Array.isArray(m.content) ? m.content.length : 0,
-        id: m.id,
-        role: m.role,
-      })),
-      threadId,
-    })
-  }, [convertedMessages, threadId])
-
   const handleAddToolResult = useCallback(
     async (options: AddToolResultOptions) => {
-      debugLog('ADD_TOOL_RESULT_CALLED', {
-        messageId: options.messageId,
-        result: options.result,
-        threadId,
-        toolCallId: options.toolCallId,
-        toolName: options.toolName,
-      })
-
       const interactiveTools = ['collectLocation', 'askQuestion']
       if (threadId && interactiveTools.includes(options.toolName)) {
-        debugLog('SUBMITTING_TOOL_RESULT', { threadId, toolCallId: options.toolCallId })
         await submitToolResultAction({
           result: options.result,
           threadId,
           toolCallId: options.toolCallId,
           toolName: options.toolName,
         })
-        debugLog('TOOL_RESULT_SUBMITTED', { threadId, toolCallId: options.toolCallId })
       }
     },
     [threadId, submitToolResultAction],

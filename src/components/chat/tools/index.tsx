@@ -15,7 +15,6 @@ import {
   Zap,
 } from 'lucide-react'
 import { useState } from 'react'
-import { Plan } from '@/components/tool-ui/plan'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import {
@@ -131,6 +130,8 @@ interface QuestionArgs {
     description?: string
   }>
   allowFreeText?: boolean
+  purpose?: 'discovery' | 'post_search' | 'application' | 'other'
+  preamble?: string
 }
 
 /**
@@ -461,13 +462,10 @@ export const SearchJobsToolUI = makeAssistantToolUI<SearchJobsArgs, SearchResult
   toolName: 'searchJobs',
 })
 
-/**
- * Tool UI for askQuestion - shows OptionList for Q&A
- */
 export const QuestionToolUI = makeAssistantToolUI<QuestionArgs, { selectedOption: string }>({
-  render: ({ args, result, status, addResult }) => {
-    // Only show confirmed state when user has actually selected an option
-    // (tool returns args immediately, but selectedOption only exists after user interaction)
+  render: ({ args, result, addResult }) => {
+    const preamble = args?.preamble
+
     if (result?.selectedOption) {
       const confirmedOptions =
         args?.options?.filter(
@@ -479,26 +477,35 @@ export const QuestionToolUI = makeAssistantToolUI<QuestionArgs, { selectedOption
       const confirmed = confirmedOptions.map(o => o.id)
 
       return (
-        <OptionList
-          confirmed={confirmed}
-          options={args?.options ?? []}
-          question={args?.question ?? ''}
-        />
+        <div>
+          {preamble && (
+            <p className='text-sm text-muted-foreground mb-3 leading-relaxed'>{preamble}</p>
+          )}
+          <OptionList
+            confirmed={confirmed}
+            options={args?.options ?? []}
+            question={args?.question ?? ''}
+          />
+        </div>
       )
     }
 
-    // Interactive state
     return (
-      <OptionList
-        allowFreeText={args?.allowFreeText ?? true}
-        onConfirm={selection => {
-          if (selection.length > 0) {
-            addResult({ selectedOption: selection[0] })
-          }
-        }}
-        options={args?.options ?? []}
-        question={args?.question ?? ''}
-      />
+      <div>
+        {preamble && (
+          <p className='text-sm text-muted-foreground mb-3 leading-relaxed'>{preamble}</p>
+        )}
+        <OptionList
+          allowFreeText={args?.allowFreeText ?? true}
+          onConfirm={selection => {
+            if (selection.length > 0) {
+              addResult({ selectedOption: selection[0] })
+            }
+          }}
+          options={args?.options ?? []}
+          question={args?.question ?? ''}
+        />
+      </div>
     )
   },
   toolName: 'askQuestion',
@@ -517,50 +524,6 @@ function formatFilters(filters?: SearchJobsArgs['filters']): string | undefined 
 
   return parts.length > 0 ? `Filters: ${parts.join(', ')}` : undefined
 }
-
-interface ShowPlanArgs {
-  id: string
-  title: string
-  description?: string
-  todos: Array<{
-    id: string
-    label: string
-    status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
-    description?: string
-  }>
-}
-
-export const ShowPlanToolUI = makeAssistantToolUI<ShowPlanArgs, ShowPlanArgs>({
-  render: ({ args, result, status }) => {
-    const plan = result ?? args
-    console.log(
-      '[MSGDUPE] ShowPlanToolUI RENDER: planId=' +
-        (plan?.id ?? 'none') +
-        ' title=' +
-        (plan?.title ?? 'none') +
-        ' todosCount=' +
-        (plan?.todos?.length ?? 0) +
-        ' status=' +
-        JSON.stringify(status),
-    )
-
-    if (!plan?.todos) {
-      console.log('[MSGDUPE] ShowPlanToolUI returning null - no todos')
-      return null
-    }
-
-    return (
-      <Plan
-        description={plan.description}
-        id={plan.id}
-        showProgress
-        title={plan.title}
-        todos={plan.todos}
-      />
-    )
-  },
-  toolName: 'showPlan',
-})
 
 interface CollectLocationArgs {
   reason: string
@@ -633,6 +596,5 @@ export const jobMatcherToolUIs = [
   PreferencesToolUI,
   SearchJobsToolUI,
   QuestionToolUI,
-  ShowPlanToolUI,
   CollectLocationToolUI,
 ]

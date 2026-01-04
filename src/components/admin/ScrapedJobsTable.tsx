@@ -8,9 +8,9 @@ import { getRouteApi } from '@tanstack/react-router'
 import { useAction } from 'convex/react'
 import { PlusCircle, Trash2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { useDebouncedCallback } from 'use-debounce'
 import { api } from '../../../convex/_generated/api'
-import { toast } from 'sonner'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,26 +67,27 @@ const FILTER_KEYS = [
 type FilterKey = (typeof FILTER_KEYS)[number]
 
 // Filter configuration for UI display
-const FILTER_CONFIG: Record<FilterKey, { category: string; label: string; displayLabel: string }> = {
-  tier_high: { category: 'Second Chance', label: 'High', displayLabel: 'Tier: High' },
-  tier_medium: { category: 'Second Chance', label: 'Medium', displayLabel: 'Tier: Medium' },
-  tier_low: { category: 'Second Chance', label: 'Low', displayLabel: 'Tier: Low' },
-  tier_unlikely: { category: 'Second Chance', label: 'Unlikely', displayLabel: 'Tier: Unlikely' },
-  tier_unknown: { category: 'Second Chance', label: 'Unknown', displayLabel: 'Tier: Unknown' },
-  source_snagajob: { category: 'Source', label: 'Snagajob', displayLabel: 'Snagajob' },
-  source_craigslist: { category: 'Source', label: 'Craigslist', displayLabel: 'Craigslist' },
-  job_type_job: { category: 'Type', label: 'Job', displayLabel: 'Job' },
-  job_type_gig: { category: 'Type', label: 'Gig', displayLabel: 'Gig' },
-  bus_accessible: { category: 'Transit', label: 'Bus', displayLabel: 'Bus' },
-  rail_accessible: { category: 'Transit', label: 'Rail', displayLabel: 'Rail' },
-  shift_morning: { category: 'Shifts', label: 'Morning', displayLabel: 'Morning' },
-  shift_afternoon: { category: 'Shifts', label: 'Afternoon', displayLabel: 'Afternoon' },
-  shift_evening: { category: 'Shifts', label: 'Evening', displayLabel: 'Evening' },
-  shift_overnight: { category: 'Shifts', label: 'Overnight', displayLabel: 'Overnight' },
-  shift_flexible: { category: 'Shifts', label: 'Flexible', displayLabel: 'Flexible' },
-  is_urgent: { category: 'Metadata', label: 'Urgent', displayLabel: 'Urgent' },
-  is_easy_apply: { category: 'Metadata', label: 'Easy Apply', displayLabel: 'Easy Apply' },
-}
+const FILTER_CONFIG: Record<FilterKey, { category: string; label: string; displayLabel: string }> =
+  {
+    bus_accessible: { category: 'Transit', displayLabel: 'Bus', label: 'Bus' },
+    is_easy_apply: { category: 'Metadata', displayLabel: 'Easy Apply', label: 'Easy Apply' },
+    is_urgent: { category: 'Metadata', displayLabel: 'Urgent', label: 'Urgent' },
+    job_type_gig: { category: 'Type', displayLabel: 'Gig', label: 'Gig' },
+    job_type_job: { category: 'Type', displayLabel: 'Job', label: 'Job' },
+    rail_accessible: { category: 'Transit', displayLabel: 'Rail', label: 'Rail' },
+    shift_afternoon: { category: 'Shifts', displayLabel: 'Afternoon', label: 'Afternoon' },
+    shift_evening: { category: 'Shifts', displayLabel: 'Evening', label: 'Evening' },
+    shift_flexible: { category: 'Shifts', displayLabel: 'Flexible', label: 'Flexible' },
+    shift_morning: { category: 'Shifts', displayLabel: 'Morning', label: 'Morning' },
+    shift_overnight: { category: 'Shifts', displayLabel: 'Overnight', label: 'Overnight' },
+    source_craigslist: { category: 'Source', displayLabel: 'Craigslist', label: 'Craigslist' },
+    source_snagajob: { category: 'Source', displayLabel: 'Snagajob', label: 'Snagajob' },
+    tier_high: { category: 'Second Chance', displayLabel: 'Tier: High', label: 'High' },
+    tier_low: { category: 'Second Chance', displayLabel: 'Tier: Low', label: 'Low' },
+    tier_medium: { category: 'Second Chance', displayLabel: 'Tier: Medium', label: 'Medium' },
+    tier_unknown: { category: 'Second Chance', displayLabel: 'Tier: Unknown', label: 'Unknown' },
+    tier_unlikely: { category: 'Second Chance', displayLabel: 'Tier: Unlikely', label: 'Unlikely' },
+  }
 
 // Category display order
 const CATEGORY_ORDER = ['Second Chance', 'Source', 'Type', 'Transit', 'Shifts', 'Metadata']
@@ -167,18 +168,25 @@ async function searchTypesense(params: SearchParams): Promise<SearchResult> {
 
   // Handle other boolean filters normally (skip tier_, source_, job_type_ which are handled above)
   for (const [key, value] of Object.entries(params.filters)) {
-    if (value === true && !key.startsWith('tier_') && !key.startsWith('source_') && !key.startsWith('job_type_')) {
+    if (
+      value === true &&
+      !key.startsWith('tier_') &&
+      !key.startsWith('source_') &&
+      !key.startsWith('job_type_')
+    ) {
       filterParts.push(`${key}:=true`)
     }
   }
 
   const searchParams = new URLSearchParams({
+    exclude_fields: 'embedding',
     facet_by:
       'source,job_type,city,state,second_chance_tier,bus_accessible,rail_accessible,shift_morning,shift_afternoon,shift_evening,shift_overnight,shift_flexible,is_urgent,is_easy_apply',
     page: String(params.page),
     per_page: '25',
+    prefix: 'false',
     q: params.q || '*',
-    query_by: 'title,company,description',
+    query_by: 'embedding',
   })
 
   if (filterParts.length > 0) {
@@ -413,7 +421,9 @@ export function ScrapedJobsTable() {
           placeholder='Search jobs...'
           value={inputQuery}
         />
-        {isPending && <span className='text-sm text-muted-foreground self-center'>Searching...</span>}
+        {isPending && (
+          <span className='text-sm text-muted-foreground self-center'>Searching...</span>
+        )}
         {selectedIds.size > 0 && (
           <Button disabled={deleting} onClick={handleDeleteSelected} variant='destructive'>
             <Trash2 className='h-4 w-4 mr-2' />
@@ -439,12 +449,17 @@ export function ScrapedJobsTable() {
 
         {/* Active filter pills */}
         {FILTER_KEYS.filter(key => filters[key] === true).map(key => (
-          <FilterPill key={key} filterKey={key} onRemove={() => toggleFilter(key)} />
+          <FilterPill filterKey={key} key={key} onRemove={() => toggleFilter(key)} />
         ))}
 
         {/* Clear all */}
         {hasActiveFilters && (
-          <Button className='h-7 text-muted-foreground' onClick={clearAllFilters} size='sm' variant='ghost'>
+          <Button
+            className='h-7 text-muted-foreground'
+            onClick={clearAllFilters}
+            size='sm'
+            variant='ghost'
+          >
             Clear all
           </Button>
         )}
@@ -676,14 +691,11 @@ function FilterDropdownContent({
   onToggle: (key: FilterKey) => void
 }) {
   // Group filters by category
-  const grouped = FILTER_KEYS.reduce<Record<string, Array<FilterKey>>>(
-    (acc, key) => {
-      const { category } = FILTER_CONFIG[key]
-      ;(acc[category] ??= []).push(key)
-      return acc
-    },
-    {},
-  )
+  const grouped = FILTER_KEYS.reduce<Record<string, Array<FilterKey>>>((acc, key) => {
+    const { category } = FILTER_CONFIG[key]
+    ;(acc[category] ??= []).push(key)
+    return acc
+  }, {})
 
   return (
     <div className='max-h-72 overflow-y-auto p-1'>

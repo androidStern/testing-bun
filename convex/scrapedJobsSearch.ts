@@ -110,13 +110,15 @@ export const search = adminAction({
       .collections('jobs')
       .documents()
       .search({
+        exclude_fields: 'embedding',
         facet_by:
           'source,city,state,second_chance_tier,bus_accessible,rail_accessible,shift_morning,shift_afternoon,shift_evening,shift_overnight,shift_flexible,is_urgent,is_easy_apply',
         filter_by: filterParts.length > 0 ? filterParts.join(' && ') : undefined,
         page: args.page || 1,
         per_page: args.perPage || 25,
+        prefix: false,
         q: args.query || '*',
-        query_by: 'title,company,description',
+        query_by: 'embedding',
       })
 
     return results
@@ -252,13 +254,15 @@ export const searchWithGeo = internalAction({
       .collections('jobs')
       .documents()
       .search({
+        exclude_fields: 'embedding',
         filter_by: filterParts.length > 0 ? filterParts.join(' && ') : undefined,
         per_page: args.limit || 50,
+        prefix: false,
         q: args.query || '*',
-        query_by: 'title,company,description',
+        query_by: 'embedding',
         sort_by: args.geoFilter
           ? `location(${args.geoFilter.lat}, ${args.geoFilter.lng}):asc`
-          : 'posted_at:desc',
+          : '_vector_distance:asc',
       })
 
     return results

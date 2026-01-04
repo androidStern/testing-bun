@@ -1,7 +1,8 @@
-// Re-export all job matcher functionality
-
-export * from './actions' // Node.js actions for AI
+export * from './actions'
 export { jobMatcherAgent } from './agent'
+export { buildUserContext } from './context'
 export * from './messages'
-export * from './queries' // queries and mutations (non-Node)
+export * from './plan'
+export * from './queries'
+export { getApplicableReminders, REMINDERS } from './reminders'
 export { tools } from './tools'

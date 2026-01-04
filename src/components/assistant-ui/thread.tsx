@@ -259,13 +259,17 @@ const AssistantActionBar: FC = () => {
 }
 
 const UserMessage: FC = () => {
-  // Check if this is a synthetic selection message (used as turn separator)
-  const isSyntheticSelection = useMessage(
-    state => (state.metadata?.custom as Record<string, unknown> | undefined)?.isSyntheticSelection === true,
-  )
+  // Check if this is a synthetic selection message by detecting [selected] prefix
+  const textContent = useMessage(state => {
+    const textPart = state.content.find(p => p.type === 'text')
+    return textPart && 'text' in textPart ? textPart.text : ''
+  })
+
+  const isSyntheticSelection = textContent.startsWith('[selected] ')
 
   // Render synthetic selections as compact chips
   if (isSyntheticSelection) {
+    const displayText = textContent.replace('[selected] ', '')
     return (
       <MessagePrimitive.Root
         className='mx-auto w-full max-w-(--thread-max-width) px-2 py-1'
@@ -273,7 +277,7 @@ const UserMessage: FC = () => {
       >
         <div className='flex justify-end'>
           <span className='text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full italic'>
-            <MessagePrimitive.Parts />
+            {displayText}
           </span>
         </div>
       </MessagePrimitive.Root>

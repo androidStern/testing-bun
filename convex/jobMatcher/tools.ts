@@ -1,8 +1,34 @@
 import { createTool } from '@convex-dev/agent'
+import { jsonSchema, tool } from 'ai'
 import { z } from 'zod'
 
 import { internal } from '../_generated/api'
 import { filterByIsochrone, type IsochroneData } from '../lib/geoFilter'
+
+import TODOWRITE_DESCRIPTION from './todowrite.txt'
+
+/**
+ * Schema for no-arg tools that works across providers.
+ * - OpenAI requires type: "object" in JSON Schema
+ * - Kimi sometimes returns null for empty args
+ *
+ * Uses jsonSchema() to separate API schema from validation logic.
+ */
+const noArgsSchema = jsonSchema<Record<string, never>>(
+  { type: 'object', properties: {} },
+  {
+    validate: (value: unknown) => {
+      if (
+        value === null ||
+        value === undefined ||
+        (typeof value === 'object' && Object.keys(value as object).length === 0)
+      ) {
+        return { success: true, value: {} as Record<string, never> }
+      }
+      return { success: false, error: new Error('Expected null or empty object') }
+    },
+  },
+)
 
 /**
  * Sanitized resume data returned to the LLM
@@ -106,9 +132,9 @@ interface SearchResult {
  * Security: Uses ctx.userId (from auth) - LLM cannot access other users' resumes
  */
 export const getMyResume = createTool({
-  args: z.union([z.object({}), z.null()]),
+  args: noArgsSchema,
   description:
-    'Get your resume including professional summary, skills, work experience, and education. Use this to understand what jobs you are qualified for.',
+    'Refresh resume data. RARELY NEEDED - resume is already in <user-context>. Only call if user says they just updated their resume.',
   handler: async (ctx): Promise<SanitizedResume | null> => {
     if (!ctx.userId) throw new Error('Not authenticated')
 
@@ -160,9 +186,9 @@ export const getMyResume = createTool({
  * Note: Returns whether user has isochrones, but NOT the actual isochrone data
  */
 export const getMyJobPreferences = createTool({
-  args: z.union([z.object({}), z.null()]),
+  args: noArgsSchema,
   description:
-    'Get your job search preferences including commute limits, shift preferences, and whether you prefer second-chance employers. Also tells you if you have transit zones set up.',
+    'Refresh preferences data. RARELY NEEDED - preferences are already in <user-context>. Only call if user says they just updated their preferences.',
   handler: async (ctx): Promise<SanitizedPreferences> => {
     if (!ctx.userId) throw new Error('Not authenticated')
 
@@ -232,13 +258,16 @@ export const searchJobs = createTool({
     query: z.string().describe('Search keywords: job titles, skills, company names, industries'),
   }),
   description: `Search for jobs matching keywords and filters.
-Results are AUTOMATICALLY filtered by your commute zone if you have transit zones set up.
-You don't need to worry about location filtering - it happens automatically based on the user's preferences.
 
-Tips:
-- Search for job titles, skills, or industries from the user's resume
-- Use filters to narrow by shift times or second-chance employers
-- Run multiple searches with different keywords to find diverse matches`,
+RULES:
+- Only search when you have: (A) a job direction, AND (B) location is set OR user accepts broad results.
+- One searchJobs call per turn is preferred. If you need multiple searches, do them in separate turns.
+- Results are AUTOMATICALLY filtered by commute zone if transit zones are set up.
+- The UI renders job cards - do NOT restate job details in your text response.
+
+After calling searchJobs:
+- Use askQuestion with purpose="post_search" to offer next steps (refine/pivot/apply).
+- Summarize patterns in the preamble, not individual jobs.`,
   handler: async (ctx, args): Promise<SearchResult> => {
     if (!ctx.userId) throw new Error('Not authenticated')
 
@@ -479,17 +508,31 @@ Tips:
 })
 
 /**
- * Ask the user a clarifying question with quick-reply options
- *
- * Use this tool when you need to gather information from the user:
- * - What kind of work they're looking for (if no resume)
- * - What shifts work for them (if no preferences set)
- * - How far they're willing to commute (if no commute preference)
- *
- * The UI will render clickable buttons for each option.
+ * UI tool for asking the user a question with clickable options.
+ * NO execute function - stops execution and waits for user input via submitToolResult.
  */
-export const askQuestion = createTool({
-  args: z.object({
+export const askQuestion = tool({
+  description: `Ask the user ONE question with clickable options.
+
+RULES:
+- Only ONE askQuestion per turn.
+- If askQuestion is used, it must be the FINAL tool call. STOP after calling.
+- If combining with searchJobs, set purpose="post_search" and call askQuestion AFTER searchJobs.
+
+PURPOSE VALUES:
+- "discovery": Figuring out what direction they want (job type, preferences)
+- "post_search": After showing job results, offering next steps (refine/pivot/apply)
+- "application": Helping them apply to a specific job
+- "other": Anything else
+
+PREAMBLE (for post_search):
+Use preamble to summarize patterns from search results. Examples:
+- "I found mostly warehouse and forklift roles, with pay around $16-20/hr."
+- "These jobs are all within your transit zone, but evening shifts dominate."
+Do NOT repeat individual job details - the UI already shows job cards.
+
+The UI displays preamble (if provided) above the question and options.`,
+  inputSchema: z.object({
     allowFreeText: z
       .boolean()
       .optional()
@@ -505,102 +548,43 @@ export const askQuestion = createTool({
       .min(1)
       .max(8)
       .describe('2-8 quick-reply options. Each MUST have id and label properties.'),
-    question: z.string().describe('The question to ask the user'),
+    preamble: z
+      .string()
+      .max(800)
+      .optional()
+      .describe(
+        'Short context shown above the question. For post_search: summarize patterns only (role mix, pay range, shift mix). Never rewrite job card details.',
+      ),
+    purpose: z
+      .enum(['discovery', 'post_search', 'application', 'other'])
+      .optional()
+      .describe(
+        'Why you are asking: discovery (figuring out direction), post_search (after showing results), application (helping apply), other',
+      ),
+    question: z.string().max(220).describe('The question to ask the user'),
   }),
-  description: `Ask the user a clarifying question with quick-reply buttons.
-
-IMPORTANT: Each option object MUST have exactly these properties:
-- id: string (unique identifier)
-- label: string (display text)
-- description: string (optional, additional context)
-
-Use this to gather missing information before searching:
-- Job type preferences (if no resume)
-- Shift availability (if not set)
-- Commute distance (if not set)
-- Location preferences
-
-The user can click an option OR type their own answer.
-After receiving their response, proceed with the job search.
-
-**DO NOT write any text message when calling this tool.**
-The UI displays the question and options automatically.
-Just call the tool with no accompanying text.`,
-  handler: async (ctx, args) => {
-    console.log(
-      `[Tool:askQuestion] question="${args.question.substring(0, 40)}...", options=${args.options.length}`,
-    )
-    return null
-  },
+  // NO execute function - waits for user input
 })
 
 /**
- * Display an action plan to show the user what you're doing
+ * UI tool for collecting user's location and transport preferences.
+ * NO execute function - stops execution and waits for user input via submitToolResult.
  */
-export const showPlan = createTool({
-  args: z.object({
-    description: z.string().optional().describe('Brief description of the plan'),
-    id: z.string().describe('Unique identifier for this plan'),
-    title: z.string().describe('Title of the plan'),
-    todos: z
-      .array(
-        z.object({
-          description: z.string().optional().describe('Additional details'),
-          id: z.string().describe('Unique identifier for this todo'),
-          label: z.string().describe('Display text for this step'),
-          status: z
-            .enum(['pending', 'in_progress', 'completed', 'cancelled'])
-            .describe('Current status'),
-        }),
-      )
-      .min(1)
-      .describe('List of steps in the plan'),
-  }),
-  description: `Display your action plan to the user with progress tracking.
-
-Call this at the START of every new search to show what you're doing:
-- Loading your profile (in_progress)
-- Checking what info we need (pending)
-- Setting up search (pending)
-- Finding matching jobs (pending)
-
-Update the plan by calling this tool again with updated statuses.`,
-  handler: async (ctx, args) => {
-    console.log(`[Tool:showPlan] "${args.title}" with ${args.todos.length} steps`)
-    return args
-  },
-})
-
-/**
- * Collect user's location and transport preferences in one multi-step UI
- */
-export const collectLocation = createTool({
-  args: z.object({
-    reason: z.string().describe('Why we need their location (shown to user)'),
-  }),
+export const collectLocation = tool({
   description: `Show location setup UI to collect user's home location and transport preferences.
 
-This is a MULTI-STEP UI that collects:
-1. Home location (browser geolocation or manual address entry)
-2. Transport mode (car, public transit, or flexible)
-3. Max commute time (if public transit selected)
+RULES:
+- Only call if <user-context> shows "location_ready: NO".
+- If called, it must be the FINAL tool call. STOP after calling.
+- Do NOT call other tools after this.
+- Do NOT write text after calling this - the UI handles everything.
 
-The UI AUTOMATICALLY waits for transit zone computation if needed.
-User can skip entirely, resulting in search with no geo filtering.
-
-Returns complete location context including whether transit zones are ready.
-If user skips, returns { skipped: true }.
-
-IMPORTANT: Only call this if the user does NOT already have a home location set.
-Check getMyJobPreferences().hasHomeLocation first.
-
-**DO NOT write any text message when calling this tool.**
-The UI displays the location setup form automatically.
-Just call the tool with no accompanying text.`,
-  handler: async (ctx, args) => {
-    console.log(`[Tool:collectLocation] reason="${args.reason}"`)
-    return { ...args, status: 'awaiting_input' as const }
-  },
+The UI collects: home location, transport mode (car/transit/flexible), max commute time.
+User can skip, resulting in no geo filtering.`,
+  inputSchema: z.object({
+    reason: z.string().describe('Why we need their location (shown to user)'),
+  }),
+  // NO execute function - waits for user input
 })
 
 /**
@@ -635,6 +619,64 @@ Only saves the fields that are provided.`,
   },
 })
 
+export const todoWrite = createTool({
+  args: z.object({
+    todos: z
+      .array(
+        z.object({
+          content: z.string().describe('Brief description of the task (3-8 words)'),
+          id: z.string().describe('Unique identifier for the todo item'),
+          priority: z.enum(['high', 'medium', 'low']).describe('Priority: high, medium, low'),
+          status: z
+            .enum(['pending', 'in_progress', 'completed', 'cancelled'])
+            .describe('Current status: pending, in_progress, completed, cancelled'),
+        }),
+      )
+      .describe('The complete updated todo list'),
+  }),
+  description: TODOWRITE_DESCRIPTION,
+  handler: async (ctx, args) => {
+    if (!ctx.threadId) throw new Error('No thread context')
+
+    await ctx.runMutation(internal.jobMatcher.plan.updatePlan, {
+      threadId: ctx.threadId,
+      todos: args.todos,
+    })
+
+    const remaining = args.todos.filter(t => t.status !== 'completed').length
+    console.log(`[Tool:todoWrite] Updated plan: ${remaining} remaining of ${args.todos.length}`)
+
+    return {
+      remaining,
+      total: args.todos.length,
+      updated: true,
+    }
+  },
+})
+
+interface TodoItem {
+  id: string
+  content: string
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+  priority: 'high' | 'medium' | 'low'
+}
+
+export const todoRead = createTool({
+  args: noArgsSchema,
+  description:
+    'Read your current todo list to see what tasks are pending. Use this if you need to check your plan status.',
+  handler: async (ctx): Promise<TodoItem[]> => {
+    if (!ctx.threadId) throw new Error('No thread context')
+
+    const plan: TodoItem[] | null = await ctx.runQuery(internal.jobMatcher.plan.getPlanInternal, {
+      threadId: ctx.threadId,
+    })
+
+    console.log(`[Tool:todoRead] Read plan: ${plan?.length ?? 0} todos`)
+    return plan ?? []
+  },
+})
+
 export const tools = {
   askQuestion,
   collectLocation,
@@ -642,5 +684,6 @@ export const tools = {
   getMyResume,
   saveUserPreference,
   searchJobs,
-  showPlan,
+  todoRead,
+  todoWrite,
 }

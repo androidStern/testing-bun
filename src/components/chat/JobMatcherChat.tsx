@@ -13,13 +13,13 @@ import type { JobPreferences } from '../jobs/FilterSummaryBanner'
 import { Button } from '../ui/button'
 import { ChatHeader } from './ChatHeader'
 import { JobMatcherRuntimeProvider } from './JobMatcherRuntimeProvider'
+import { PlanHeader } from './PlanHeader'
 import {
   CollectLocationToolUI,
   PreferencesToolUI,
   QuestionToolUI,
   ResumeToolUI,
   SearchJobsToolUI,
-  ShowPlanToolUI,
 } from './tools'
 
 /**
@@ -166,8 +166,9 @@ export function JobMatcherChat() {
         onRedoSearch={handleRedoSearch}
       />
 
+      <PlanHeader isAgentRunning={isForceSearching} threadId={threadId} />
+
       <JobMatcherRuntimeProvider onThreadCreated={handleThreadCreated} threadId={threadId}>
-        <ShowPlanToolUI />
         <ResumeToolUI />
         <PreferencesToolUI />
         <CollectLocationToolUI />
