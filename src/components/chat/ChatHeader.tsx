@@ -6,6 +6,8 @@ import { FilterDrawer } from '../jobs/FilterDrawer'
 import type { FilterCategory } from '../jobs/FilterSummaryBanner'
 import { FilterToolbar } from '../jobs/FilterToolbar'
 import { Button } from '../ui/button'
+import { SavedJobsDrawer } from './SavedJobsDrawer'
+import { SavedJobsToggle } from './SavedJobsToggle'
 
 interface ChatHeaderProps {
   onForceSearch: () => void
@@ -14,12 +16,9 @@ interface ChatHeaderProps {
   isSearching: boolean
   hasActiveThread: boolean
   filtersChanged?: boolean
+  workosUserId?: string
 }
 
-/**
- * ChatHeader with filter toolbar and action buttons.
- * Shows all 4 filter categories as buttons, plus Start New, Redo Search, and Search Now.
- */
 export function ChatHeader({
   onForceSearch,
   onNewChat,
@@ -27,8 +26,10 @@ export function ChatHeader({
   isSearching,
   hasActiveThread,
   filtersChanged = false,
+  workosUserId,
 }: ChatHeaderProps) {
   const [drawerCategory, setDrawerCategory] = useState<FilterCategory | null>(null)
+  const [savedJobsOpen, setSavedJobsOpen] = useState(false)
 
   const handleCategoryClick = (category: FilterCategory) => {
     setDrawerCategory(category)
@@ -41,14 +42,14 @@ export function ChatHeader({
   return (
     <>
       <div className='sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
-        {/* Responsive layout: mobile = buttons top, filters bottom; desktop = filters left, buttons right */}
         <div className='flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-2 p-3'>
-          {/* Filters - bottom on mobile, left on desktop */}
           <FilterToolbar onCategoryClick={handleCategoryClick} />
 
-          {/* Action buttons - top on mobile, right on desktop */}
           <div className='flex items-center justify-between md:justify-end gap-2 flex-shrink-0'>
-            {/* Start New - only when there's an active thread */}
+            {workosUserId && (
+              <SavedJobsToggle onClick={() => setSavedJobsOpen(true)} workosUserId={workosUserId} />
+            )}
+
             {hasActiveThread && onNewChat && (
               <Button disabled={isSearching} onClick={onNewChat} size='sm' variant='ghost'>
                 <RotateCcw className='mr-2 h-4 w-4' />
@@ -56,7 +57,6 @@ export function ChatHeader({
               </Button>
             )}
 
-            {/* Redo Search - only when filters changed since last search */}
             {hasActiveThread && filtersChanged && onRedoSearch && (
               <Button disabled={isSearching} onClick={onRedoSearch} size='sm' variant='outline'>
                 <RefreshCw className='mr-2 h-4 w-4' />
@@ -64,7 +64,6 @@ export function ChatHeader({
               </Button>
             )}
 
-            {/* Primary search button */}
             <Button disabled={isSearching} onClick={onForceSearch} size='sm'>
               {isSearching ? (
                 <>
@@ -82,8 +81,15 @@ export function ChatHeader({
         </div>
       </div>
 
-      {/* Filter Drawer - opens when clicking filter buttons */}
       <FilterDrawer category={drawerCategory} onClose={handleDrawerClose} />
+
+      {workosUserId && (
+        <SavedJobsDrawer
+          onOpenChange={setSavedJobsOpen}
+          open={savedJobsOpen}
+          workosUserId={workosUserId}
+        />
+      )}
     </>
   )
 }

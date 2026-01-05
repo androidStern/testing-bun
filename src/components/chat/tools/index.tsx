@@ -1,12 +1,13 @@
 'use client'
 
 import { makeAssistantToolUI } from '@assistant-ui/react'
+import { useAuth } from '@workos/authkit-tanstack-react-start/client'
 import { FileText, MapPin, Search, Settings } from 'lucide-react'
 
 import { ResumeUploadCard, type ResumeUploadResult } from '@/components/resume/ResumeUploadCard'
 import type { SearchContext, SearchJobResult } from '@/lib/schemas/job'
-
 import { JobSearchResults } from './job-search-results'
+import { JobCardStack } from './job-search-results/JobCardStack'
 import { type LocationResult, LocationSetupCard } from './LocationSetupCard'
 import { OptionList } from './OptionList'
 import { PreferenceToolUI } from './PreferenceToolUI'
@@ -78,9 +79,6 @@ interface QuestionArgs {
   preamble?: string
 }
 
-/**
- * Tool UI for getMyResume - shows resume loading/summary
- */
 export const ResumeToolUI = makeAssistantToolUI<Record<string, never>, ResumeResult | null>({
   render: ({ result, status }) => {
     const isRunning = status.type === 'running'
@@ -127,9 +125,6 @@ export const ResumeToolUI = makeAssistantToolUI<Record<string, never>, ResumeRes
   toolName: 'getMyResume',
 })
 
-/**
- * Tool UI for getMyJobPreferences - shows preference summary
- */
 export const PreferencesToolUI = makeAssistantToolUI<Record<string, never>, PreferencesResult>({
   render: ({ result, status }) => {
     const isRunning = status.type === 'running'
@@ -176,7 +171,8 @@ export const PreferencesToolUI = makeAssistantToolUI<Record<string, never>, Pref
 })
 
 export const SearchJobsToolUI = makeAssistantToolUI<SearchJobsArgs, SearchResult>({
-  render: ({ args, result, status }) => {
+  render: function SearchJobsRender({ args, result, status }) {
+    const { user } = useAuth()
     const isRunning = status.type === 'running'
     const query = args?.query ?? '...'
 
@@ -195,6 +191,10 @@ export const SearchJobsToolUI = makeAssistantToolUI<SearchJobsArgs, SearchResult
     const searchContext = Array.isArray(result)
       ? createDefaultSearchContext(query)
       : (result?.searchContext ?? createDefaultSearchContext(query))
+
+    if (user?.id) {
+      return <JobCardStack jobs={jobs} searchContext={searchContext} workosUserId={user.id} />
+    }
 
     return <JobSearchResults jobs={jobs} searchContext={searchContext} />
   },
