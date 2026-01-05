@@ -7,6 +7,7 @@ import { Loader2, MessageSquare, Send } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 
 import { Thread } from '@/components/assistant-ui/thread'
+import { ErrorBanner } from '@/components/ErrorBanner'
 import { api } from '../../../convex/_generated/api'
 import type { JobPreferences } from '../jobs/FilterSummaryBanner'
 import { ResumeUploadCard } from '../resume/ResumeUploadCard'
@@ -64,6 +65,7 @@ import {
   CollectLocationToolUI,
   CollectResumeToolUI,
   PreferencesToolUI,
+  PreferenceToolUI,
   QuestionToolUI,
   ResumeToolUI,
   SearchJobsToolUI,
@@ -79,17 +81,12 @@ interface JobMatcherChatProps {
   initialPrompt?: string
 }
 
-/**
- * JobMatcherChat - Main chat interface for the job matcher.
- *
- * Features:
- * - Header with preference controls and Force Search button
- * - Chat messages with tool activity visualization
- * - Quick-reply buttons for Q&A
- * - Inline job results
- * - Persistent chat history via Convex Agent
- * - Resume upload gate on first message (if no resume exists)
- */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'An unexpected error occurred'
+}
+
 export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
   const [lastSearchPrefs, setLastSearchPrefs] = useState<JobPreferences | null>(null)
@@ -97,39 +94,64 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
   const [resumeGateReason, setResumeGateReason] = useState<'missing' | 'incomplete' | null>(null)
   const [inputValue, setInputValue] = useState(initialPrompt ?? '')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
-  const { data: existingResume } = useQuery(
-    convexQuery(api.resumes.getByWorkosUserId, { workosUserId: user.id }),
-  )
+  const {
+    data: existingResume,
+    error: resumeError,
+    refetch: refetchResume,
+  } = useQuery(convexQuery(api.resumes.getByWorkosUserId, { workosUserId: user.id }))
 
   const {
     data: activeSearch,
     isLoading: searchLoading,
+    error: searchError,
     refetch: refetchSearch,
   } = useQuery(convexQuery(api.jobMatcher.queries.getActiveSearch, {}))
 
-  const { data: currentPrefs } = useQuery(convexQuery(api.jobPreferences.get, {}))
+  const {
+    data: currentPrefs,
+    error: prefsError,
+    refetch: refetchPrefs,
+  } = useQuery(convexQuery(api.jobPreferences.get, {}))
 
-  // Detect if filters have changed since last search
+  const queryError = resumeError || searchError || prefsError
+  const displayError = actionError || (queryError ? getErrorMessage(queryError) : null)
+
+  const clearActionError = useCallback(() => setActionError(null), [])
+
+  const handleRetry = useCallback(() => {
+    clearActionError()
+    if (resumeError) refetchResume()
+    if (searchError) refetchSearch()
+    if (prefsError) refetchPrefs()
+  }, [
+    clearActionError,
+    resumeError,
+    searchError,
+    prefsError,
+    refetchResume,
+    refetchSearch,
+    refetchPrefs,
+  ])
+
   const filtersChanged = useMemo(() => {
     if (!lastSearchPrefs || !currentPrefs) return false
     return JSON.stringify(lastSearchPrefs) !== JSON.stringify(currentPrefs)
   }, [lastSearchPrefs, currentPrefs])
 
-  // Use active search's thread ID if available
   const threadId = activeThreadId ?? activeSearch?.threadId ?? null
 
   const forceSearchAction = useAction(api.jobMatcher.actions.forceSearch)
   const cancelSearchAction = useAction(api.jobMatcher.actions.cancelSearch)
   const startSearchAction = useAction(api.jobMatcher.actions.startSearch)
 
-  // Track if we're in the middle of a force search
   const [isForceSearching, setIsForceSearching] = useState(false)
 
   const handleForceSearch = useCallback(async () => {
     setIsForceSearching(true)
+    clearActionError()
     try {
-      // Snapshot current preferences before search
       if (currentPrefs) {
         setLastSearchPrefs(currentPrefs)
       }
@@ -138,10 +160,13 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
         setActiveThreadId(result.threadId)
         await refetchSearch()
       }
+    } catch (err) {
+      console.error('Force search failed:', err)
+      setActionError(getErrorMessage(err))
     } finally {
       setIsForceSearching(false)
     }
-  }, [forceSearchAction, threadId, refetchSearch, currentPrefs])
+  }, [forceSearchAction, threadId, refetchSearch, currentPrefs, clearActionError])
 
   const handleThreadCreated = useCallback(
     (newThreadId: string) => {
@@ -153,12 +178,18 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
 
   const handleNewChat = useCallback(async () => {
     if (activeSearch) {
-      await cancelSearchAction({ searchId: activeSearch._id })
-      setActiveThreadId(null)
-      setLastSearchPrefs(null)
-      await refetchSearch()
+      clearActionError()
+      try {
+        await cancelSearchAction({ searchId: activeSearch._id })
+        setActiveThreadId(null)
+        setLastSearchPrefs(null)
+        await refetchSearch()
+      } catch (err) {
+        console.error('Cancel search failed:', err)
+        setActionError(getErrorMessage(err))
+      }
     }
-  }, [activeSearch, cancelSearchAction, refetchSearch])
+  }, [activeSearch, cancelSearchAction, refetchSearch, clearActionError])
 
   const handleRedoSearch = useCallback(async () => {
     await handleForceSearch()
@@ -167,16 +198,20 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
   const startSearch = useCallback(
     async (text: string) => {
       setIsSubmitting(true)
+      clearActionError()
       try {
         const result = await startSearchAction({ prompt: text })
         setActiveThreadId(result.threadId)
         setInputValue('')
         await refetchSearch()
+      } catch (err) {
+        console.error('Start search failed:', err)
+        setActionError(getErrorMessage(err))
       } finally {
         setIsSubmitting(false)
       }
     },
-    [startSearchAction, refetchSearch],
+    [startSearchAction, refetchSearch, clearActionError],
   )
 
   const handleWelcomeSubmit = useCallback(async () => {
@@ -208,7 +243,10 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
     }
   }, [pendingMessage, startSearch])
 
-  // Loading state
+  const handleRuntimeError = useCallback((error: string) => {
+    setActionError(error)
+  }, [])
+
   if (searchLoading) {
     return (
       <div className='flex items-center justify-center py-12'>
@@ -227,6 +265,11 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
             isSearching={isForceSearching}
             onForceSearch={handleForceSearch}
           />
+          {displayError && (
+            <div className='p-4'>
+              <ErrorBanner message={displayError} onRetry={handleRetry} />
+            </div>
+          )}
           <div className='flex flex-1 items-center justify-center p-4'>
             {resumeGateReason === 'missing' ? (
               <ResumeUploadCard
@@ -252,6 +295,12 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
           isSearching={isForceSearching}
           onForceSearch={handleForceSearch}
         />
+
+        {displayError && (
+          <div className='p-4'>
+            <ErrorBanner message={displayError} onRetry={handleRetry} />
+          </div>
+        )}
 
         <div className='flex flex-1 items-center justify-center p-4'>
           <div className='flex w-full max-w-2xl flex-col'>
@@ -298,7 +347,6 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
     )
   }
 
-  // Active thread - show chat interface with generated Thread component
   return (
     <div className='flex flex-col h-dvh'>
       <ChatHeader
@@ -310,11 +358,22 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
         onRedoSearch={handleRedoSearch}
       />
 
+      {displayError && (
+        <div className='px-4 pt-2'>
+          <ErrorBanner message={displayError} onRetry={handleRetry} />
+        </div>
+      )}
+
       <PlanHeader isAgentRunning={isForceSearching} threadId={threadId} />
 
-      <JobMatcherRuntimeProvider onThreadCreated={handleThreadCreated} threadId={threadId}>
+      <JobMatcherRuntimeProvider
+        onError={handleRuntimeError}
+        onThreadCreated={handleThreadCreated}
+        threadId={threadId}
+      >
         <ResumeToolUI />
         <PreferencesToolUI />
+        <PreferenceToolUI />
         <CollectLocationToolUI />
         <CollectResumeToolUI />
         <SearchJobsToolUI />

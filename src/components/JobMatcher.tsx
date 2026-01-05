@@ -2,20 +2,27 @@ import { useUIMessages } from '@convex-dev/agent/react'
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
 import { useAction } from 'convex/react'
-import { AlertCircle, Loader2, MessageSquare, Search } from 'lucide-react'
+import { Loader2, MessageSquare, Search } from 'lucide-react'
 import { type FormEvent, useId, useMemo, useState } from 'react'
 
 import { api } from '../../convex/_generated/api'
+import { ErrorBanner } from './ErrorBanner'
 import { JobMatchResults } from './JobMatchResults'
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Input } from './ui/input'
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'An unexpected error occurred'
+}
+
 interface JobMatcherProps {
   workosUserId: string
 }
 
-export function JobMatcher({ workosUserId }: JobMatcherProps) {
+export function JobMatcher({ workosUserId: _workosUserId }: JobMatcherProps) {
   const formId = useId()
   const [prompt, setPrompt] = useState('Find jobs matching my resume and preferences')
   const [followUpInput, setFollowUpInput] = useState('')
@@ -24,12 +31,14 @@ export function JobMatcher({ workosUserId }: JobMatcherProps) {
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Check for active search
   const {
     data: activeSearch,
     isLoading: searchLoading,
+    error: searchError,
     refetch: refetchSearch,
   } = useQuery(convexQuery(api.jobMatcher.queries.getActiveSearch, {}))
+
+  const displayError = error || (searchError ? getErrorMessage(searchError) : null)
 
   // Subscribe to thread messages (survives page refresh!)
   const { results: messages, status: streamStatus } = useUIMessages(
@@ -164,29 +173,25 @@ export function JobMatcher({ workosUserId }: JobMatcherProps) {
     )
   }
 
-  // Use error state for display
-  const displayError = error
-
   // Active search - show results and chat
   return (
     <div className='space-y-6'>
-      {/* Error display */}
       {displayError && (
-        <Card className='border-destructive bg-destructive/10'>
-          <CardContent className='py-4'>
-            <div className='flex items-start gap-3'>
-              <AlertCircle className='h-5 w-5 text-destructive mt-0.5' />
-              <div>
-                <p className='font-medium text-destructive'>Error</p>
-                <p className='text-sm text-destructive/80'>{displayError}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <ErrorBanner
+          message={displayError}
+          onRetry={() => {
+            setError(null)
+            refetchSearch()
+          }}
+        />
       )}
 
       {/* Results */}
-      <JobMatchResults isStarting={isStarting} isStreaming={isStreaming} messages={messages ?? []} />
+      <JobMatchResults
+        isStarting={isStarting}
+        isStreaming={isStreaming}
+        messages={messages ?? []}
+      />
 
       {/* Debug info - shows stream status for debugging */}
       {process.env.NODE_ENV === 'development' && (

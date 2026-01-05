@@ -18,21 +18,20 @@ interface JobMatcherRuntimeProviderProps {
   threadId: string | null
   children: ReactNode
   onThreadCreated?: (threadId: string) => void
+  onError?: (error: string) => void
 }
 
-/**
- * Provides assistant-ui runtime by bridging Convex Agent messages.
- *
- * This component:
- * 1. Subscribes to Convex Agent thread messages via useUIMessages
- * 2. Converts them to assistant-ui ThreadMessageLike format
- * 3. Creates an external store runtime that assistant-ui components can use
- * 4. Handles sending new messages via Convex actions
- */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'An unexpected error occurred'
+}
+
 export function JobMatcherRuntimeProvider({
   threadId,
   children,
   onThreadCreated,
+  onError,
 }: JobMatcherRuntimeProviderProps) {
   const { results: messages, status: paginationStatus } = useUIMessages(
     api.jobMatcher.messages.listThreadMessages,
@@ -58,17 +57,22 @@ export function JobMatcherRuntimeProvider({
 
   const handleAddToolResult = useCallback(
     async (options: AddToolResultOptions) => {
-      const interactiveTools = ['collectLocation', 'collectResume', 'askQuestion']
+      const interactiveTools = ['collectLocation', 'collectResume', 'askQuestion', 'askPreference']
       if (threadId && interactiveTools.includes(options.toolName)) {
-        await submitToolResultAction({
-          result: options.result,
-          threadId,
-          toolCallId: options.toolCallId,
-          toolName: options.toolName,
-        })
+        try {
+          await submitToolResultAction({
+            result: options.result,
+            threadId,
+            toolCallId: options.toolCallId,
+            toolName: options.toolName,
+          })
+        } catch (err) {
+          console.error('Submit tool result failed:', err)
+          onError?.(getErrorMessage(err))
+        }
       }
     },
-    [threadId, submitToolResultAction],
+    [threadId, submitToolResultAction, onError],
   )
 
   const handleNewMessage = useCallback(
@@ -78,19 +82,24 @@ export function JobMatcherRuntimeProvider({
 
       if (!text.trim()) return
 
-      if (threadId) {
-        await sendMessageAction({
-          message: text,
-          threadId,
-        })
-      } else {
-        const result = await startSearchAction({
-          prompt: text,
-        })
-        onThreadCreated?.(result.threadId)
+      try {
+        if (threadId) {
+          await sendMessageAction({
+            message: text,
+            threadId,
+          })
+        } else {
+          const result = await startSearchAction({
+            prompt: text,
+          })
+          onThreadCreated?.(result.threadId)
+        }
+      } catch (err) {
+        console.error('Send message failed:', err)
+        onError?.(getErrorMessage(err))
       }
     },
-    [threadId, sendMessageAction, startSearchAction, onThreadCreated],
+    [threadId, sendMessageAction, startSearchAction, onThreadCreated, onError],
   )
 
   const runtime = useExternalStoreRuntime({

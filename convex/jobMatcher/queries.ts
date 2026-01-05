@@ -24,6 +24,21 @@ export const getActiveSearch = query({
       _id: v.id('jobSearches'),
       completedAt: v.optional(v.number()),
       initialPrompt: v.string(),
+      plan: v.optional(
+        v.array(
+          v.object({
+            content: v.string(),
+            id: v.string(),
+            priority: v.union(v.literal('high'), v.literal('medium'), v.literal('low')),
+            status: v.union(
+              v.literal('pending'),
+              v.literal('in_progress'),
+              v.literal('completed'),
+              v.literal('cancelled'),
+            ),
+          }),
+        ),
+      ),
       startedAt: v.number(),
       status: v.string(),
       threadId: v.string(),
@@ -54,6 +69,21 @@ export const listSearches = query({
       _id: v.id('jobSearches'),
       completedAt: v.optional(v.number()),
       initialPrompt: v.string(),
+      plan: v.optional(
+        v.array(
+          v.object({
+            content: v.string(),
+            id: v.string(),
+            priority: v.union(v.literal('high'), v.literal('medium'), v.literal('low')),
+            status: v.union(
+              v.literal('pending'),
+              v.literal('in_progress'),
+              v.literal('completed'),
+              v.literal('cancelled'),
+            ),
+          }),
+        ),
+      ),
       startedAt: v.number(),
       status: v.string(),
       threadId: v.string(),

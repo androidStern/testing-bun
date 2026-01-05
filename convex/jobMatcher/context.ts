@@ -155,21 +155,25 @@ export function buildUserContext(data: ContextInput): string {
 
   // Derived Hints section (new)
   const hints = inferDirectionHints(data.resume)
-  const hasHighConfidenceHint = hints.some(h => h.confidence === 'high')
+  const topHint = hints[0] // Highest-scoring hint (if any)
+  const hasAnyHint = hints.length > 0
   const fairChanceRequired = Boolean(data.preferences?.requireSecondChance)
 
   sections.push('## Derived Hints')
   if (hints.length === 0) {
     sections.push('- Job direction hints: None (resume missing or unclear)')
+    sections.push('- auto_pick_direction: None available')
   } else {
     sections.push('- Job direction hints:')
     for (const h of hints) {
       sections.push(`  - ${h.label} (${h.confidence})`)
     }
+    // Provide explicit auto-pick instruction for when user defers
+    sections.push(`- auto_pick_direction: "${topHint.label}" (use this if user defers to you)`)
   }
   sections.push('- Search readiness:')
   sections.push(
-    `  - direction_ready: ${hasHighConfidenceHint ? 'LIKELY (confirm with user)' : 'UNSURE (need to ask)'}`,
+    `  - direction_ready: ${hasAnyHint ? `YES - use "${topHint.label}" if user defers` : 'NO (need to ask or search broad)'}`,
   )
   sections.push(`  - location_ready: ${locationSet ? 'YES' : 'NO'}`)
   sections.push(`  - fair_chance_required: ${fairChanceRequired ? 'YES' : 'NO/UNKNOWN'}`)

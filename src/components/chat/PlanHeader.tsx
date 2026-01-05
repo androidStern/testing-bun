@@ -1,5 +1,8 @@
 'use client'
 
+// TODO: Set to true to show the todo HUD
+const SHOW_TODO_HUD = false
+
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
 import { CheckCircle2, ChevronDown, Circle, CircleDotDashed, XCircle } from 'lucide-react'
@@ -77,6 +80,7 @@ export function PlanHeader({ threadId, isAgentRunning }: PlanHeaderProps) {
     }
   }, [isAgentRunning, plan])
 
+  if (!SHOW_TODO_HUD) return null
   if (!plan || plan.length === 0) return null
 
   const completedCount = plan.filter(t => t.status === 'completed').length

@@ -1,37 +1,19 @@
 'use client'
 
 import { makeAssistantToolUI } from '@assistant-ui/react'
-import {
-  Briefcase,
-  Bus,
-  ChevronDown,
-  Clock,
-  FileText,
-  Heart,
-  MapPin,
-  Search,
-  Settings,
-  Train,
-  Zap,
-} from 'lucide-react'
-import { useState } from 'react'
+import { FileText, MapPin, Search, Settings } from 'lucide-react'
+
 import { ResumeUploadCard, type ResumeUploadResult } from '@/components/resume/ResumeUploadCard'
-import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel'
-import { cn } from '@/lib/utils'
-import { JobResultCard } from '../results/JobResultCard'
+import type { SearchContext, SearchJobResult } from '@/lib/schemas/job'
+
+import { JobSearchResults } from './job-search-results'
 import { type LocationResult, LocationSetupCard } from './LocationSetupCard'
-import { type OptionItem, OptionList } from './OptionList'
+import { OptionList } from './OptionList'
+import { PreferenceToolUI } from './PreferenceToolUI'
 import { ToolCard } from './ToolProgress'
 
-// Type definitions for tool arguments and results
+export { PreferenceToolUI }
+
 interface ResumeResult {
   skills?: string | null
   summary?: string | null
@@ -79,47 +61,8 @@ interface SearchJobsArgs {
   limit?: number
 }
 
-interface JobResult {
-  id: string
-  title: string
-  company: string
-  location: string | null
-  description: string | null
-  salary: string | null
-  isSecondChance: boolean
-  secondChanceTier: string | null
-  shifts: Array<string>
-  transitAccessible: boolean
-  busAccessible: boolean
-  railAccessible: boolean
-  isUrgent: boolean
-  isEasyApply: boolean
-  url: string
-}
-
-interface SearchContext {
-  query: string
-  totalFound: number
-  location: {
-    city?: string
-    state?: string
-    withinCommuteZone: boolean
-    maxCommuteMinutes?: number
-    homeLocation?: string // User's home location string (e.g., "Miami, FL")
-  }
-  filters: {
-    secondChanceRequired: boolean
-    secondChancePreferred: boolean
-    busRequired: boolean
-    railRequired: boolean
-    shifts: Array<string>
-    urgentOnly: boolean
-    easyApplyOnly: boolean
-  }
-}
-
 interface SearchResult {
-  jobs: Array<JobResult>
+  jobs: Array<SearchJobResult>
   searchContext: SearchContext
 }
 
@@ -232,144 +175,11 @@ export const PreferencesToolUI = makeAssistantToolUI<Record<string, never>, Pref
   toolName: 'getMyJobPreferences',
 })
 
-/**
- * Collapsible search details component
- */
-function SearchDetailsSection({ context }: { context: SearchContext }) {
-  const [isOpen, setIsOpen] = useState(false)
-
-  // Build location display string
-  const getLocationDisplay = () => {
-    if (context.location.city && context.location.state) {
-      return `${context.location.city}, ${context.location.state}`
-    }
-    if (context.location.withinCommuteZone && context.location.homeLocation) {
-      const minutes = context.location.maxCommuteMinutes ?? 30
-      return `Within ${minutes} min of ${context.location.homeLocation}`
-    }
-    if (context.location.homeLocation) {
-      return `Near ${context.location.homeLocation}`
-    }
-    return null
-  }
-
-  const locationDisplay = getLocationDisplay()
-  const hasFilters =
-    locationDisplay ||
-    context.filters.busRequired ||
-    context.filters.railRequired ||
-    context.filters.shifts.length > 0 ||
-    context.filters.secondChanceRequired ||
-    context.filters.secondChancePreferred ||
-    context.filters.urgentOnly ||
-    context.filters.easyApplyOnly
-
-  if (!hasFilters) return null
-
-  return (
-    <div className='border-t border-border/50'>
-      <button
-        className='flex w-full items-center justify-between px-4 py-2 text-sm text-muted-foreground hover:bg-muted/30 transition-colors'
-        onClick={() => setIsOpen(!isOpen)}
-        type='button'
-      >
-        <span>Search filters</span>
-        <ChevronDown
-          className={cn('h-4 w-4 transition-transform duration-200', isOpen && 'rotate-180')}
-        />
-      </button>
-
-      {isOpen && (
-        <div className='px-4 pb-3 space-y-2'>
-          {/* Location */}
-          {locationDisplay && (
-            <div className='flex items-center gap-2 text-sm'>
-              <MapPin className='h-3.5 w-3.5 text-muted-foreground' />
-              <span>{locationDisplay}</span>
-            </div>
-          )}
-
-          {/* Commute zone indicator */}
-          {context.location.withinCommuteZone && (
-            <div className='flex items-center gap-2 text-sm'>
-              <Clock className='h-3.5 w-3.5 text-muted-foreground' />
-              <span>{context.location.maxCommuteMinutes ?? 30} min max commute</span>
-            </div>
-          )}
-
-          {/* Transit requirements */}
-          {(context.filters.busRequired || context.filters.railRequired) && (
-            <div className='flex items-center gap-2 text-sm'>
-              {context.filters.busRequired && (
-                <Badge className='gap-1 text-xs' variant='secondary'>
-                  <Bus className='h-3 w-3' />
-                  Bus
-                </Badge>
-              )}
-              {context.filters.railRequired && (
-                <Badge className='gap-1 text-xs' variant='secondary'>
-                  <Train className='h-3 w-3' />
-                  Rail
-                </Badge>
-              )}
-            </div>
-          )}
-
-          {/* Shifts */}
-          {context.filters.shifts.length > 0 && (
-            <div className='flex items-center gap-2 text-sm flex-wrap'>
-              <Briefcase className='h-3.5 w-3.5 text-muted-foreground' />
-              {context.filters.shifts.map(shift => (
-                <Badge className='text-xs capitalize' key={shift} variant='outline'>
-                  {shift}
-                </Badge>
-              ))}
-            </div>
-          )}
-
-          {/* Second chance preference */}
-          {(context.filters.secondChanceRequired || context.filters.secondChancePreferred) && (
-            <div className='flex items-center gap-2 text-sm'>
-              <Heart className='h-3.5 w-3.5 text-muted-foreground' />
-              <span>
-                {context.filters.secondChanceRequired
-                  ? 'Fair Chance employers only'
-                  : 'Prefer Fair Chance employers'}
-              </span>
-            </div>
-          )}
-
-          {/* Urgent/Easy apply */}
-          {(context.filters.urgentOnly || context.filters.easyApplyOnly) && (
-            <div className='flex items-center gap-2 text-sm'>
-              <Zap className='h-3.5 w-3.5 text-muted-foreground' />
-              {context.filters.urgentOnly && (
-                <Badge className='text-xs' variant='secondary'>
-                  Urgent hiring
-                </Badge>
-              )}
-              {context.filters.easyApplyOnly && (
-                <Badge className='text-xs' variant='secondary'>
-                  Easy apply
-                </Badge>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-/**
- * Tool UI for searchJobs - shows search progress and job cards in a unified card
- */
 export const SearchJobsToolUI = makeAssistantToolUI<SearchJobsArgs, SearchResult>({
   render: ({ args, result, status }) => {
     const isRunning = status.type === 'running'
     const query = args?.query ?? '...'
 
-    // Loading state
     if (isRunning) {
       return (
         <ToolCard
@@ -381,87 +191,32 @@ export const SearchJobsToolUI = makeAssistantToolUI<SearchJobsArgs, SearchResult
       )
     }
 
-    // Handle legacy format (array of jobs) for backwards compatibility
     const jobs = Array.isArray(result) ? result : (result?.jobs ?? [])
-    const searchContext = Array.isArray(result) ? null : result?.searchContext
+    const searchContext = Array.isArray(result)
+      ? createDefaultSearchContext(query)
+      : (result?.searchContext ?? createDefaultSearchContext(query))
 
-    // No results
-    if (jobs.length === 0) {
-      return (
-        <Card className='mb-4 overflow-hidden'>
-          <div className='p-4'>
-            <div className='flex items-center gap-2 text-muted-foreground'>
-              <Search className='h-4 w-4' />
-              <span className='text-sm'>No jobs found</span>
-            </div>
-            <p className='mt-2 text-lg font-medium'>"{searchContext?.query ?? query}"</p>
-          </div>
-          {searchContext && <SearchDetailsSection context={searchContext} />}
-        </Card>
-      )
-    }
-
-    // Results card with carousel
-    return (
-      <Card className='mb-4 overflow-hidden'>
-        {/* Header with query and count */}
-        <div className='p-4 pb-3'>
-          <div className='flex items-start justify-between gap-4'>
-            <div className='min-w-0 flex-1'>
-              <p className='text-lg font-semibold leading-tight truncate'>
-                "{searchContext?.query ?? query}"
-              </p>
-              <p className='text-sm text-muted-foreground mt-1'>
-                Found {jobs.length} job{jobs.length !== 1 ? 's' : ''}
-                {searchContext && searchContext.totalFound > jobs.length && (
-                  <span className='text-muted-foreground/70'>
-                    {' '}
-                    (of {searchContext.totalFound} total)
-                  </span>
-                )}
-              </p>
-            </div>
-            <Search className='h-5 w-5 text-primary flex-shrink-0 mt-1' />
-          </div>
-        </div>
-
-        {/* Expandable search details */}
-        {searchContext && <SearchDetailsSection context={searchContext} />}
-
-        {/* Jobs carousel */}
-        <div className='relative px-10 py-4 bg-muted/20'>
-          <Carousel className='w-full' opts={{ align: 'start' }}>
-            <CarouselContent>
-              {jobs.map(job => (
-                <CarouselItem
-                  className='basis-[280px] sm:basis-[280px] md:basis-[300px]'
-                  key={job.id}
-                >
-                  <JobResultCard
-                    className='h-full'
-                    job={{
-                      company: job.company,
-                      id: job.id,
-                      isSecondChance: job.isSecondChance,
-                      location: job.location,
-                      salary: job.salary,
-                      shifts: job.shifts,
-                      title: job.title,
-                      url: job.url,
-                    }}
-                  />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className='left-0 -translate-x-full' />
-            <CarouselNext className='right-0 translate-x-full' />
-          </Carousel>
-        </div>
-      </Card>
-    )
+    return <JobSearchResults jobs={jobs} searchContext={searchContext} />
   },
   toolName: 'searchJobs',
 })
+
+function createDefaultSearchContext(query: string): SearchContext {
+  return {
+    filters: {
+      busRequired: false,
+      easyApplyOnly: false,
+      railRequired: false,
+      secondChancePreferred: false,
+      secondChanceRequired: false,
+      shifts: [],
+      urgentOnly: false,
+    },
+    location: { withinCommuteZone: false },
+    query,
+    totalFound: 0,
+  }
+}
 
 export const QuestionToolUI = makeAssistantToolUI<QuestionArgs, { selectedOption: string }>({
   render: ({ args, result, addResult }) => {
@@ -645,4 +400,5 @@ export const jobMatcherToolUIs = [
   QuestionToolUI,
   CollectLocationToolUI,
   CollectResumeToolUI,
+  PreferenceToolUI,
 ]

@@ -96,12 +96,33 @@ export const upsert = mutation({
 
 export const upsertInternal = internalMutation({
   args: {
+    // Commute preferences
     maxCommuteMinutes: v.optional(v.union(v.literal(10), v.literal(30), v.literal(60))),
+    // Fair chance preferences
+    preferSecondChance: v.optional(v.boolean()),
+    requireBusAccessible: v.optional(v.boolean()),
     requirePublicTransit: v.optional(v.boolean()),
+    requireRailAccessible: v.optional(v.boolean()),
+    requireSecondChance: v.optional(v.boolean()),
+    // Shift preferences
+    shiftAfternoon: v.optional(v.boolean()),
+    shiftEvening: v.optional(v.boolean()),
+    shiftFlexible: v.optional(v.boolean()),
+    shiftMorning: v.optional(v.boolean()),
+    shiftOvernight: v.optional(v.boolean()),
+    // User ID
     workosUserId: v.string(),
   },
   handler: async (ctx, args) => {
     const { workosUserId, ...updates } = args
+
+    // Filter out undefined values to only patch what's provided
+    const filteredUpdates: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(updates)) {
+      if (value !== undefined) {
+        filteredUpdates[key] = value
+      }
+    }
 
     const existing = await ctx.db
       .query('jobPreferences')
@@ -109,7 +130,7 @@ export const upsertInternal = internalMutation({
       .unique()
 
     const data = {
-      ...updates,
+      ...filteredUpdates,
       updatedAt: Date.now(),
       workosUserId,
     }

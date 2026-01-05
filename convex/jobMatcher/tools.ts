@@ -603,35 +603,122 @@ After upload, the resume is automatically included in the next turn's <user-cont
 })
 
 /**
- * Save user preferences to their profile
+ * Silently save user preferences discovered during conversation.
+ * This tool executes immediately (no UI) and writes to jobPreferences.
  */
-export const saveUserPreference = createTool({
+const SHIFT_FIELDS = [
+  'shiftMorning',
+  'shiftAfternoon',
+  'shiftEvening',
+  'shiftOvernight',
+  'shiftFlexible',
+] as const
+
+export const savePreference = createTool({
   args: z.object({
+    clearOtherShifts: z
+      .boolean()
+      .optional()
+      .describe(
+        'Set true when user says "only", "just", or implies exclusivity. Clears all shifts not explicitly set to true.',
+      ),
     maxCommuteMinutes: z
       .union([z.literal(10), z.literal(30), z.literal(60)])
       .optional()
-      .describe('Max commute time in minutes (for transit users)'),
-    requirePublicTransit: z.boolean().optional().describe('Whether user requires public transit'),
+      .describe('Maximum commute time in minutes'),
+    preferSecondChance: z.boolean().optional().describe('Prioritize fair-chance employers'),
+    requirePublicTransit: z.boolean().optional().describe('Must be accessible by public transit'),
+    requireSecondChance: z.boolean().optional().describe('Only show fair-chance employers'),
+    shiftAfternoon: z.boolean().optional().describe('Afternoon shift (12pm-6pm)'),
+    shiftEvening: z.boolean().optional().describe('Evening shift (6pm-12am)'),
+    shiftFlexible: z.boolean().optional().describe('Flexible/any shift'),
+    shiftMorning: z.boolean().optional().describe('Morning shift (6am-12pm)'),
+    shiftOvernight: z.boolean().optional().describe('Overnight shift (12am-6am)'),
   }),
-  description: `Save user preferences to their profile for future searches.
+  description: `Silently save user preferences discovered during conversation.
 
-Call this when the user chooses "Save for future searches" after setting preferences.
-Only saves the fields that are provided.`,
+Use when the user STATES a preference (don't ask again, just save):
+- "I can only work mornings" -> savePreference({ shiftMorning: true, clearOtherShifts: true })
+- "I can also work evenings" -> savePreference({ shiftEvening: true })
+- "I take the bus" -> savePreference({ requirePublicTransit: true })
+- "I have a record" -> savePreference({ preferSecondChance: true })
+- "30 minute commute max" -> savePreference({ maxCommuteMinutes: 30 })
+
+IMPORTANT - clearOtherShifts:
+- Set clearOtherShifts: true when user says "only", "just", or "can't work X" (exclusive intent)
+- Leave it off when user says "also", "and", or is adding to existing preferences (additive intent)
+
+RULES:
+- Only save what user explicitly mentioned
+- Can set multiple fields at once
+- Runs silently - no UI, but top bar updates immediately
+- Can be called alongside other tools (not interactive)
+- Do NOT use this for job type/industry preferences (those aren't saved)`,
   handler: async (ctx, args) => {
     if (!ctx.userId) throw new Error('Not authenticated')
 
+    const { clearOtherShifts, ...prefArgs } = args
+    const updates: Record<string, unknown> = {}
+
+    for (const [key, value] of Object.entries(prefArgs)) {
+      if (value !== undefined) {
+        updates[key] = value
+      }
+    }
+
+    if (clearOtherShifts) {
+      for (const field of SHIFT_FIELDS) {
+        if (updates[field] === undefined) {
+          updates[field] = false
+        }
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      console.log('[Tool:savePreference] No preferences to save')
+      return { reason: 'no_values', saved: false }
+    }
+
     console.log(
-      `[Tool:saveUserPreference] transit=${args.requirePublicTransit}, commute=${args.maxCommuteMinutes}`,
+      `[Tool:savePreference] Saving: ${Object.keys(updates).join(', ')}${clearOtherShifts ? ' (exclusive)' : ''}`,
     )
 
     await ctx.runMutation(internal.jobPreferences.upsertInternal, {
-      maxCommuteMinutes: args.maxCommuteMinutes,
-      requirePublicTransit: args.requirePublicTransit,
       workosUserId: ctx.userId,
+      ...updates,
     })
 
-    return { preferences: args, saved: true }
+    return { fields: Object.keys(updates), saved: true }
   },
+})
+
+/**
+ * UI tool for collecting specific preference with deterministic options.
+ * NO execute function - stops execution and waits for user input via submitToolResult.
+ */
+export const askPreference = tool({
+  description: `Ask user to select a specific preference using a deterministic form.
+
+Use when you NEED to ask (user hasn't stated preference):
+- Need shift info -> askPreference({ preference: "shift" })
+- Need commute tolerance -> askPreference({ preference: "commute" })
+- Need fair-chance preference -> askPreference({ preference: "fairChance" })
+
+RULES:
+- Only ONE askPreference per turn
+- Must be FINAL tool call - STOP after calling
+- Do NOT use if user already stated the preference (use savePreference instead)
+- Do NOT use askQuestion for shift/commute/fairChance (use this tool)
+
+The UI shows a hardcoded form matching our database schema. Selections are saved automatically.`,
+  inputSchema: z.object({
+    context: z
+      .string()
+      .max(200)
+      .optional()
+      .describe('Brief context explaining why you need this (shown to user)'),
+    preference: z.enum(['shift', 'commute', 'fairChance']).describe('Which preference to collect'),
+  }),
 })
 
 export const todoWrite = createTool({
@@ -693,12 +780,13 @@ export const todoRead = createTool({
 })
 
 export const tools = {
+  askPreference,
   askQuestion,
   collectLocation,
   collectResume,
   getMyJobPreferences,
   getMyResume,
-  saveUserPreference,
+  savePreference,
   searchJobs,
   todoRead,
   todoWrite,
