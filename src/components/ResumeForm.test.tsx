@@ -1,0 +1,386 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { render } from 'vitest-browser-react'
+import { resetAllMocks } from '@/test/setup'
+import { ResumeForm } from './ResumeForm'
+
+const mockUser = {
+  email: 'test@example.com',
+  firstName: 'Test',
+  id: 'user_test123',
+  lastName: 'User',
+}
+
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  })
+}
+
+function TestWrapper({ children }: { children: React.ReactNode }) {
+  const queryClient = createTestQueryClient()
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+}
+
+describe('ResumeForm', () => {
+  beforeEach(() => {
+    resetAllMocks()
+    vi.clearAllMocks()
+  })
+
+  describe('Personal Information', () => {
+    test('pre-fills name from user data', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const nameInput = screen.getByLabelText(/full name/i)
+      await expect.element(nameInput).toHaveValue('Test User')
+    })
+
+    test('pre-fills email from user data', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const emailInput = screen.getByLabelText(/email/i)
+      await expect.element(emailInput).toHaveValue('test@example.com')
+    })
+
+    test('has full name input field', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const nameInput = screen.getByLabelText(/full name/i)
+      await expect.element(nameInput).toBeVisible()
+    })
+
+    test('has email input field', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const emailInput = screen.getByLabelText(/email/i)
+      await expect.element(emailInput).toBeVisible()
+    })
+
+    test('has phone input field', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      await expect.element(screen.getByText('Phone')).toBeVisible()
+    })
+
+    test('has location input field', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      await expect.element(screen.getByText('Location')).toBeVisible()
+    })
+  })
+
+  describe('Personal Info Validation', () => {
+    test('shows name required error when name is cleared and blurred', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const nameInput = screen.getByLabelText(/full name/i)
+      await nameInput.fill('')
+
+      const emailInput = screen.getByLabelText(/email/i)
+      await emailInput.click()
+
+      await expect.element(screen.getByText('Name is required')).toBeVisible()
+    })
+
+    test('shows email validation error for invalid email', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const emailInput = screen.getByLabelText(/email/i)
+      await emailInput.fill('invalid-email')
+
+      const nameInput = screen.getByLabelText(/full name/i)
+      await nameInput.click()
+
+      await expect.element(screen.getByText('Please enter a valid email')).toBeVisible()
+    })
+
+    test('accepts valid email without error', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const emailInput = screen.getByLabelText(/email/i)
+      await emailInput.fill('valid@example.com')
+
+      const nameInput = screen.getByLabelText(/full name/i)
+      await nameInput.click()
+
+      const container = screen.container
+      expect(container.textContent).not.toContain('Please enter a valid email')
+    })
+  })
+
+  describe('Work Experience Array', () => {
+    test('starts with one work experience entry', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      await expect.element(screen.getByText('Experience 1')).toBeVisible()
+    })
+
+    test('adds new work experience entry when clicking Add Experience', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      await expect.element(screen.getByText('Experience 1')).toBeVisible()
+
+      await screen.getByText('Add Experience').click()
+
+      await expect.element(screen.getByText('Experience 2')).toBeVisible()
+    })
+
+    test('removes work experience entry when clicking Remove', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Add Experience').click()
+      await expect.element(screen.getByText('Experience 2')).toBeVisible()
+
+      const removeButtons = screen.container.querySelectorAll('button')
+      const removeButton = Array.from(removeButtons).find(btn =>
+        btn.textContent?.includes('Remove'),
+      )
+
+      if (removeButton) {
+        await removeButton.click()
+      }
+
+      const experienceHeaders = screen.container.querySelectorAll('span')
+      const hasExperience2 = Array.from(experienceHeaders).some(
+        span => span.textContent === 'Experience 2',
+      )
+      expect(hasExperience2).toBe(false)
+    })
+
+    test('does not show Remove button when only one work experience exists', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const removeButtons = screen.container.querySelectorAll('button')
+      const hasRemoveInFirstSection = Array.from(removeButtons).some(btn =>
+        btn.textContent?.includes('Remove'),
+      )
+      expect(hasRemoveInFirstSection).toBe(false)
+    })
+  })
+
+  describe('Education Array', () => {
+    test('starts with one education entry', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      await expect.element(screen.getByText('Education 1')).toBeVisible()
+    })
+
+    test('adds new education entry when clicking Add Education', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Add Education').click()
+
+      await expect.element(screen.getByText('Education 2')).toBeVisible()
+    })
+  })
+
+  describe('Form Dirty State', () => {
+    test('form starts as clean (no unsaved indicator)', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const container = screen.container
+      expect(container.textContent).not.toContain('Unsaved changes')
+    })
+
+    test('shows unsaved changes indicator when form is modified', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const nameInput = screen.getByLabelText(/full name/i)
+      await nameInput.fill('Changed Name')
+
+      await expect.element(screen.getByText('Unsaved changes')).toBeVisible()
+    })
+
+    test('discard button resets form to original values', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const nameInput = screen.getByLabelText(/full name/i)
+      const originalValue = 'Test User'
+
+      await nameInput.fill('Changed Name')
+      await expect.element(screen.getByText('Unsaved changes')).toBeVisible()
+
+      await screen.getByText('Discard').click()
+
+      await expect.element(nameInput).toHaveValue(originalValue)
+    })
+  })
+
+  describe('Form Title', () => {
+    test('shows "Build Your Resume" title when no existing resume', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      await expect.element(screen.getByText('Build Your Resume')).toBeVisible()
+    })
+  })
+
+  describe('AI Polish Features', () => {
+    test('has Polish button in summary section', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const polishButtons = screen.container.querySelectorAll('button')
+      const hasPolishButton = Array.from(polishButtons).some(btn =>
+        btn.textContent?.includes('Polish'),
+      )
+      expect(hasPolishButton).toBe(true)
+    })
+
+    test('has Dictate button in summary section', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const dictateButtons = screen.container.querySelectorAll('button')
+      const hasDictateButton = Array.from(dictateButtons).some(btn =>
+        btn.textContent?.includes('Dictate'),
+      )
+      expect(hasDictateButton).toBe(true)
+    })
+  })
+
+  describe('Toolbar', () => {
+    test('has toolbar with action buttons (icons)', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const svgIcons = screen.container.querySelectorAll('svg')
+      expect(svgIcons.length).toBeGreaterThan(0)
+    })
+
+    test('toolbar contains upload icon for import', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const uploadIcon = screen.container.querySelector('svg.lucide-upload')
+      expect(uploadIcon).not.toBeNull()
+    })
+
+    test('toolbar contains eye icon for preview', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const eyeIcon = screen.container.querySelector('svg.lucide-eye')
+      expect(eyeIcon).not.toBeNull()
+    })
+
+    test('toolbar contains download icon', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const downloadIcon = screen.container.querySelector('svg.lucide-download')
+      expect(downloadIcon).not.toBeNull()
+    })
+  })
+
+  describe('Save Button', () => {
+    test('has save button', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      await expect.element(saveButton).toBeVisible()
+    })
+  })
+})
