@@ -40,7 +40,7 @@ export const Thread: FC = () => {
         ['--thread-max-width' as string]: '44rem',
       }}
     >
-      <ThreadPrimitive.Viewport className='aui-thread-viewport relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth px-4 pt-4'>
+      <ThreadPrimitive.Viewport className='aui-thread-viewport relative flex flex-1 flex-col overflow-y-auto overscroll-contain min-h-0 scroll-smooth px-4 pt-4'>
         <AssistantIf condition={({ thread }) => thread.isEmpty}>
           <ThreadWelcome />
         </AssistantIf>
@@ -53,11 +53,13 @@ export const Thread: FC = () => {
           }}
         />
 
-        <ThreadPrimitive.ViewportFooter className='aui-thread-viewport-footer sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) flex-col gap-4 overflow-visible rounded-t-3xl bg-background pb-4 md:pb-6'>
-          <ThreadScrollToBottom />
-          <Composer />
-        </ThreadPrimitive.ViewportFooter>
+        <div className='shrink-0 h-4' />
       </ThreadPrimitive.Viewport>
+
+      <div className='aui-thread-footer shrink-0 relative mx-auto w-full max-w-(--thread-max-width) flex flex-col items-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-background'>
+        <ThreadScrollToBottom />
+        <Composer />
+      </div>
     </ThreadPrimitive.Root>
   )
 }
@@ -66,7 +68,7 @@ const ThreadScrollToBottom: FC = () => {
   return (
     <ThreadPrimitive.ScrollToBottom asChild>
       <TooltipIconButton
-        className='aui-thread-scroll-to-bottom absolute -top-12 z-10 self-center rounded-full p-4 disabled:invisible dark:bg-background dark:hover:bg-accent'
+        className='aui-thread-scroll-to-bottom absolute -top-10 z-10 rounded-full p-3 disabled:invisible bg-background hover:bg-accent border shadow-sm'
         tooltip='Scroll to bottom'
         variant='outline'
       >

@@ -1,6 +1,6 @@
 'use client'
 
-import { Bug, Loader2, RefreshCw, RotateCcw, Search } from 'lucide-react'
+import { Bug, Loader2, Plus, RefreshCw, Search } from 'lucide-react'
 import { useState } from 'react'
 import { FilterDrawer } from '../jobs/FilterDrawer'
 import type { FilterCategory } from '../jobs/FilterSummaryBanner'
@@ -46,7 +46,7 @@ export function ChatHeader({
 
   return (
     <>
-      <div className='sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
+      <div className='shrink-0 z-10 border-b bg-background pt-[env(safe-area-inset-top)]'>
         <div className='flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-2 p-3'>
           <FilterToolbar onCategoryClick={handleCategoryClick} />
 
@@ -63,8 +63,8 @@ export function ChatHeader({
 
             {hasActiveThread && onNewChat && (
               <Button disabled={isSearching} onClick={onNewChat} size='sm' variant='ghost'>
-                <RotateCcw className='mr-2 h-4 w-4' />
-                Start New
+                <Plus className='mr-2 h-4 w-4' />
+                New
               </Button>
             )}
 
@@ -75,19 +75,21 @@ export function ChatHeader({
               </Button>
             )}
 
-            <Button disabled={isSearching} onClick={onForceSearch} size='sm'>
-              {isSearching ? (
-                <>
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  Searching...
-                </>
-              ) : (
-                <>
-                  <Search className='mr-2 h-4 w-4' />
-                  {hasActiveThread ? 'Search Again' : 'Search Now'}
-                </>
-              )}
-            </Button>
+            {hasActiveThread && (
+              <Button disabled={isSearching} onClick={onForceSearch} size='sm'>
+                {isSearching ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className='mr-2 h-4 w-4' />
+                    Redo
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -281,11 +281,11 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
             onForceSearch={handleForceSearch}
           />
           {displayError && (
-            <div className='p-4'>
+            <div className='shrink-0 p-4'>
               <ErrorBanner message={displayError} onRetry={handleRetry} />
             </div>
           )}
-          <div className='flex flex-1 items-center justify-center p-4'>
+          <div className='flex flex-1 min-h-0 overflow-y-auto overscroll-contain items-center justify-center p-4'>
             {resumeGateReason === 'missing' ? (
               <ResumeUploadCard
                 onComplete={() => handleResumeFlowComplete()}
@@ -322,12 +322,12 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
         />
 
         {displayError && (
-          <div className='p-4'>
+          <div className='shrink-0 p-4'>
             <ErrorBanner message={displayError} onRetry={handleRetry} />
           </div>
         )}
 
-        <div className='flex flex-1 items-center justify-center p-4'>
+        <div className='flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col items-center justify-center p-4'>
           <div className='flex w-full max-w-2xl flex-col'>
             <div className='mb-4'>
               <div className='mb-2 flex items-center gap-2'>
@@ -335,39 +335,42 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
                 <h1 className='text-3xl font-semibold'>AI JOB SEARCH</h1>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div className='flex flex-col gap-3'>
-              <textarea
-                className='w-full min-h-40 resize-none border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-                disabled={isSubmitting}
-                onChange={e => setInputValue(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    handleWelcomeSubmit()
-                  }
-                }}
-                placeholder="I'll help you find jobs that match your skills and preferences. Start by telling me what you're looking for, or click 'Search Now' to find matches based on your profile."
-                value={inputValue}
-              />
-              <div className='flex justify-end gap-2'>
-                <Button
-                  className='gap-2'
-                  disabled={isSubmitting || !inputValue.trim()}
-                  onClick={handleWelcomeSubmit}
-                  size='lg'
-                >
-                  {isSubmitting ? (
-                    <Loader2 className='h-4 w-4 animate-spin' />
-                  ) : (
-                    <Send className='h-4 w-4' />
-                  )}
-                  Search Now
-                </Button>
-              </div>
+        <div className='shrink-0 w-full max-w-2xl mx-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]'>
+          <div className='flex flex-col gap-3'>
+            <textarea
+              className='w-full min-h-24 resize-none border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl'
+              disabled={isSubmitting}
+              onChange={e => setInputValue(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleWelcomeSubmit()
+                }
+              }}
+              placeholder="Tell me what kind of job you're looking for..."
+              value={inputValue}
+            />
+            <div className='flex justify-end gap-2'>
+              <Button
+                className='gap-2'
+                disabled={isSubmitting || !inputValue.trim()}
+                onClick={handleWelcomeSubmit}
+                size='lg'
+              >
+                {isSubmitting ? (
+                  <Loader2 className='h-4 w-4 animate-spin' />
+                ) : (
+                  <Send className='h-4 w-4' />
+                )}
+                Search Now
+              </Button>
             </div>
           </div>
         </div>
+
         {isAdmin && (
           <AdminDebugDrawer
             onOpenChange={setDebugDrawerOpen}
@@ -394,7 +397,7 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
       />
 
       {displayError && (
-        <div className='px-4 pt-2'>
+        <div className='shrink-0 px-4 pt-2'>
           <ErrorBanner message={displayError} onRetry={handleRetry} />
         </div>
       )}
@@ -415,7 +418,7 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
         <SearchJobsToolUI />
         <QuestionToolUI />
 
-        <div className='flex-1 overflow-hidden min-h-0'>
+        <div className='flex-1 min-h-0'>
           <Thread />
         </div>
       </JobMatcherRuntimeProvider>
