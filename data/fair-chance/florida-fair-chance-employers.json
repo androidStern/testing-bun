@@ -1,6 +1,519 @@
 {
-  "scrapedAt": "2026-01-05T06:40:05.243Z",
-  "totalEmployers": 0,
-  "totalJobsSeen": 0,
-  "employers": []
+  "scrapedAt": "2026-01-06T06:01:52.007Z",
+  "totalEmployers": 29,
+  "totalJobsSeen": 72,
+  "employers": [
+    {
+      "fccid": "f7c3c2d35dd92dfe",
+      "name": "CEMEX",
+      "slug": "CEMEX",
+      "jobCount": 9,
+      "locations": [
+        "Miami, FL 33182",
+        "Clewiston, FL 33440",
+        "Tampa, FL",
+        "Florida",
+        "Wildwood, FL 34785",
+        "Sanford, FL 32771",
+        "Saint Cloud, FL 34769",
+        "Naples, FL 34110"
+      ],
+      "jobTitles": [
+        "LABORER SERVICEMAN CEMENT",
+        "Laborer Aggregates",
+        "Worker Yard",
+        "Dispatcher",
+        "OPERATOR TERMINAL"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/CEMEX"
+    },
+    {
+      "fccid": "be3b11aa573faee7",
+      "name": "CVS Health",
+      "slug": "CVS-Health",
+      "jobCount": 6,
+      "locations": [
+        "Weston, FL 33331",
+        "Tallahassee, FL 32303",
+        "Milton, FL 32570",
+        "Tampa, FL 33607",
+        "Orlando, FL",
+        "Winter Park, FL 32789"
+      ],
+      "jobTitles": [
+        "Delivery Driver - Omnicare",
+        "Store Associate",
+        "Store Associatte",
+        "Loader 1st Shift",
+        "Inventory Control Coordinator"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/CVS-Health"
+    },
+    {
+      "fccid": "417f86aed2946c16",
+      "name": "Marshalls",
+      "slug": "Marshalls",
+      "jobCount": 6,
+      "locations": [
+        "Davenport, FL 33837",
+        "Saint Augustine, FL 32084",
+        "Brooksville, FL 34613",
+        "Tampa, FL",
+        "Florida",
+        "Clewiston, FL 33440"
+      ],
+      "jobTitles": [
+        "Cashier associate",
+        "Seasonal Overnight 10p-6a Backroom Associate",
+        "ASSOCIATE",
+        "Merchandise Associate",
+        "Cleaner"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Marshalls"
+    },
+    {
+      "fccid": "fefd75f5326e1589",
+      "name": "WALGREENS",
+      "slug": "WALGREENS",
+      "jobCount": 5,
+      "locations": [
+        "Orlando, FL 32829",
+        "Hybrid work in Florida",
+        "Hybrid work in Miami, FL 33126",
+        "Davenport, FL 33837"
+      ],
+      "jobTitles": [
+        "Administrative Assistant",
+        "General Warehouse Person Jupiter - Part-Time",
+        "Pharmacy Scheduler",
+        "Pharmacy Cashier",
+        "Fulfillment Specialist"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/WALGREENS"
+    },
+    {
+      "fccid": "a3163e1f583839d0",
+      "name": "Labcorp",
+      "slug": "Labcorp",
+      "jobCount": 4,
+      "locations": [
+        "Orlando, FL 32792",
+        "Tampa, FL 33607",
+        "Gainesville, FL 32609",
+        "Orlando, FL 32829"
+      ],
+      "jobTitles": [
+        "Lab Associate (data entry)-Orlando",
+        "Medical Courier-Tampa",
+        "Laboratory Specimen Processor",
+        "Lab Testing Clerk - Referrals"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Labcorp"
+    },
+    {
+      "fccid": "f2d0ffe36bb2f0f4",
+      "name": "Live Nation",
+      "slug": "Live-Nation",
+      "jobCount": 4,
+      "locations": [
+        "Lake Buena Vista, FL 32830",
+        "Sunrise, FL 33323",
+        "Tampa, FL 33607",
+        "Wildwood, FL 34785"
+      ],
+      "jobTitles": [
+        "Stage Hand House of Blues Orlando (Disney Springs Lake Buena Vista)",
+        "Insomniac - EDC Orlando 2025 Seasonal Entertainer",
+        "Insomniac - Vans Warped Tour 2025 Seasonal Box Office Attendant",
+        "Production Runner - MIDFLORIDA Credit Union Amphitheatre"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Live-Nation"
+    },
+    {
+      "fccid": "8560c2a313694ce7",
+      "name": "HomeGoods",
+      "slug": "HomeGoods",
+      "jobCount": 4,
+      "locations": [
+        "Brooksville, FL 34601",
+        "Estero, FL 33928",
+        "Miami, FL 33178",
+        "Saint Augustine, FL 32084"
+      ],
+      "jobTitles": [
+        "Retail Merchandise Associate",
+        "Cleaning Associate-",
+        "Backroom Associate",
+        "retail backroom associate"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/HomeGoods"
+    },
+    {
+      "fccid": "756537cd73891813",
+      "name": "Ulta Beauty, Inc.",
+      "slug": "Ulta-Beauty,-Inc.",
+      "jobCount": 4,
+      "locations": [
+        "Kissimmee, FL 34747",
+        "Saint Cloud, FL 34769",
+        "Davenport, FL 33837",
+        "Estero, FL 33928"
+      ],
+      "jobTitles": [
+        "Lead Cashier",
+        "Seasonal Task Associate",
+        "Task"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Ulta-Beauty%2C-Inc."
+    },
+    {
+      "fccid": "2a4da7fa99f4b9ae",
+      "name": "Elevance Health",
+      "slug": "Elevance-Health",
+      "jobCount": 3,
+      "locations": [
+        "Jupiter, FL 33478",
+        "Florida",
+        "Miami, FL 33178"
+      ],
+      "jobTitles": [
+        "Authorization Rep I",
+        "Sales Support Coordinator II (New York Only)",
+        "Distribution Associate- BioPlus Specialty Pharmacy"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Elevance-Health"
+    },
+    {
+      "fccid": "6e6cbd5e71a8e53a",
+      "name": "Victoria's Secret",
+      "slug": "Victoria's-Secret",
+      "jobCount": 3,
+      "locations": [
+        "Kissimmee, FL 34747",
+        "Winter Garden, FL",
+        "Tampa, FL"
+      ],
+      "jobTitles": [
+        "Selling Associate-Sawgrass Mills at The Oasis",
+        "Selling Associate-Winter Garden Village",
+        "Selling Associate-International Plaza"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Victoria's-Secret"
+    },
+    {
+      "fccid": "68ce5c21322a81a4",
+      "name": "Nordstrom",
+      "slug": "Nordstrom",
+      "jobCount": 2,
+      "locations": [
+        "Hybrid work in Lake Mary, FL 32746",
+        "Estero, FL 33928"
+      ],
+      "jobTitles": [
+        "Seasonal Warehouse Associate - Gainesville Distribution Center",
+        "Retail Stock & Fulfillment - Coconut Point Rack"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Nordstrom"
+    },
+    {
+      "fccid": "25b5166547bbf543",
+      "name": "AT&T",
+      "slug": "AT&T",
+      "jobCount": 2,
+      "locations": [
+        "Miami, FL 33169",
+        "Merritt Island, FL"
+      ],
+      "jobTitles": [
+        "Call Center Bilingual Collections Representative (English/Spanish) - Hybrid",
+        "Part Time Retail Sales Consultant"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/AT%26T"
+    },
+    {
+      "fccid": "b59989803df0669c",
+      "name": "PetSmart",
+      "slug": "PetSmart",
+      "jobCount": 2,
+      "locations": [
+        "Orlando, FL 32809",
+        "Estero, FL 33928"
+      ],
+      "jobTitles": [
+        "Retail Sales Associate Part Time",
+        "Pet Bather"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/PetSmart"
+    },
+    {
+      "fccid": "cdd85c4d445cce0f",
+      "name": "Williams-Sonoma, Inc.",
+      "slug": "Williams-Sonoma,-Inc.",
+      "jobCount": 2,
+      "locations": [
+        "West Palm Beach, FL 33410",
+        "Saint Augustine, FL 32084"
+      ],
+      "jobTitles": [
+        "Stock Assoc",
+        "Stockroom Shipper-Receiver Coconut Point WE884"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Williams-Sonoma%2C-Inc."
+    },
+    {
+      "fccid": "94f8a3a6ac5079e2",
+      "name": "Sherwin-Williams",
+      "slug": "Sherwin-Williams",
+      "jobCount": 2,
+      "locations": [
+        "Florida",
+        "Wildwood, FL 34785"
+      ],
+      "jobTitles": [
+        "Bilingual Field Store Associate (Spanish) - Part Time",
+        "Field Store Associate - Part Time"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Sherwin-Williams"
+    },
+    {
+      "fccid": "bd1e91b086243c79",
+      "name": "Ramp",
+      "slug": "Ramp",
+      "jobCount": 1,
+      "locations": [
+        "Hybrid work in Miami, FL"
+      ],
+      "jobTitles": [
+        "Customer Experience Agent"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Ramp"
+    },
+    {
+      "fccid": "f057e04c37cca134",
+      "name": "Amex",
+      "slug": "Amex",
+      "jobCount": 1,
+      "locations": [
+        "Hybrid work in Miami, FL"
+      ],
+      "jobTitles": [
+        "Customer Experience Concierge Centurion Lounge - MIA"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Amex"
+    },
+    {
+      "fccid": "2dd390c3a48a7ed0",
+      "name": "KPMG",
+      "slug": "KPMG",
+      "jobCount": 1,
+      "locations": [
+        "Orlando, FL 32809"
+      ],
+      "jobTitles": [
+        "Document Processing Specialist, Seasonal Support"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/KPMG"
+    },
+    {
+      "fccid": "08ff7fcad836cdbb",
+      "name": "Bath & Body Works",
+      "slug": "Bath-&-Body-Works",
+      "jobCount": 1,
+      "locations": [
+        "Orlando, FL"
+      ],
+      "jobTitles": [
+        "Retail Sales Associate-Sawgrass Square"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Bath-%26-Body-Works"
+    },
+    {
+      "fccid": "b8df555617879658",
+      "name": "Ecolab Inc.",
+      "slug": "Ecolab-Inc.",
+      "jobCount": 1,
+      "locations": [
+        "Sunrise, FL"
+      ],
+      "jobTitles": [
+        "Brand Standards, Guest Experience, & Food Safety Advisor"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Ecolab-Inc."
+    },
+    {
+      "fccid": "26c4ea497c27a6c6",
+      "name": "TJ Maxx",
+      "slug": "TJ-Maxx",
+      "jobCount": 1,
+      "locations": [
+        "Florida"
+      ],
+      "jobTitles": [
+        "Merchandise Associate"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/TJ-Maxx"
+    },
+    {
+      "fccid": "02c3642d72b15da7",
+      "name": "US Veterans Health Administration",
+      "slug": "US-Veterans-Health-Administration",
+      "jobCount": 1,
+      "locations": [
+        "Brooksville, FL 34601"
+      ],
+      "jobTitles": [
+        "Housekeeping Aid"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/US-Veterans-Health-Administration"
+    },
+    {
+      "fccid": "9c874b53d20a7e1d",
+      "name": "American National Red Cross",
+      "slug": "American-National-Red-Cross",
+      "jobCount": 1,
+      "locations": [
+        "Florida"
+      ],
+      "jobTitles": [
+        "Apheresis Telerecruitment Representative"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/American-National-Red-Cross"
+    },
+    {
+      "fccid": "c3d54cd455267476",
+      "name": "Vans",
+      "slug": "Vans",
+      "jobCount": 1,
+      "locations": [
+        "Orange Park, FL 32067"
+      ],
+      "jobTitles": [
+        "Vans: Floor Supervisor - Orange Park Mall"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Vans"
+    },
+    {
+      "fccid": "0f97f3c514b55d0d",
+      "name": "Blue Origin",
+      "slug": "Blue-Origin",
+      "jobCount": 1,
+      "locations": [
+        "Florida"
+      ],
+      "jobTitles": [
+        "Lunar Operations - Production Support Technician (All Levels)"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Blue-Origin"
+    },
+    {
+      "fccid": "d57a67431f719964",
+      "name": "Frito-Lay North America",
+      "slug": "Frito-Lay-North-America",
+      "jobCount": 1,
+      "locations": [
+        "Bradenton, FL"
+      ],
+      "jobTitles": [
+        "Merchandiser"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Frito-Lay-North-America"
+    },
+    {
+      "fccid": "dd616958bd9ddc12",
+      "name": "Fitness CF Gym",
+      "slug": "Fitness-CF-Gym",
+      "jobCount": 1,
+      "locations": [
+        "Davenport, FL 33837"
+      ],
+      "jobTitles": [
+        "Female Housekeeper"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Fitness-CF-Gym"
+    },
+    {
+      "fccid": "d092e7dc51468c22",
+      "name": "Topgolf Callaway Brands Corp.",
+      "slug": "Topgolf-Callaway-Brands-Corp.",
+      "jobCount": 1,
+      "locations": [
+        "Florida"
+      ],
+      "jobTitles": [
+        "Janitorial Worker"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Topgolf-Callaway-Brands-Corp."
+    },
+    {
+      "fccid": "3646b595c8497783",
+      "name": "Homesense",
+      "slug": "Homesense",
+      "jobCount": 1,
+      "locations": [
+        "Florida"
+      ],
+      "jobTitles": [
+        "merchandise associate"
+      ],
+      "firstSeen": "2026-01-06T06:00:00.247Z",
+      "lastSeen": "2026-01-06T06:00:00.247Z",
+      "indeedUrl": "https://www.indeed.com/cmp/Homesense"
+    }
+  ]
 }

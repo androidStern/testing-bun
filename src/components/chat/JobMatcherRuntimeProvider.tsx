@@ -35,26 +35,32 @@ export function JobMatcherRuntimeProvider({
   onError,
   systemPromptOverride,
 }: JobMatcherRuntimeProviderProps) {
-  const { results: messages, status: paginationStatus } = useUIMessages(
+  const { results: allMessages, status: paginationStatus } = useUIMessages(
     api.jobMatcher.messages.listThreadMessages,
     threadId ? { threadId } : 'skip',
     { initialNumItems: 50, stream: true },
   )
+
+  const latestTurnMessages = useMemo(() => {
+    if (!allMessages?.length) return []
+    const maxOrder = Math.max(...allMessages.map(m => m.order))
+    return allMessages.filter(m => m.order === maxOrder)
+  }, [allMessages])
 
   const startSearchAction = useAction(api.jobMatcher.actions.startSearch)
   const sendMessageAction = useAction(api.jobMatcher.actions.sendMessage)
   const submitToolResultAction = useAction(api.jobMatcher.actions.submitToolResult)
 
   const isRunning = useMemo(() => {
-    if (!messages?.length) return false
-    return messages.some(msg => isMessageStreaming(msg))
-  }, [messages])
+    if (!latestTurnMessages?.length) return false
+    return latestTurnMessages.some(msg => isMessageStreaming(msg))
+  }, [latestTurnMessages])
 
   const convertedMessages = useExternalMessageConverter({
     callback: convertConvexMessage,
     isRunning,
     joinStrategy: 'none',
-    messages: messages ?? [],
+    messages: latestTurnMessages,
   })
 
   const handleAddToolResult = useCallback(
