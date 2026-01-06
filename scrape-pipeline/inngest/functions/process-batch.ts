@@ -15,6 +15,7 @@ import {
   insertJob,
   markJobIndexed,
 } from '../../lib/convex'
+import { sendEmail } from '../../lib/email'
 import { enrichJob } from '../../lib/enrichment'
 import { getEmployerSignal } from '../../lib/enrichment/second-chance-employer'
 // Multi-signal second-chance scoring
@@ -32,6 +33,61 @@ import type { SnagajobJob } from '../../scrapers/snagajob'
 import type { TransitScore } from '../../transit-scorer'
 import { loadTransitData, scoreTransitAccess } from '../../transit-scorer'
 import { inngest } from '../client'
+
+// Sample 1/20th of duplicates for monitoring
+const DUPLICATE_SAMPLE_RATE = 1 / 20
+
+interface SampledDuplicate {
+  title: string
+  company: string
+  location: string
+  url: string
+  externalId: string
+  duplicateOf: string
+  hammingDistance: number
+}
+
+interface BatchStats {
+  source: string
+  totalProcessed: number
+  totalDuplicates: number
+  totalIndexed: number
+}
+
+function formatDuplicateSampleEmail(samples: SampledDuplicate[], stats: BatchStats): string {
+  const lines = [
+    `Duplicate Sampling Report`,
+    `========================`,
+    ``,
+    `Source: ${stats.source}`,
+    `Total processed: ${stats.totalProcessed}`,
+    `Duplicates filtered: ${stats.totalDuplicates}`,
+    `Jobs indexed: ${stats.totalIndexed}`,
+    `Sample rate: 1/20`,
+    `Samples in this email: ${samples.length}`,
+    ``,
+    `---`,
+    ``,
+  ]
+
+  for (const sample of samples) {
+    lines.push(`Job: ${sample.title}`)
+    lines.push(`Company: ${sample.company}`)
+    lines.push(`Location: ${sample.location}`)
+    lines.push(`URL: ${sample.url}`)
+    lines.push(`External ID: ${sample.externalId}`)
+    lines.push(``)
+    lines.push(`  -> Matched existing job: ${sample.duplicateOf}`)
+    lines.push(`  -> Hamming distance: ${sample.hammingDistance} (threshold: 10)`)
+    lines.push(``)
+    lines.push(`---`)
+    lines.push(``)
+  }
+
+  lines.push(`If jobs look like false positives, consider adjusting dedup thresholds.`)
+
+  return lines.join('\n')
+}
 
 // Helper: Convert SnagajobJob to ConvexJobInput
 // Note: Convex rejects null, only accepts undefined for optional fields
@@ -134,13 +190,12 @@ export const processBatch = inngest.createFunction(
       await loadTransitData()
     })
 
-    // Process each job: dedup → convex insert → enrich → convex enrich → index → convex mark indexed
     const results = await step.run('process-jobs', async () => {
       let indexed = 0
       let duplicates = 0
+      const sampledDuplicates: SampledDuplicate[] = []
 
       for (const job of jobs) {
-        // Step 1: Dedup check (Redis)
         const dedupResult = await dedup.processJob({
           company: job.company,
           description: job.descriptionText || '',
@@ -153,6 +208,17 @@ export const processBatch = inngest.createFunction(
 
         if (dedupResult.isDuplicate) {
           duplicates++
+          if (Math.random() < DUPLICATE_SAMPLE_RATE) {
+            sampledDuplicates.push({
+              company: job.company,
+              duplicateOf: dedupResult.duplicateOf,
+              externalId: job.id,
+              hammingDistance: dedupResult.hammingDistance ?? -1,
+              location: `${job.city || ''}, ${job.state || ''}`,
+              title: job.title,
+              url: job.applyUrl,
+            })
+          }
           continue
         }
 
@@ -200,7 +266,6 @@ export const processBatch = inngest.createFunction(
         logger.info(`Indexed: ${job.title} at ${job.company}`)
       }
 
-      // Record daily metrics to Redis
       const redis = getRedis()
       const today = new Date().toISOString().split('T')[0]
       const metricsKey = `dedup:metrics:${today}`
@@ -208,12 +273,27 @@ export const processBatch = inngest.createFunction(
       await redis.hincrby(metricsKey, 'duplicates', duplicates)
       await redis.hincrby(metricsKey, 'indexed', indexed)
       await redis.hincrby(metricsKey, `source:${source}`, jobs.length)
-      await redis.expire(metricsKey, 60 * 60 * 24 * 30) // 30 days
+      await redis.expire(metricsKey, 60 * 60 * 24 * 30)
 
-      return { duplicates, indexed }
+      return { duplicates, indexed, sampledDuplicates }
     })
 
+    if (results.sampledDuplicates.length > 0) {
+      await step.run('send-duplicate-sample-email', async () => {
+        const { sampledDuplicates } = results
+        const subject = `[Dedup Sample] ${sampledDuplicates.length} filtered jobs from ${source}`
+        const body = formatDuplicateSampleEmail(sampledDuplicates, {
+          source,
+          totalDuplicates: results.duplicates,
+          totalIndexed: results.indexed,
+          totalProcessed: jobs.length,
+        })
+        await sendEmail(subject, body)
+        logger.info(`Sent duplicate sample email with ${sampledDuplicates.length} jobs`)
+      })
+    }
+
     logger.info(`Batch complete: ${results.indexed} indexed, ${results.duplicates} duplicates`)
-    return results
+    return { duplicates: results.duplicates, indexed: results.indexed }
   },
 )

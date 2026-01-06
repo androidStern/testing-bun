@@ -22,7 +22,7 @@ export function JobCardStack({ jobs, searchContext }: JobCardStackProps) {
     skippedCount: number
   } | null>(null)
 
-  const { data: reviewedJobIds = [] } = useTanstackQuery(
+  const { data: reviewedJobIds = [], isPending: isLoadingReviewedIds } = useTanstackQuery(
     convexQuery(api.jobReviews.getReviewedJobIds, {}),
   )
 
@@ -33,7 +33,7 @@ export function JobCardStack({ jobs, searchContext }: JobCardStackProps) {
     [jobs, reviewedIdsSet],
   )
 
-  const shouldShowModal = modalOpen && !allJobsAlreadyReviewed
+  const shouldShowModal = modalOpen && !isLoadingReviewedIds && !allJobsAlreadyReviewed
 
   const handleComplete = useCallback((savedCount: number, skippedCount: number) => {
     setReviewSummary({ savedCount, skippedCount })
@@ -49,7 +49,7 @@ export function JobCardStack({ jobs, searchContext }: JobCardStackProps) {
   }
 
   return (
-    <div className='space-y-4'>
+    <div className='space-y-4 mb-4'>
       <div className='rounded-lg border border-border overflow-hidden'>
         <SearchProvenance jobCount={jobs.length} searchContext={searchContext} />
       </div>

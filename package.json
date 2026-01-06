@@ -27,9 +27,13 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
+    "coverage": "vitest run --coverage",
     "tunnel": "cloudflared tunnel run inngest-dev",
     "infra:up": "docker-compose up -d",
-    "infra:down": "docker-compose down"
+    "infra:down": "docker-compose down",
+    "sandbox:build": "./scripts/sandbox-build.sh",
+    "sandbox": "./scripts/sandbox-run.sh",
+    "sandbox:coverage": "./scripts/coverage-loop.sh"
   },
   "dependencies": {
     "@ai-sdk/groq": "2",
@@ -127,6 +131,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "@vitest/browser": "^4.0.16",
     "@vitest/browser-playwright": "^4.0.16",
+    "@vitest/coverage-istanbul": "^4.0.16",
     "bun-types": "^1.3.5",
     "dotenv": "^17.2.3",
     "inngest-cli": "^1.15.0",

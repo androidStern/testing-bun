@@ -3,8 +3,9 @@
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
 import { useAction } from 'convex/react'
-import { ChevronDown, ChevronRight, MessageSquare, Trash2, Wrench } from 'lucide-react'
+import { Check, ChevronDown, ChevronRight, Copy, MessageSquare, Trash2, Wrench } from 'lucide-react'
 import { useCallback, useState } from 'react'
+import { toast } from 'sonner'
 
 import { api } from '../../../../convex/_generated/api'
 import { Button } from '../../ui/button'
@@ -141,7 +142,45 @@ function groupByOrder(messages: MessageDoc[]): TurnGroup[] {
     }))
 }
 
+function formatMessagesForExport(messages: MessageDoc[], threadId: string): string {
+  const formatted = messages.map(msg => {
+    const role = msg.message?.role ?? 'unknown'
+    let content = msg.message?.content
+
+    if (Array.isArray(content)) {
+      content = content
+        .map(part => {
+          if (part.type === 'text') return part.text
+          if (part.type === 'tool-call') return `[Tool Call: ${part.toolName}]`
+          if (part.type === 'tool-result') return `[Tool Result: ${part.toolName}]`
+          return '[Unknown content]'
+        })
+        .join('\n')
+    }
+
+    return {
+      content: content ?? '',
+      order: msg.order,
+      role,
+      stepOrder: msg.stepOrder,
+    }
+  })
+
+  return JSON.stringify(
+    {
+      exportedAt: new Date().toISOString(),
+      messageCount: messages.length,
+      messages: formatted,
+      threadId,
+    },
+    null,
+    2,
+  )
+}
+
 export function ThreadTree({ threadId }: ThreadTreeProps) {
+  const [copied, setCopied] = useState(false)
+
   const { data: messages, refetch } = useQuery(
     convexQuery(api.jobMatcher.admin.listThreadMessages, threadId ? { threadId } : 'skip'),
   )
@@ -156,32 +195,79 @@ export function ThreadTree({ threadId }: ThreadTreeProps) {
     [deleteMessageAction, refetch],
   )
 
+  const handleExport = useCallback(async () => {
+    if (!messages || !threadId) return
+
+    try {
+      const exportData = formatMessagesForExport(messages as MessageDoc[], threadId)
+      await navigator.clipboard.writeText(exportData)
+      setCopied(true)
+      toast.success('Chat exported', {
+        description: `${messages.length} messages copied to clipboard`,
+      })
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error('Export failed', {
+        description: 'Could not copy to clipboard',
+      })
+    }
+  }, [messages, threadId])
+
   if (!threadId) {
-    return <div className='text-xs text-muted-foreground p-2'>No active thread</div>
+    return (
+      <div className='flex flex-col h-full'>
+        <div className='px-2 py-1 border-b bg-muted/50 flex-shrink-0'>
+          <span className='text-xs font-medium'>Thread Tree</span>
+        </div>
+        <div className='text-xs text-muted-foreground p-2'>No active thread</div>
+      </div>
+    )
   }
 
   if (!messages) {
-    return <div className='text-xs text-muted-foreground p-2'>Loading...</div>
+    return (
+      <div className='flex flex-col h-full'>
+        <div className='px-2 py-1 border-b bg-muted/50 flex-shrink-0'>
+          <span className='text-xs font-medium'>Thread Tree</span>
+        </div>
+        <div className='text-xs text-muted-foreground p-2'>Loading...</div>
+      </div>
+    )
   }
 
   const turns = groupByOrder(messages as MessageDoc[])
 
-  if (turns.length === 0) {
-    return <div className='text-xs text-muted-foreground p-2'>No messages</div>
-  }
-
   return (
-    <ScrollArea className='h-full'>
-      <div className='p-2 space-y-2 overflow-hidden'>
-        {turns.map(turn => (
-          <div className='border-l-2 border-muted pl-2 overflow-hidden' key={turn.order}>
-            <div className='text-[10px] text-muted-foreground mb-1'>Turn {turn.order}</div>
-            {turn.messages.map(msg => (
-              <MessageNode key={msg._id} message={msg} onDelete={handleDelete} />
+    <div className='flex flex-col h-full'>
+      <div className='px-2 py-1 border-b bg-muted/50 flex-shrink-0 flex items-center justify-between'>
+        <span className='text-xs font-medium'>Thread Tree</span>
+        <Button
+          className='h-5 w-5 p-0'
+          disabled={turns.length === 0}
+          onClick={handleExport}
+          size='sm'
+          title='Export chat to clipboard'
+          variant='ghost'
+        >
+          {copied ? <Check className='h-3 w-3' /> : <Copy className='h-3 w-3' />}
+        </Button>
+      </div>
+      {turns.length === 0 ? (
+        <div className='text-xs text-muted-foreground p-2'>No messages</div>
+      ) : (
+        <ScrollArea className='flex-1 min-h-0'>
+          <div className='p-2 space-y-2 overflow-hidden'>
+            {turns.map(turn => (
+              <div className='border-l-2 border-muted pl-2 overflow-hidden' key={turn.order}>
+                <div className='text-[10px] text-muted-foreground mb-1'>Turn {turn.order}</div>
+                {turn.messages.map(msg => (
+                  <MessageNode key={msg._id} message={msg} onDelete={handleDelete} />
+                ))}
+              </div>
             ))}
           </div>
-        ))}
-      </div>
-    </ScrollArea>
+        </ScrollArea>
+      )}
+    </div>
   )
 }

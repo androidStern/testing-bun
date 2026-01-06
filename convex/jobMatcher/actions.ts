@@ -269,14 +269,23 @@ export const submitToolResult = action({
       threadId: args.threadId,
     })
 
-    console.log(
-      `[submitToolResult] Saved tool-result, continuing from original message: ${toolCallMessage._id}`,
-    )
+    console.log(`[submitToolResult] Saved tool-result`)
+
+    const resultStr = typeof args.result === 'string' ? args.result : JSON.stringify(args.result)
+    const { messageId: userMessageId } = await jobMatcherAgent.saveMessage(ctx, {
+      message: {
+        content: `[selected] ${resultStr}`,
+        role: 'user',
+      },
+      threadId: args.threadId,
+    })
+
+    console.log(`[submitToolResult] Saved user message=${userMessageId} to start new turn`)
 
     await jobMatcherAgent.generateText(
       ctx,
       { threadId: args.threadId, userId },
-      { promptMessageId: toolCallMessage._id, system: systemPrompt },
+      { promptMessageId: userMessageId, system: systemPrompt },
     )
 
     console.log(`[submitToolResult] Done`)

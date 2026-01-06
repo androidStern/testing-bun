@@ -28,13 +28,8 @@ export function AdminDebugDrawer({ onOpenChange, open, threadId }: AdminDebugDra
         </SheetHeader>
 
         <div className='flex-1 flex flex-col min-h-0'>
-          <div className='flex-1 min-h-0 border-b overflow-hidden flex flex-col'>
-            <div className='px-2 py-1 border-b bg-muted/50 flex-shrink-0'>
-              <span className='text-xs font-medium'>Thread Tree</span>
-            </div>
-            <div className='flex-1 min-h-0'>
-              <ThreadTree threadId={threadId} />
-            </div>
+          <div className='flex-1 min-h-0 border-b overflow-hidden'>
+            <ThreadTree threadId={threadId} />
           </div>
 
           <div className='flex-1 min-h-0 overflow-hidden'>

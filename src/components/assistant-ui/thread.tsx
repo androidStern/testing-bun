@@ -220,10 +220,10 @@ const AssistantMessage: FC = () => {
         <MessageError />
       </div>
 
-      <div className='aui-assistant-message-footer mt-1 ml-2 flex'>
+      {/* <div className='aui-assistant-message-footer mt-1 ml-2 flex'>
         <BranchPicker />
         <AssistantActionBar />
-      </div>
+      </div> */}
     </MessagePrimitive.Root>
   )
 }
@@ -260,8 +260,24 @@ const AssistantActionBar: FC = () => {
   )
 }
 
+function parseSelection(jsonStr: string): Array<{ key: string; value: string }> {
+  try {
+    const data = JSON.parse(jsonStr)
+    return Object.entries(data)
+      .filter(([, v]) => v !== false && v !== null && v !== undefined)
+      .map(([k, v]) => ({
+        key: k
+          .replace(/([A-Z])/g, ' $1')
+          .toLowerCase()
+          .trim(),
+        value: String(v),
+      }))
+  } catch {
+    return [{ key: 'selection', value: jsonStr }]
+  }
+}
+
 const UserMessage: FC = () => {
-  // Check if this is a synthetic selection message by detecting [selected] prefix
   const textContent = useMessage(state => {
     const textPart = state.content.find(p => p.type === 'text')
     return textPart && 'text' in textPart ? textPart.text : ''
@@ -269,18 +285,24 @@ const UserMessage: FC = () => {
 
   const isSyntheticSelection = textContent.startsWith('[selected] ')
 
-  // Render synthetic selections as compact chips
   if (isSyntheticSelection) {
-    const displayText = textContent.replace('[selected] ', '')
+    const rawJson = textContent.replace('[selected] ', '')
+    const entries = parseSelection(rawJson)
     return (
       <MessagePrimitive.Root
-        className='mx-auto w-full max-w-(--thread-max-width) px-2 py-1'
+        className='mx-auto w-full max-w-(--thread-max-width) px-2 py-2'
         data-role='user'
       >
-        <div className='flex justify-end'>
-          <span className='text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full italic'>
-            {displayText}
-          </span>
+        <div className='flex justify-end flex-wrap gap-1.5'>
+          {entries.map(({ key, value }) => (
+            <span
+              className='inline-flex items-center gap-1 bg-muted rounded-full px-3 py-1 text-xs'
+              key={key}
+            >
+              <span className='text-muted-foreground'>{key}:</span>
+              <span className='font-medium'>{value}</span>
+            </span>
+          ))}
         </div>
       </MessagePrimitive.Root>
     )
@@ -303,7 +325,7 @@ const UserMessage: FC = () => {
         </div>
       </div>
 
-      <BranchPicker className='aui-user-branch-picker col-span-full col-start-1 row-start-3 -mr-1 justify-end' />
+      {/* <BranchPicker className='aui-user-branch-picker col-span-full col-start-1 row-start-3 -mr-1 justify-end' /> */}
     </MessagePrimitive.Root>
   )
 }
