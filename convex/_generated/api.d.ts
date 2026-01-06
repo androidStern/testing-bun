@@ -23,6 +23,8 @@ import type * as inngest_processJob from "../inngest/processJob.js";
 import type * as inngestNode from "../inngestNode.js";
 import type * as isochrones from "../isochrones.js";
 import type * as jobMatcher_actions from "../jobMatcher/actions.js";
+import type * as jobMatcher_admin from "../jobMatcher/admin.js";
+import type * as jobMatcher_adminNode from "../jobMatcher/adminNode.js";
 import type * as jobMatcher_agent from "../jobMatcher/agent.js";
 import type * as jobMatcher_context from "../jobMatcher/context.js";
 import type * as jobMatcher_index from "../jobMatcher/index.js";
@@ -78,6 +80,8 @@ declare const fullApi: ApiFromModules<{
   inngestNode: typeof inngestNode;
   isochrones: typeof isochrones;
   "jobMatcher/actions": typeof jobMatcher_actions;
+  "jobMatcher/admin": typeof jobMatcher_admin;
+  "jobMatcher/adminNode": typeof jobMatcher_adminNode;
   "jobMatcher/agent": typeof jobMatcher_agent;
   "jobMatcher/context": typeof jobMatcher_context;
   "jobMatcher/index": typeof jobMatcher_index;

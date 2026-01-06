@@ -2,11 +2,18 @@
 
 import { v } from 'convex/values'
 
-import { internal } from '../_generated/api'
-import { action } from '../_generated/server'
+import { api, internal } from '../_generated/api'
+import { type ActionCtx, action } from '../_generated/server'
 
 import { jobMatcherAgent } from './agent'
 import { buildUserContext } from './context'
+
+async function isAdmin(ctx: ActionCtx, userId: string): Promise<boolean> {
+  const profile = await ctx.runQuery(api.profiles.getByWorkosUserId, { workosUserId: userId })
+  if (!profile?.email) return false
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) ?? []
+  return adminEmails.includes(profile.email.toLowerCase())
+}
 
 /**
  * Start a new job search or continue an existing one
@@ -14,6 +21,7 @@ import { buildUserContext } from './context'
 export const startSearch = action({
   args: {
     prompt: v.string(),
+    systemPromptOverride: v.optional(v.string()),
     threadId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -51,6 +59,11 @@ export const startSearch = action({
       sessionStarted: new Date(),
     })
 
+    let systemPrompt = userContext
+    if (args.systemPromptOverride && (await isAdmin(ctx, userId))) {
+      systemPrompt = args.systemPromptOverride
+    }
+
     if (args.threadId) {
       console.log(`[JobMatcher] Continuing thread=${args.threadId}`)
 
@@ -60,7 +73,7 @@ export const startSearch = action({
       })
 
       await thread.streamText(
-        { prompt: args.prompt, system: userContext },
+        { prompt: args.prompt, system: systemPrompt },
         { saveStreamDeltas: true },
       )
 
@@ -79,7 +92,7 @@ export const startSearch = action({
     })
 
     await thread.streamText(
-      { prompt: args.prompt, system: userContext },
+      { prompt: args.prompt, system: systemPrompt },
       { saveStreamDeltas: true },
     )
 
@@ -94,6 +107,7 @@ export const startSearch = action({
 export const sendMessage = action({
   args: {
     message: v.string(),
+    systemPromptOverride: v.optional(v.string()),
     threadId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -127,13 +141,18 @@ export const sendMessage = action({
       sessionStarted: new Date(),
     })
 
+    let systemPrompt = userContext
+    if (args.systemPromptOverride && (await isAdmin(ctx, userId))) {
+      systemPrompt = args.systemPromptOverride
+    }
+
     const { thread } = await jobMatcherAgent.continueThread(ctx, {
       threadId: args.threadId,
       userId,
     })
 
     await thread.streamText(
-      { prompt: args.message, system: userContext },
+      { prompt: args.message, system: systemPrompt },
       { saveStreamDeltas: true },
     )
 
@@ -166,6 +185,7 @@ export const cancelSearch = action({
 export const submitToolResult = action({
   args: {
     result: v.any(),
+    systemPromptOverride: v.optional(v.string()),
     threadId: v.string(),
     toolCallId: v.string(),
     toolName: v.string(),
@@ -176,11 +196,8 @@ export const submitToolResult = action({
 
     const userId = identity.subject
 
-    console.log(
-      `[submitToolResult] toolCallId=${args.toolCallId} toolName=${args.toolName}`,
-    )
+    console.log(`[submitToolResult] toolCallId=${args.toolCallId} toolName=${args.toolName}`)
 
-    // Find the message containing the tool call
     const allMessages = await jobMatcherAgent.listMessages(ctx, {
       paginationOpts: { cursor: null, numItems: 100 },
       threadId: args.threadId,
@@ -202,7 +219,6 @@ export const submitToolResult = action({
 
     console.log(`[submitToolResult] Found tool call message: ${toolCallMessage._id}`)
 
-    // Fetch fresh context
     const [resume, preferences, profile] = await Promise.all([
       ctx.runQuery(internal.resumes.getByWorkosUserIdInternal, { workosUserId: userId }),
       ctx.runQuery(internal.jobPreferences.getByWorkosUserIdInternal, { workosUserId: userId }),
@@ -228,12 +244,16 @@ export const submitToolResult = action({
       sessionStarted: new Date(),
     })
 
-    const { thread } = await jobMatcherAgent.continueThread(ctx, {
+    let systemPrompt = userContext
+    if (args.systemPromptOverride && (await isAdmin(ctx, userId))) {
+      systemPrompt = args.systemPromptOverride
+    }
+
+    await jobMatcherAgent.continueThread(ctx, {
       threadId: args.threadId,
       userId,
     })
 
-    // Save the tool-result message
     await jobMatcherAgent.saveMessage(ctx, {
       message: {
         content: [
@@ -249,15 +269,14 @@ export const submitToolResult = action({
       threadId: args.threadId,
     })
 
-    console.log(`[submitToolResult] Saved tool-result, continuing from original message: ${toolCallMessage._id}`)
+    console.log(
+      `[submitToolResult] Saved tool-result, continuing from original message: ${toolCallMessage._id}`,
+    )
 
-    // Continue with generateText using ORIGINAL tool-call message ID
-    // This matches the official human-in-the-loop pattern and avoids
-    // the saveStreamDeltas bug (Issue #185) that causes duplicate rendering
     await jobMatcherAgent.generateText(
       ctx,
       { threadId: args.threadId, userId },
-      { promptMessageId: toolCallMessage._id, system: userContext },
+      { promptMessageId: toolCallMessage._id, system: systemPrompt },
     )
 
     console.log(`[submitToolResult] Done`)
@@ -269,6 +288,7 @@ export const submitToolResult = action({
 
 export const forceSearch = action({
   args: {
+    systemPromptOverride: v.optional(v.string()),
     threadId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -306,6 +326,11 @@ export const forceSearch = action({
       sessionStarted: new Date(),
     })
 
+    let systemPrompt = userContext
+    if (args.systemPromptOverride && (await isAdmin(ctx, userId))) {
+      systemPrompt = args.systemPromptOverride
+    }
+
     if (args.threadId) {
       console.log(`[JobMatcher] Force search on existing thread=${args.threadId}`)
 
@@ -315,7 +340,7 @@ export const forceSearch = action({
       })
 
       await thread.streamText(
-        { prompt: forcePrompt, system: userContext },
+        { prompt: forcePrompt, system: systemPrompt },
         { saveStreamDeltas: true },
       )
 
@@ -334,7 +359,7 @@ export const forceSearch = action({
     })
 
     await thread.streamText(
-      { prompt: forcePrompt, system: userContext },
+      { prompt: forcePrompt, system: systemPrompt },
       { saveStreamDeltas: true },
     )
 

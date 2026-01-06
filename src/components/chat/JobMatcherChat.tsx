@@ -8,10 +8,12 @@ import { useCallback, useMemo, useState } from 'react'
 
 import { Thread } from '@/components/assistant-ui/thread'
 import { ErrorBanner } from '@/components/ErrorBanner'
+import { usePromptOverride } from '@/hooks/use-prompt-override'
 import { api } from '../../../convex/_generated/api'
 import type { JobPreferences } from '../jobs/FilterSummaryBanner'
 import { ResumeUploadCard } from '../resume/ResumeUploadCard'
 import { Button } from '../ui/button'
+import { AdminDebugDrawer } from './AdminDebugDrawer'
 import { ChatHeader } from './ChatHeader'
 import { JobMatcherRuntimeProvider } from './JobMatcherRuntimeProvider'
 import { PlanHeader } from './PlanHeader'
@@ -95,6 +97,10 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
   const [inputValue, setInputValue] = useState(initialPrompt ?? '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [debugDrawerOpen, setDebugDrawerOpen] = useState(false)
+
+  const { data: isAdmin } = useQuery(convexQuery(api.auth.isAdmin, {}))
+  const { promptOverride } = usePromptOverride()
 
   const {
     data: existingResume,
@@ -155,7 +161,10 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
       if (currentPrefs) {
         setLastSearchPrefs(currentPrefs)
       }
-      const result = await forceSearchAction({ threadId: threadId ?? undefined })
+      const result = await forceSearchAction({
+        systemPromptOverride: promptOverride ?? undefined,
+        threadId: threadId ?? undefined,
+      })
       if (result.isNew) {
         setActiveThreadId(result.threadId)
         await refetchSearch()
@@ -166,7 +175,7 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
     } finally {
       setIsForceSearching(false)
     }
-  }, [forceSearchAction, threadId, refetchSearch, currentPrefs, clearActionError])
+  }, [forceSearchAction, threadId, refetchSearch, currentPrefs, clearActionError, promptOverride])
 
   const handleThreadCreated = useCallback(
     (newThreadId: string) => {
@@ -200,7 +209,10 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
       setIsSubmitting(true)
       clearActionError()
       try {
-        const result = await startSearchAction({ prompt: text })
+        const result = await startSearchAction({
+          prompt: text,
+          systemPromptOverride: promptOverride ?? undefined,
+        })
         setActiveThreadId(result.threadId)
         setInputValue('')
         await refetchSearch()
@@ -211,7 +223,7 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
         setIsSubmitting(false)
       }
     },
-    [startSearchAction, refetchSearch, clearActionError],
+    [startSearchAction, refetchSearch, clearActionError, promptOverride],
   )
 
   const handleWelcomeSubmit = useCallback(async () => {
@@ -262,8 +274,10 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
           <ChatHeader
             filtersChanged={false}
             hasActiveThread={false}
+            isAdmin={isAdmin ?? false}
             isAuthenticated={true}
             isSearching={isForceSearching}
+            onDebugClick={() => setDebugDrawerOpen(true)}
             onForceSearch={handleForceSearch}
           />
           {displayError && (
@@ -284,6 +298,13 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
               />
             )}
           </div>
+          {isAdmin && (
+            <AdminDebugDrawer
+              onOpenChange={setDebugDrawerOpen}
+              open={debugDrawerOpen}
+              threadId={threadId}
+            />
+          )}
         </div>
       )
     }
@@ -293,8 +314,10 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
         <ChatHeader
           filtersChanged={false}
           hasActiveThread={false}
+          isAdmin={isAdmin ?? false}
           isAuthenticated={true}
           isSearching={isForceSearching}
+          onDebugClick={() => setDebugDrawerOpen(true)}
           onForceSearch={handleForceSearch}
         />
 
@@ -345,6 +368,13 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
             </div>
           </div>
         </div>
+        {isAdmin && (
+          <AdminDebugDrawer
+            onOpenChange={setDebugDrawerOpen}
+            open={debugDrawerOpen}
+            threadId={threadId}
+          />
+        )}
       </div>
     )
   }
@@ -354,8 +384,10 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
       <ChatHeader
         filtersChanged={filtersChanged}
         hasActiveThread={true}
+        isAdmin={isAdmin ?? false}
         isAuthenticated={true}
         isSearching={isForceSearching}
+        onDebugClick={() => setDebugDrawerOpen(true)}
         onForceSearch={handleForceSearch}
         onNewChat={handleNewChat}
         onRedoSearch={handleRedoSearch}
@@ -372,6 +404,7 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
       <JobMatcherRuntimeProvider
         onError={handleRuntimeError}
         onThreadCreated={handleThreadCreated}
+        systemPromptOverride={promptOverride}
         threadId={threadId}
       >
         <ResumeToolUI />
@@ -386,6 +419,14 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
           <Thread />
         </div>
       </JobMatcherRuntimeProvider>
+
+      {isAdmin && (
+        <AdminDebugDrawer
+          onOpenChange={setDebugDrawerOpen}
+          open={debugDrawerOpen}
+          threadId={threadId}
+        />
+      )}
     </div>
   )
 }

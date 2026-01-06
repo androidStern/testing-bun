@@ -1,4 +1,5 @@
 export * from './actions'
+export * as admin from './admin'
 export { jobMatcherAgent } from './agent'
 export { buildUserContext } from './context'
 export * from './messages'

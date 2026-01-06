@@ -1,10 +1,11 @@
 'use client'
 
-import { Loader2, RefreshCw, RotateCcw, Search } from 'lucide-react'
+import { Bug, Loader2, RefreshCw, RotateCcw, Search } from 'lucide-react'
 import { useState } from 'react'
 import { FilterDrawer } from '../jobs/FilterDrawer'
 import type { FilterCategory } from '../jobs/FilterSummaryBanner'
 import { FilterToolbar } from '../jobs/FilterToolbar'
+import { ThemeToggle } from '../ThemeToggle'
 import { Button } from '../ui/button'
 import { SavedJobsDrawer } from './SavedJobsDrawer'
 import { SavedJobsToggle } from './SavedJobsToggle'
@@ -17,6 +18,8 @@ interface ChatHeaderProps {
   hasActiveThread: boolean
   filtersChanged?: boolean
   isAuthenticated?: boolean
+  isAdmin?: boolean
+  onDebugClick?: () => void
 }
 
 export function ChatHeader({
@@ -27,6 +30,8 @@ export function ChatHeader({
   hasActiveThread,
   filtersChanged = false,
   isAuthenticated = false,
+  isAdmin = false,
+  onDebugClick,
 }: ChatHeaderProps) {
   const [drawerCategory, setDrawerCategory] = useState<FilterCategory | null>(null)
   const [savedJobsOpen, setSavedJobsOpen] = useState(false)
@@ -46,6 +51,14 @@ export function ChatHeader({
           <FilterToolbar onCategoryClick={handleCategoryClick} />
 
           <div className='flex items-center justify-between md:justify-end gap-2 flex-shrink-0'>
+            <ThemeToggle />
+
+            {isAdmin && onDebugClick && (
+              <Button onClick={onDebugClick} size='sm' variant='ghost'>
+                <Bug className='h-4 w-4' />
+              </Button>
+            )}
+
             {isAuthenticated && <SavedJobsToggle onClick={() => setSavedJobsOpen(true)} />}
 
             {hasActiveThread && onNewChat && (

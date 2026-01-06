@@ -19,6 +19,7 @@ interface JobMatcherRuntimeProviderProps {
   children: ReactNode
   onThreadCreated?: (threadId: string) => void
   onError?: (error: string) => void
+  systemPromptOverride?: string | null
 }
 
 function getErrorMessage(error: unknown): string {
@@ -32,6 +33,7 @@ export function JobMatcherRuntimeProvider({
   children,
   onThreadCreated,
   onError,
+  systemPromptOverride,
 }: JobMatcherRuntimeProviderProps) {
   const { results: messages, status: paginationStatus } = useUIMessages(
     api.jobMatcher.messages.listThreadMessages,
@@ -62,6 +64,7 @@ export function JobMatcherRuntimeProvider({
         try {
           await submitToolResultAction({
             result: options.result,
+            systemPromptOverride: systemPromptOverride ?? undefined,
             threadId,
             toolCallId: options.toolCallId,
             toolName: options.toolName,
@@ -72,7 +75,7 @@ export function JobMatcherRuntimeProvider({
         }
       }
     },
-    [threadId, submitToolResultAction, onError],
+    [threadId, submitToolResultAction, onError, systemPromptOverride],
   )
 
   const handleNewMessage = useCallback(
@@ -86,11 +89,13 @@ export function JobMatcherRuntimeProvider({
         if (threadId) {
           await sendMessageAction({
             message: text,
+            systemPromptOverride: systemPromptOverride ?? undefined,
             threadId,
           })
         } else {
           const result = await startSearchAction({
             prompt: text,
+            systemPromptOverride: systemPromptOverride ?? undefined,
           })
           onThreadCreated?.(result.threadId)
         }
@@ -99,7 +104,14 @@ export function JobMatcherRuntimeProvider({
         onError?.(getErrorMessage(err))
       }
     },
-    [threadId, sendMessageAction, startSearchAction, onThreadCreated, onError],
+    [
+      threadId,
+      sendMessageAction,
+      startSearchAction,
+      onThreadCreated,
+      onError,
+      systemPromptOverride,
+    ],
   )
 
   const runtime = useExternalStoreRuntime({
