@@ -262,9 +262,9 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
           <ChatHeader
             filtersChanged={false}
             hasActiveThread={false}
+            isAuthenticated={true}
             isSearching={isForceSearching}
             onForceSearch={handleForceSearch}
-            workosUserId={user.id}
           />
           {displayError && (
             <div className='p-4'>
@@ -293,9 +293,9 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
         <ChatHeader
           filtersChanged={false}
           hasActiveThread={false}
+          isAuthenticated={true}
           isSearching={isForceSearching}
           onForceSearch={handleForceSearch}
-          workosUserId={user.id}
         />
 
         {displayError && (
@@ -354,11 +354,11 @@ export function JobMatcherChat({ user, initialPrompt }: JobMatcherChatProps) {
       <ChatHeader
         filtersChanged={filtersChanged}
         hasActiveThread={true}
+        isAuthenticated={true}
         isSearching={isForceSearching}
         onForceSearch={handleForceSearch}
         onNewChat={handleNewChat}
         onRedoSearch={handleRedoSearch}
-        workosUserId={user.id}
       />
 
       {displayError && (

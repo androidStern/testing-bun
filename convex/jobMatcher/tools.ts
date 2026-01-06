@@ -412,6 +412,13 @@ After calling searchJobs:
       jobs = filteredJobs
     }
 
+    // Filter out already reviewed jobs
+    const reviewedJobIds = await ctx.runQuery(internal.jobReviews.getReviewedJobIdsInternal, {
+      workosUserId: ctx.userId,
+    })
+    const reviewedIdsSet = new Set(reviewedJobIds)
+    jobs = jobs.filter(hit => !reviewedIdsSet.has(hit.document.id))
+
     // Limit results
     jobs = jobs.slice(0, args.limit)
 

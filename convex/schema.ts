@@ -92,6 +92,34 @@ export default defineSchema({
     workosUserId: v.string(),
   }).index('by_workos_user_id', ['workosUserId']),
 
+  // Job Reviews - tracks user's saved and skipped jobs from search results
+  jobReviews: defineTable({
+    jobId: v.string(),
+    jobSnapshot: v.optional(
+      v.object({
+        busAccessible: v.boolean(),
+        company: v.string(),
+        isEasyApply: v.boolean(),
+        isSecondChance: v.boolean(),
+        isUrgent: v.boolean(),
+        location: v.union(v.string(), v.null()),
+        railAccessible: v.boolean(),
+        salary: v.union(v.string(), v.null()),
+        secondChanceTier: v.union(v.string(), v.null()),
+        shifts: v.array(v.string()),
+        title: v.string(),
+        transitAccessible: v.boolean(),
+        url: v.string(),
+      }),
+    ),
+    reviewedAt: v.number(),
+    status: v.union(v.literal('saved'), v.literal('skipped')),
+    workosUserId: v.string(),
+  })
+    .index('by_user', ['workosUserId'])
+    .index('by_user_and_job', ['workosUserId', 'jobId'])
+    .index('by_user_and_status', ['workosUserId', 'status']),
+
   // Track active job searches (one per user)
   jobSearches: defineTable({
     completedAt: v.optional(v.number()),
@@ -295,11 +323,10 @@ export default defineSchema({
     workosUserId: v.string(),
   }).index('by_workos_user_id', ['workosUserId']),
 
-  // Saved Jobs - user's globally saved jobs from search results
+  // DEPRECATED: Use jobReviews instead - kept for migration
   savedJobs: defineTable({
-    jobId: v.string(), // Original job ID from search results
+    jobId: v.string(),
     jobSnapshot: v.object({
-      // Snapshot of job data at save time
       busAccessible: v.boolean(),
       company: v.string(),
       isEasyApply: v.boolean(),

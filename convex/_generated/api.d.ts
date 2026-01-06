@@ -32,6 +32,7 @@ import type * as jobMatcher_queries from "../jobMatcher/queries.js";
 import type * as jobMatcher_reminders from "../jobMatcher/reminders.js";
 import type * as jobMatcher_tools from "../jobMatcher/tools.js";
 import type * as jobPreferences from "../jobPreferences.js";
+import type * as jobReviews from "../jobReviews.js";
 import type * as jobSubmissions from "../jobSubmissions.js";
 import type * as lib_circle from "../lib/circle.js";
 import type * as lib_crypto from "../lib/crypto.js";
@@ -86,6 +87,7 @@ declare const fullApi: ApiFromModules<{
   "jobMatcher/reminders": typeof jobMatcher_reminders;
   "jobMatcher/tools": typeof jobMatcher_tools;
   jobPreferences: typeof jobPreferences;
+  jobReviews: typeof jobReviews;
   jobSubmissions: typeof jobSubmissions;
   "lib/circle": typeof lib_circle;
   "lib/crypto": typeof lib_crypto;

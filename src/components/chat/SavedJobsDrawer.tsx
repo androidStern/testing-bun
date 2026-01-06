@@ -10,35 +10,31 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { api } from '../../../convex/_generated/api'
-import type { Id } from '../../../convex/_generated/dataModel'
 
 interface SavedJobsDrawerProps {
-  workosUserId: string
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function SavedJobsDrawer({ workosUserId, open, onOpenChange }: SavedJobsDrawerProps) {
-  const { data: savedJobs = [], refetch } = useQuery(
-    convexQuery(api.savedJobs.getSavedJobs, { workosUserId }),
-  )
+export function SavedJobsDrawer({ open, onOpenChange }: SavedJobsDrawerProps) {
+  const { data: savedJobs = [], refetch } = useQuery(convexQuery(api.jobReviews.getSavedJobs, {}))
 
-  const unsaveJobMutation = useMutation(api.savedJobs.unsaveJobById)
-  const [removingId, setRemovingId] = useState<Id<'savedJobs'> | null>(null)
+  const unsaveJobMutation = useMutation(api.jobReviews.unsaveJob)
+  const [removingJobId, setRemovingJobId] = useState<string | null>(null)
 
   const handleRemove = useCallback(
-    async (savedJobId: Id<'savedJobs'>) => {
-      setRemovingId(savedJobId)
+    async (jobId: string) => {
+      setRemovingJobId(jobId)
       try {
-        await unsaveJobMutation({ savedJobId, workosUserId })
+        await unsaveJobMutation({ jobId })
         refetch()
       } catch (error) {
         console.error('Failed to remove job:', error)
       } finally {
-        setRemovingId(null)
+        setRemovingJobId(null)
       }
     },
-    [unsaveJobMutation, workosUserId, refetch],
+    [unsaveJobMutation, refetch],
   )
 
   return (
@@ -61,9 +57,9 @@ export function SavedJobsDrawer({ workosUserId, open, onOpenChange }: SavedJobsD
           ) : (
             savedJobs.map(saved => (
               <SavedJobCard
-                isRemoving={removingId === saved._id}
+                isRemoving={removingJobId === saved.jobId}
                 key={saved._id}
-                onRemove={() => handleRemove(saved._id)}
+                onRemove={() => handleRemove(saved.jobId)}
                 savedJob={saved}
               />
             ))
@@ -76,9 +72,9 @@ export function SavedJobsDrawer({ workosUserId, open, onOpenChange }: SavedJobsD
 
 interface SavedJobCardProps {
   savedJob: {
-    _id: Id<'savedJobs'>
+    _id: string
     jobId: string
-    jobSnapshot: {
+    jobSnapshot?: {
       title: string
       company: string
       location: string | null
@@ -87,7 +83,7 @@ interface SavedJobCardProps {
       isSecondChance: boolean
       url: string
     }
-    savedAt: number
+    reviewedAt: number
   }
   onRemove: () => void
   isRemoving: boolean
@@ -95,6 +91,10 @@ interface SavedJobCardProps {
 
 function SavedJobCard({ savedJob, onRemove, isRemoving }: SavedJobCardProps) {
   const { jobSnapshot } = savedJob
+
+  if (!jobSnapshot) {
+    return null
+  }
 
   return (
     <div className={cn('border rounded-lg p-3 transition-opacity', isRemoving && 'opacity-50')}>

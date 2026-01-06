@@ -133,21 +133,29 @@ export function MorphingCardStack({
   }
 
   const getLayoutStyles = (stackPosition: number) => {
-    const maxVisible = Math.min(visibleCards.length, 3)
+    const maxVisible = Math.min(visibleCards.length, 5)
     const normalizedPosition = Math.min(stackPosition, maxVisible - 1)
 
     switch (layout) {
       case 'stack':
         return {
-          left: normalizedPosition * 6,
-          rotate: normalizedPosition * 1.5,
-          scale: 1 - normalizedPosition * 0.03,
-          top: normalizedPosition * 6,
+          boxShadow:
+            normalizedPosition === 0
+              ? '0 10px 40px -10px rgba(0,0,0,0.3)'
+              : `0 ${4 + normalizedPosition * 2}px ${10 + normalizedPosition * 5}px -${5 + normalizedPosition}px rgba(0,0,0,0.15)`,
+          left: 0,
+          rotate:
+            normalizedPosition === 0
+              ? 0
+              : (normalizedPosition % 2 === 0 ? 1 : -1) * (normalizedPosition * 3),
+          scale: 1 - normalizedPosition * 0.04,
+          top: normalizedPosition * 8,
           zIndex: visibleCards.length - stackPosition,
         }
       case 'grid':
       case 'list':
         return {
+          boxShadow: undefined,
           left: 0,
           rotate: 0,
           scale: 1,
@@ -160,7 +168,7 @@ export function MorphingCardStack({
   const containerStyles = {
     grid: 'grid grid-cols-1 sm:grid-cols-2 gap-3',
     list: 'flex flex-col gap-3',
-    stack: 'relative h-80 w-full max-w-sm mx-auto',
+    stack: 'relative h-96 w-full max-w-md mx-auto pt-4',
   }
 
   const displayCards =
@@ -250,6 +258,7 @@ export function MorphingCardStack({
                   onDragStart={() => setIsDragging(true)}
                   style={{
                     backgroundColor: card.color || undefined,
+                    boxShadow: layout === 'stack' ? styles.boxShadow : undefined,
                   }}
                   transition={{
                     damping: 25,

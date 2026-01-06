@@ -9,15 +9,12 @@ import { cn } from '@/lib/utils'
 import { api } from '../../../convex/_generated/api'
 
 interface SavedJobsToggleProps {
-  workosUserId: string
   onClick: () => void
   className?: string
 }
 
-export function SavedJobsToggle({ workosUserId, onClick, className }: SavedJobsToggleProps) {
-  const { data: count = 0 } = useQuery(
-    convexQuery(api.savedJobs.getSavedJobsCount, { workosUserId }),
-  )
+export function SavedJobsToggle({ onClick, className }: SavedJobsToggleProps) {
+  const { data: count = 0 } = useQuery(convexQuery(api.jobReviews.getSavedJobsCount, {}))
 
   return (
     <Button className={cn('relative gap-2', className)} onClick={onClick} size='sm' variant='ghost'>

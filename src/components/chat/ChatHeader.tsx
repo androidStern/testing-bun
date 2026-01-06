@@ -16,7 +16,7 @@ interface ChatHeaderProps {
   isSearching: boolean
   hasActiveThread: boolean
   filtersChanged?: boolean
-  workosUserId?: string
+  isAuthenticated?: boolean
 }
 
 export function ChatHeader({
@@ -26,7 +26,7 @@ export function ChatHeader({
   isSearching,
   hasActiveThread,
   filtersChanged = false,
-  workosUserId,
+  isAuthenticated = false,
 }: ChatHeaderProps) {
   const [drawerCategory, setDrawerCategory] = useState<FilterCategory | null>(null)
   const [savedJobsOpen, setSavedJobsOpen] = useState(false)
@@ -46,9 +46,7 @@ export function ChatHeader({
           <FilterToolbar onCategoryClick={handleCategoryClick} />
 
           <div className='flex items-center justify-between md:justify-end gap-2 flex-shrink-0'>
-            {workosUserId && (
-              <SavedJobsToggle onClick={() => setSavedJobsOpen(true)} workosUserId={workosUserId} />
-            )}
+            {isAuthenticated && <SavedJobsToggle onClick={() => setSavedJobsOpen(true)} />}
 
             {hasActiveThread && onNewChat && (
               <Button disabled={isSearching} onClick={onNewChat} size='sm' variant='ghost'>
@@ -83,13 +81,7 @@ export function ChatHeader({
 
       <FilterDrawer category={drawerCategory} onClose={handleDrawerClose} />
 
-      {workosUserId && (
-        <SavedJobsDrawer
-          onOpenChange={setSavedJobsOpen}
-          open={savedJobsOpen}
-          workosUserId={workosUserId}
-        />
-      )}
+      {isAuthenticated && <SavedJobsDrawer onOpenChange={setSavedJobsOpen} open={savedJobsOpen} />}
     </>
   )
 }

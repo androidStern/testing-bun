@@ -193,7 +193,7 @@ export const SearchJobsToolUI = makeAssistantToolUI<SearchJobsArgs, SearchResult
       : (result?.searchContext ?? createDefaultSearchContext(query))
 
     if (user?.id) {
-      return <JobCardStack jobs={jobs} searchContext={searchContext} workosUserId={user.id} />
+      return <JobCardStack jobs={jobs} searchContext={searchContext} />
     }
 
     return <JobSearchResults jobs={jobs} searchContext={searchContext} />
