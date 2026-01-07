@@ -978,3 +978,10 @@
 - SenderCard: 77.41% → 80.64% statements, line 57 (handleApprove) now covered
 - Note: Tests admin approval workflow - admin approves pending senders
 
+## Iteration 141
+- File: SenderCard.tsx
+- Tested: Block button triggers status update for pending sender
+- Coverage: 20.93% statements, 22% lines
+- SenderCard: 80.64% → 83.87% statements, line 61 (handleBlock) now covered
+- Note: Tests admin blocking workflow - admin can block pending senders
+
