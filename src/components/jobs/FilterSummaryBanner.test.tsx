@@ -65,6 +65,25 @@ describe('FilterSummaryBanner', () => {
       await expect.element(screen.getByText('Fair chance preferred')).toBeVisible()
     })
 
+    test('shows "Fair chance only" when user requires fair-chance employers exclusively', async () => {
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          requireSecondChance: true,
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <FilterSummaryBanner />
+        </TestWrapper>,
+      )
+
+      // User should see that only fair-chance employers are shown
+      await expect.element(screen.getByText('Fair chance only')).toBeVisible()
+    })
+
     test('shows "Transit accessible" when user requires public transit without commute time', async () => {
       vi.mocked(useQuery).mockReturnValue({
         data: {
