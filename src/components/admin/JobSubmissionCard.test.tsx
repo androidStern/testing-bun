@@ -571,6 +571,33 @@ describe('JobSubmissionCard', () => {
       expect((stateInput.element() as HTMLInputElement).value).toBe('NY')
     })
 
+    test('changing work arrangement select updates the value', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // Find the work arrangement select (has 'remote', 'on-site', 'hybrid' options)
+      const selects = screen.container.querySelectorAll('select')
+      const workArrangementSelect = Array.from(selects).find(s =>
+        Array.from(s.options).some(o => o.value === 'remote') &&
+        Array.from(s.options).some(o => o.value === 'on-site'),
+      ) as HTMLSelectElement
+
+      expect(workArrangementSelect).not.toBeNull()
+
+      // Change the select value from remote to hybrid
+      workArrangementSelect.value = 'hybrid'
+      workArrangementSelect.dispatchEvent(new Event('change', { bubbles: true }))
+
+      // Verify the select value was updated
+      expect(workArrangementSelect.value).toBe('hybrid')
+    })
+
     test('employment type select has correct options', async () => {
       const job = createMockJob({ status: 'pending_approval' })
       const screen = await render(
