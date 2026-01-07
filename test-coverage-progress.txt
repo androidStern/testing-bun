@@ -881,3 +881,10 @@
 - EmployerCard: 81.08% → 83.78% statements, line 178 website onChange handler now covered
 - Note: Tests admin employer editing - updating website URL in edit mode. EmployerCard now at 83.78% (lines 54-55, 60-61, 66-67 uncovered - confirm() handlers)
 
+## Iteration 127
+- File: SenderCard.tsx
+- Tested: Save button triggers mutation and exits editing mode
+- Coverage: 20.27% statements
+- SenderCard: 74.19% → 77.41% statements, handleSave function lines 94-105 now covered
+- Note: Tests admin sender editing - Save button calls adminUpdate mutation and exits editing mode on success
+
