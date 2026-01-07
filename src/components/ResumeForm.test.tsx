@@ -233,6 +233,43 @@ describe('ResumeForm', () => {
 
       await expect.element(screen.getByText('Education 2')).toBeVisible()
     })
+
+    test('removes education entry when clicking Remove in education section', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      // Add a second education entry first
+      await screen.getByText('Add Education').click()
+      await expect.element(screen.getByText('Education 2')).toBeVisible()
+
+      // Find the Remove button in the Education section (near Education 2)
+      // The Education section comes after Work Experience, so we find the card with Education 2
+      const educationCards = screen.container.querySelectorAll('.space-y-6')
+      const removeButtons = screen.container.querySelectorAll('button')
+
+      // Find all Remove buttons - there should be ones in Work Experience (if > 1) and Education
+      // We need the Remove button that's near the Education section
+      const educationRemoveButton = Array.from(removeButtons).filter(btn =>
+        btn.textContent?.includes('Remove')
+      ).pop() // Last remove button should be in Education section
+
+      if (educationRemoveButton) {
+        await educationRemoveButton.click()
+      }
+
+      // Education 2 should no longer exist
+      const educationHeaders = screen.container.querySelectorAll('span')
+      const hasEducation2 = Array.from(educationHeaders).some(
+        span => span.textContent === 'Education 2',
+      )
+      expect(hasEducation2).toBe(false)
+
+      // Education 1 should still exist
+      await expect.element(screen.getByText('Education 1')).toBeVisible()
+    })
   })
 
   describe('Form Dirty State', () => {
