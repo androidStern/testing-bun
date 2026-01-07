@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider, useSuspenseQuery } from '@tanstack/react-query'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { mockConvexMutation, mockExistingProfile, resetAllMocks } from '@/test/setup'
+import { mockConvexAction, mockConvexMutation, mockExistingProfile, resetAllMocks } from '@/test/setup'
 import { ProfileForm } from './ProfileForm'
 
 const mockUser = {
@@ -386,6 +386,33 @@ describe('ProfileForm', () => {
       expect(locationInput).toBeNull()
     })
 
+    test('optional fields are automatically shown when returning user has filled optional data', async () => {
+      // Mock existing profile with optional data (location, website, linkedinUrl)
+      vi.mocked(useSuspenseQuery).mockReturnValue({
+        data: mockExistingProfile, // mockExistingProfile has location and website filled
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <ProfileForm onSuccess={vi.fn()} user={mockUser as never} />
+        </TestWrapper>,
+      )
+
+      // Optional fields should be automatically visible since existingProfile has location and website
+      await expect.element(screen.getByLabelText(/location/i)).toBeVisible()
+      await expect.element(screen.getByLabelText(/website/i)).toBeVisible()
+      await expect.element(screen.getByLabelText(/linkedin/i)).toBeVisible()
+
+      // Reset mock for other tests
+      vi.mocked(useSuspenseQuery).mockReturnValue({
+        data: null,
+        error: null,
+        isLoading: false,
+      } as never)
+    })
+
     test('clicking toggle button shows optional fields', async () => {
       const screen = await render(
         <TestWrapper>
@@ -513,5 +540,6 @@ describe('ProfileForm', () => {
       const polishButton = screen.getByRole('button', { name: /polish with ai/i })
       await expect.element(polishButton).toBeEnabled()
     })
+
   })
 })
