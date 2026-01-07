@@ -31,6 +31,27 @@ describe('ReferralCard', () => {
     })
   })
 
+  describe('Loading/Empty States', () => {
+    test('renders nothing when stats data is null', async () => {
+      // Mock referral stats to return null (user has no referral data yet)
+      vi.mocked(useSuspenseQuery).mockReturnValue({
+        data: null,
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <ReferralCard workosUserId="user_test123" />
+        </TestWrapper>,
+      )
+
+      // Component should not render any content
+      const container = screen.container
+      expect(container.querySelector('.flex')).toBeNull()
+    })
+  })
+
   describe('Referral Stats Display', () => {
     test('shows singular "person" when exactly one referral', async () => {
       // Mock referral stats with exactly 1 referral
