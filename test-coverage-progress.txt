@@ -1345,3 +1345,10 @@
 - Coverage: 26.83% statements (unchanged - branches already covered)
 - Note: Tests video player thumbnail display for landing page
 
+## Iteration 194
+- File: hero-video-dialog.tsx
+- Tested: Clicking thumbnail opens video modal with iframe
+- Coverage: 26.86% statements, 28% lines (+0.03%, +0.03%)
+- HeroVideoDialog: 78.57% → 85.71% (modal open covered)
+- Note: Tests video modal open interaction for landing page hero section
+
