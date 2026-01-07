@@ -145,3 +145,10 @@
 - ChatHeader: 0% → 62.5% statements
 - Note: Big coverage increase - this component also exercises FilterToolbar and other imported components
 
+## Iteration 22
+- File: StatusBadge.tsx
+- Tested: Status labels display correctly for different statuses (pending_review, approved, blocked), falls back to raw status for unknown
+- Coverage: 12.64% statements, 13.45% lines (small component)
+- StatusBadge: 0% → 100%
+- Note: Admin-facing component for displaying job submission statuses
+
