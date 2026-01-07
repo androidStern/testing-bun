@@ -131,3 +131,10 @@
 - ThemeToggle: 0% → 75% statements
 - Note: Simple component but important for accessibility - users with screen readers can toggle theme
 
+## Iteration 20
+- File: JobResultCard.tsx
+- Tested: Job details display (title, company, location, salary), Fair Chance badge, Apply button, and empty state
+- Coverage: 11.48% statements, 12.21% lines
+- JobResultCard: 0% → partial
+- Note: Tests key job search UX - users need to see job info clearly to decide whether to apply
+
