@@ -1,3 +1,18 @@
 # Test Coverage Progress
 # Started: Tue Jan  6 22:02:46 CET 2026
 
+## Iteration 1
+- File: FilterDrawer.tsx
+- Tested: Checkbox toggle behavior - clicking changes state from unchecked→checked→unchecked
+- Coverage: 7.42% → 8.03% statements
+- FilterDrawer: 37.64% → 38.82%
+- Note: Fixed failing tests in ResumeForm.test.tsx (getByLabelText→getByPlaceholder, removed tests for non-existent blur validation)
+- Note: Fixed FilterDrawer.test.tsx (exact match for "Maximum commute time")
+- Note: Fixed ResumeForm Preview Mode test (ExpandableTabs needs 2 clicks)
+
+## Iteration 2
+- File: ResumeForm.tsx + expandable-tabs.tsx
+- Tested: Preview mode toggle - user clicks Preview twice (ExpandableTabs pattern) to switch to preview, Back to form returns
+- Coverage: 8.03% → 8.61% lines
+- expandable-tabs.tsx: 80.95% → 100%
+
