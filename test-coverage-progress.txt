@@ -1,13 +1,8 @@
 Test Coverage Progress
 ======================
-Current: 27.44% statements (target: 90%)
+Current: 27.72% statements (target: 90%)
 
-Latest iteration: 196
-- Added tests for geocodeAddress in geo.ts
-- Tests cover: successful address lookup, address not found error, API failure error
-- geo.ts coverage: 55.55% → 77.77%
-
-Remaining uncovered in geo.ts (lines 9-10, 37-41, 80):
-- Line 9-10: geolocation not supported check
-- Lines 37-41: POSITION_UNAVAILABLE and TIMEOUT error codes  
-- Line 80: catch block in getCityFromCoords
+Latest iteration: 197
+- Added tests for useIsMobile hook
+- Tests cover: mobile viewport (<768px), desktop viewport (>=768px)
+- use-mobile.ts coverage: 0% → 90.9%
