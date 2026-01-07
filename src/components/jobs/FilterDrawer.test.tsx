@@ -338,5 +338,25 @@ describe('FilterDrawer', () => {
       await easyApplyCheckbox?.click()
       expect(easyApplyCheckbox?.getAttribute('data-state')).toBe('unchecked')
     })
+
+    test('toggling commute rail checkbox updates its state', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <FilterDrawer category='commute' onClose={vi.fn()} />
+        </TestWrapper>,
+      )
+
+      // Test "Rail" transit checkbox
+      const railLabel = screen.getByText('Rail')
+      const railCheckbox = railLabel.element().closest('div')?.querySelector('[role="checkbox"]')
+      expect(railCheckbox).not.toBeNull()
+
+      // Initially unchecked
+      expect(railCheckbox?.getAttribute('data-state')).toBe('unchecked')
+
+      // Click to check - user wants rail-accessible jobs
+      await railCheckbox?.click()
+      expect(railCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
   })
 })
