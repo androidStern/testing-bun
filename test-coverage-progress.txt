@@ -1139,3 +1139,10 @@
 - JobSubmissionCard: line 240 (contactPhone onChange) now covered
 - Note: Tests admin workflow for editing contact phone number in job submission
 
+## Iteration 164
+- File: JobSubmissionCard.tsx
+- Tested: Job title input updates value when admin types in edit mode
+- Coverage: 21.53% statements, 22.66% lines
+- JobSubmissionCard: line 169 (title onChange) now covered
+- Note: Tests admin workflow for editing job title in job submission
+
