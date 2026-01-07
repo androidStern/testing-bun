@@ -1264,3 +1264,10 @@
 - ToolProgress: 0% → 50% statements
 - Note: Tests basic tool progress display for job searching UI feedback
 
+## Iteration 182
+- File: ToolProgress.tsx
+- Tested: Progress steps with complete/running/pending statuses
+- Coverage: 23.58% statements, 24.61% lines (+0.03%, +0.03%)
+- ToolProgress: 50% → 75% statements
+- Note: Tests step-by-step progress display for multi-step tool operations
+
