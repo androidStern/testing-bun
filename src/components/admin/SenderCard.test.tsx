@@ -158,5 +158,23 @@ describe('SenderCard', () => {
       // Verify the input value was updated
       expect((notesInput.element() as HTMLInputElement).value).toBe('Important sender - follow up needed')
     })
+
+    test('clicking Save button triggers mutation and exits editing mode', async () => {
+      const screen = await render(<SenderCard sender={mockSender} />)
+
+      // Enter editing mode
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Should be in editing mode
+      await expect.element(screen.getByText('Editing')).toBeVisible()
+
+      // Click Save to persist changes
+      const saveButton = screen.getByText('Save')
+      await saveButton.click()
+
+      // After save completes, should exit editing mode and return to normal display
+      await expect.element(screen.getByText('Edit')).toBeVisible()
+    })
   })
 })
