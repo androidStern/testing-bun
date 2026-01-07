@@ -84,5 +84,20 @@ describe('MessageCard', () => {
       // Should return to normal display - editing UI should be gone
       await expect.element(screen.getByText('Edit')).toBeVisible()
     })
+
+    test('typing in edit textarea updates the message body content', async () => {
+      const screen = await render(<MessageCard message={mockMessage} />)
+
+      // Enter editing mode
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Find the textarea and type new content
+      const textarea = screen.getByPlaceholder('Message body')
+      await textarea.fill('Updated message content for testing')
+
+      // Verify the textarea value was updated
+      expect((textarea.element() as HTMLTextAreaElement).value).toBe('Updated message content for testing')
+    })
   })
 })
