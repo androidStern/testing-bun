@@ -1153,3 +1153,10 @@
 - JobSubmissionCard: line 183 (description onChange) now covered
 - Note: Tests admin workflow for editing job description in job submission
 
+## Iteration 166
+- File: ProfileForm.tsx
+- Tested: Submit button triggers form submission when clicked with valid data
+- Coverage: 21.71% statements, 22.84% lines
+- ProfileForm: lines 198-200 (form onSubmit handler) now covered
+- Note: Tests that clicking submit button with filled form triggers submission
+
