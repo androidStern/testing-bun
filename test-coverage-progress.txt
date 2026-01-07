@@ -908,3 +908,10 @@
 - ReferralCard: now at 100% line coverage, only early-return null check uncovered
 - Note: Tests the singular/plural grammar for referral count display
 
+## Iteration 131
+- File: ResumeForm.tsx
+- Tested: Field of Study input updates value in education section
+- Coverage: 20.32% statements
+- ResumeForm: 22.83% → 23.14% statements, line 1453 education field onChange now covered
+- Note: Tests user typing in education field of study - covers onChange handler for education form field
+
