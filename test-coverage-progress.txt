@@ -628,3 +628,10 @@
 - SavedJobsDrawer: 29.41% → 52.94% statements (lines 58-99 SavedJobCard rendering now covered)
 - Note: Tests core UX - users see their saved jobs with all details and can click Apply to navigate to job
 
+## Iteration 91
+- File: SavedJobsDrawer.tsx
+- Tested: Graceful handling when saved job has no jobSnapshot (null return path at line 96)
+- Coverage: 18.68% statements, 19.64% lines
+- SavedJobsDrawer: 52.94% → 58.82% statements (line 96 null return now covered)
+- Note: Tests edge case where job record exists but snapshot is undefined - component doesn't crash
+
