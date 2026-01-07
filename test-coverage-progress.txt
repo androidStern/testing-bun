@@ -860,3 +860,10 @@
 - EmployerCard: line 148 phone onChange handler now covered
 - Note: Tests admin employer editing - updating employer phone number in edit mode
 
+## Iteration 124
+- File: EmployerCard.tsx
+- Tested: Company field input updates value in editing mode
+- Coverage: 20.18% statements
+- EmployerCard: 75.67% → 78.37% statements, line 158 company onChange handler now covered
+- Note: Tests admin employer editing - updating company name in edit mode
+
