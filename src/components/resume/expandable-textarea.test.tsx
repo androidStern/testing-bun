@@ -56,5 +56,36 @@ describe('ExpandableTextarea', () => {
       const modalTextarea = allTextareas[1] as HTMLTextAreaElement
       expect(modalTextarea.value).toBe('My professional experience includes...')
     })
+
+    test('closing modal triggers onBlur callback', async () => {
+      const onChange = vi.fn()
+      const onBlur = vi.fn()
+      const screen = await render(
+        <ExpandableTextarea
+          modalTitle="Edit Description"
+          onBlur={onBlur}
+          onChange={onChange}
+          placeholder="Enter description..."
+          value="Test content"
+        />,
+      )
+
+      // Open the modal
+      const expandButton = screen.getByRole('button', { name: /expand editor/i })
+      await expandButton.click()
+
+      // Modal should be open
+      await expect.element(screen.getByText('Edit Description')).toBeVisible()
+
+      // onBlur should not have been called yet
+      expect(onBlur).not.toHaveBeenCalled()
+
+      // Close the modal by clicking the close button (X)
+      const closeButton = screen.getByRole('button', { name: /close/i })
+      await closeButton.click()
+
+      // onBlur should be called when modal closes
+      expect(onBlur).toHaveBeenCalledTimes(1)
+    })
   })
 })
