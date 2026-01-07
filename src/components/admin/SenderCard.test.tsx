@@ -204,5 +204,22 @@ describe('SenderCard', () => {
       // Button should still exist (we're not testing mutation result, just that handler fires)
       await expect.element(blockButton).toBeVisible()
     })
+
+    test('clicking Delete button shows confirmation dialog', async () => {
+      vi.stubGlobal('confirm', vi.fn(() => true))
+
+      const screen = await render(<SenderCard sender={mockSender} />)
+
+      // Admin wants to delete a sender
+      const deleteButton = screen.getByRole('button', { name: 'Delete' })
+      await deleteButton.click()
+
+      // Confirm dialog should be called with sender info
+      expect(window.confirm).toHaveBeenCalledWith(
+        expect.stringContaining('Delete sender +1555123456'),
+      )
+
+      vi.unstubAllGlobals()
+    })
   })
 })
