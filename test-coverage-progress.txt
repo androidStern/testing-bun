@@ -1339,3 +1339,9 @@
 - ToolFallback: 83.33% → 100% (line 51 setIsCollapsed now covered)
 - Note: Tests expand/collapse for viewing tool call details in chat
 
+## Iteration 193
+- File: hero-video-dialog.tsx
+- Tested: YouTube thumbnail auto-extraction from embed URL
+- Coverage: 26.83% statements (unchanged - branches already covered)
+- Note: Tests video player thumbnail display for landing page
+
