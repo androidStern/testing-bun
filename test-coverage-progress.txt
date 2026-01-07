@@ -1202,3 +1202,10 @@
 - ProfileForm: tests hasOptionalData conditional for auto-showing optional section
 - Note: Tests UX for returning users - if they filled location/website/linkedin before, optional fields section is visible by default without clicking expand
 
+## Iteration 173
+- File: FilterDrawer.tsx
+- Tested: Submitting commute time preference via Apply button
+- Coverage: 22.22% statements, 23.22% lines (+0.03%, +0.04%)
+- FilterDrawer: line 163 (maxCommuteMinutes dirty submission) now covered
+- Note: Tests that user changing commute time and clicking Apply submits the preference
+
