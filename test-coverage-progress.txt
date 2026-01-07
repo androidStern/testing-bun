@@ -810,3 +810,10 @@
 - SenderCard: line 127 phone onChange handler now covered
 - Note: Tests admin sender editing - updating phone number in edit mode
 
+## Iteration 117
+- File: SenderCard.tsx
+- Tested: Email field input updates value in editing mode
+- Coverage: 19.98% statements, 21.01% lines
+- SenderCard: line 136 email onChange handler now covered
+- Note: Tests admin sender editing - updating email address in edit mode
+
