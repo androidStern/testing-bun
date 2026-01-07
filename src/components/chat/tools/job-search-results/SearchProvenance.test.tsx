@@ -58,4 +58,27 @@ describe('SearchProvenance', () => {
     const container = screen.container
     expect(container.textContent).toContain('warehouse associate')
   })
+
+  test('displays transit and fair chance icons when filters are active', async () => {
+    const context = createContext({
+      query: 'delivery driver',
+      filters: {
+        busRequired: true,
+        easyApplyOnly: false,
+        railRequired: false,
+        secondChancePreferred: true,
+        secondChanceRequired: false,
+        shifts: ['morning'],
+        urgentOnly: false,
+      },
+    })
+
+    const screen = await render(<SearchProvenance jobCount={3} searchContext={context} />)
+
+    // Users should see icons indicating their active filters
+    const container = screen.container
+    expect(container.textContent).toContain('🚌') // transit icon
+    expect(container.textContent).toContain('⭐') // fair chance icon
+    expect(container.textContent).toContain('☀️') // morning shift icon
+  })
 })
