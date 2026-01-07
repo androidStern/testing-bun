@@ -1195,3 +1195,10 @@
 - FilterToolbar: lines 138-139 (shiftOvernight, shiftFlexible branches) now covered
 - Note: Tests Night/Flex display when user selects overnight and flexible shifts
 
+## Iteration 172
+- File: ProfileForm.tsx
+- Tested: Optional fields auto-expand for returning users with filled optional data
+- Coverage: 22.19% statements (unchanged - branch already covered)
+- ProfileForm: tests hasOptionalData conditional for auto-showing optional section
+- Note: Tests UX for returning users - if they filled location/website/linkedin before, optional fields section is visible by default without clicking expand
+
