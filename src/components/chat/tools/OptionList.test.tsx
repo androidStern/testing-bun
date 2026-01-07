@@ -34,4 +34,31 @@ describe('OptionList', () => {
       await expect.element(screen.getByRole('option', { name: 'Contract' })).toBeVisible()
     })
   })
+
+  describe('Single Select Mode', () => {
+    test('clicking an option triggers onConfirm with that option in single-select mode', async () => {
+      const onConfirm = vi.fn()
+      const options = [
+        { id: 'opt1', label: 'Full-time' },
+        { id: 'opt2', label: 'Part-time' },
+      ]
+
+      const screen = await render(
+        <OptionList
+          question="What type of employment?"
+          options={options}
+          selectionMode="single"
+          onConfirm={onConfirm}
+        />,
+      )
+
+      // User clicks an option - should immediately trigger confirm with that selection
+      const fullTimeOption = screen.getByRole('option', { name: 'Full-time' })
+      await fullTimeOption.click()
+
+      // onConfirm should be called with the selected option ID
+      expect(onConfirm).toHaveBeenCalledTimes(1)
+      expect(onConfirm).toHaveBeenCalledWith(['opt1'])
+    })
+  })
 })
