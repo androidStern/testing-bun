@@ -1,7 +1,7 @@
 Test Coverage Progress
 ======================
-Current: 29.48% statements (target: 90%)
+Current: 29.74% statements (target: 90%)
 
-Latest iteration: 208
-- Added delete confirmation dialog test for MessageCard
-- MessageCard.tsx coverage: 88.88% → 96.29%
+Latest iteration: 209
+- Added tests for AdminDebugDrawer index component
+- AdminDebugDrawer folder coverage: 5.81% → 16.27%
