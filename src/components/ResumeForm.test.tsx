@@ -128,6 +128,21 @@ describe('ResumeForm', () => {
       // Verify the input value was updated
       expect((locationInput.element() as HTMLInputElement).value).toBe('Miami, FL')
     })
+
+    test('typing in LinkedIn input updates the value', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      // Find the LinkedIn input by placeholder
+      const linkedinInput = screen.getByPlaceholder('linkedin.com/in/johndoe')
+      await linkedinInput.fill('linkedin.com/in/janesmith')
+
+      // Verify the input value was updated
+      expect((linkedinInput.element() as HTMLInputElement).value).toBe('linkedin.com/in/janesmith')
+    })
   })
 
   describe('Personal Info Validation', () => {
