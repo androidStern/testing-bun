@@ -113,5 +113,20 @@ describe('SenderCard', () => {
       // Verify the input value was updated
       expect((emailInput.element() as HTMLInputElement).value).toBe('newemail@example.com')
     })
+
+    test('typing in name field updates the input value', async () => {
+      const screen = await render(<SenderCard sender={mockSender} />)
+
+      // Enter editing mode
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Find the name input and type new content
+      const nameInput = screen.getByPlaceholder('Name')
+      await nameInput.fill('Jane Smith')
+
+      // Verify the input value was updated
+      expect((nameInput.element() as HTMLInputElement).value).toBe('Jane Smith')
+    })
   })
 })
