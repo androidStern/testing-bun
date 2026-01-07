@@ -168,5 +168,26 @@ describe('FilterSummaryBanner', () => {
       // User should see generic transit text when no specific mode is selected
       await expect.element(screen.getByText('30 min by transit')).toBeVisible()
     })
+
+    test('shows shift names when user has 2 or fewer shift preferences', async () => {
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          shiftMorning: true,
+          shiftEvening: true,
+          // Only 2 shifts - should show names
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <FilterSummaryBanner />
+        </TestWrapper>,
+      )
+
+      // User should see shift names joined with "&" when 2 or fewer
+      await expect.element(screen.getByText('Morning & Evening')).toBeVisible()
+    })
   })
 })
