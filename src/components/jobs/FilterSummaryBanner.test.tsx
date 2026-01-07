@@ -84,5 +84,27 @@ describe('FilterSummaryBanner', () => {
       // User should see transit accessibility is enabled without time restriction
       await expect.element(screen.getByText('Transit accessible')).toBeVisible()
     })
+
+    test('shows commute time with specific transit mode when user selects bus-only', async () => {
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          maxCommuteMinutes: 30,
+          requirePublicTransit: true,
+          requireBusAccessible: true,
+          // requireRailAccessible is not set - user only has bus access
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <FilterSummaryBanner />
+        </TestWrapper>,
+      )
+
+      // User should see "30 min by bus" - their commute time with their specific transit mode
+      await expect.element(screen.getByText('30 min by bus')).toBeVisible()
+    })
   })
 })
