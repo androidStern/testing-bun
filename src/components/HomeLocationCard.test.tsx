@@ -3,6 +3,14 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { resetAllMocks } from '@/test/setup'
 import { HomeLocationCard } from './HomeLocationCard'
+import * as geo from '@/lib/geo'
+
+// Mock geo module
+vi.mock('@/lib/geo', () => ({
+  getCityFromCoords: vi.fn(),
+  getUserLocation: vi.fn(),
+  geocodeAddress: vi.fn(),
+}))
 
 function createTestQueryClient() {
   return new QueryClient({
@@ -71,6 +79,40 @@ describe('HomeLocationCard', () => {
 
       // Users should have option to enter location manually
       await expect.element(screen.getByText('Enter manually')).toBeVisible()
+    })
+  })
+
+  describe('Location Set Display', () => {
+    test('shows city name and "Transit zones ready" when location and isochrones are set', async () => {
+      // Mock profile with location and computed isochrones
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          workosUserId: 'user_123',
+          homeLat: 27.9506,
+          homeLon: -82.4572,
+          isochrones: { computedAt: Date.now() },
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      // Mock getCityFromCoords to return a city name
+      vi.mocked(geo.getCityFromCoords).mockResolvedValue('Tampa')
+
+      const screen = await render(
+        <TestWrapper>
+          <HomeLocationCard workosUserId="user_123" />
+        </TestWrapper>,
+      )
+
+      // User should see their city name displayed
+      await expect.element(screen.getByText('Tampa')).toBeVisible()
+
+      // User should see confirmation that transit zones are computed
+      await expect.element(screen.getByText('Transit zones ready')).toBeVisible()
+
+      // Button should show "Update" instead of "Use my location"
+      await expect.element(screen.getByText('Update')).toBeVisible()
     })
   })
 })
