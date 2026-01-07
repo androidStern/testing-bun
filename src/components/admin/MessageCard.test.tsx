@@ -131,5 +131,19 @@ describe('MessageCard', () => {
       // Button should still exist (we're not testing mutation result, just that handler fires)
       await expect.element(approveButton).toBeVisible()
     })
+
+    test('clicking Reject button triggers status update for pending message', async () => {
+      const screen = await render(<MessageCard message={mockMessage} showActions={true} />)
+
+      // Admin wants to reject a pending message
+      const rejectButton = screen.getByText('Reject')
+      await expect.element(rejectButton).toBeVisible()
+
+      // Click Reject - this triggers updateStatus mutation
+      await rejectButton.click()
+
+      // Button should still exist (we're not testing mutation result, just that handler fires)
+      await expect.element(rejectButton).toBeVisible()
+    })
   })
 })
