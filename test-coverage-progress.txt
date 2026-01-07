@@ -1278,3 +1278,9 @@
 - ActionButtons: 0% → covered, useActionButtons hook also covered
 - Note: Big coverage jump - tests reusable action button component used across tool UIs
 
+## Iteration 184
+- File: action-buttons.tsx + use-action-buttons.tsx
+- Tested: Clicking button triggers onAction with correct action id
+- Coverage: 24.64% statements, 25.67% lines (+0.37%, +0.37%)
+- Note: Tests onClick handler flowing through useActionButtons hook
+
