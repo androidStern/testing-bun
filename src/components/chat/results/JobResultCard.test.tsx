@@ -83,6 +83,22 @@ describe('JobResultsList', () => {
 
       await expect.element(screen.getByText('No matching jobs found.')).toBeVisible()
     })
+
+    test('shows suggestions when no results with improvement tips', async () => {
+      const suggestions = [
+        'Try broadening your search',
+        'Check spelling of keywords',
+      ]
+      const screen = await render(<JobResultsList jobs={[]} suggestions={suggestions} />)
+
+      // User should see the no results message
+      await expect.element(screen.getByText('No matching jobs found.')).toBeVisible()
+
+      // User should also see actionable suggestions
+      await expect.element(screen.getByText('Try:')).toBeVisible()
+      await expect.element(screen.getByText('• Try broadening your search')).toBeVisible()
+      await expect.element(screen.getByText('• Check spelling of keywords')).toBeVisible()
+    })
   })
 
   describe('Suggestions Display', () => {
