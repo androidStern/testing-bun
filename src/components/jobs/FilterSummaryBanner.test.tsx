@@ -233,5 +233,27 @@ describe('FilterSummaryBanner', () => {
       // Callback should be called with the fairChance category
       expect(onCategoryClick).toHaveBeenCalledWith('fairChance')
     })
+
+    test('shows "30 min by bus or rail" when user requires both transit modes', async () => {
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          maxCommuteMinutes: 30,
+          requirePublicTransit: true,
+          requireBusAccessible: true,
+          requireRailAccessible: true,
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <FilterSummaryBanner />
+        </TestWrapper>,
+      )
+
+      // User should see combined transit text when both bus and rail are required
+      await expect.element(screen.getByText('30 min by bus or rail')).toBeVisible()
+    })
   })
 })
