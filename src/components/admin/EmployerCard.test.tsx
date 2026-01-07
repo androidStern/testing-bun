@@ -157,5 +157,20 @@ describe('EmployerCard', () => {
       // Verify the input value was updated
       expect((await phoneInput.element() as HTMLInputElement).value).toBe('+1555999888')
     })
+
+    test('typing in company field updates the input value', async () => {
+      const screen = await render(<EmployerCard employer={mockEmployer} />)
+
+      // Enter editing mode
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Find the company input and type new content
+      const companyInput = screen.getByPlaceholder('Company')
+      await companyInput.fill('New Company Inc')
+
+      // Verify the input value was updated
+      expect((await companyInput.element() as HTMLInputElement).value).toBe('New Company Inc')
+    })
   })
 })

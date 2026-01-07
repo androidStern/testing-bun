@@ -346,6 +346,7 @@ describe('ProfileForm', () => {
 
       await expect.element(submitButton).toBeEnabled()
     })
+
   })
 
   describe('Optional Fields', () => {
