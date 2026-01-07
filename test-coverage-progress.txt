@@ -320,3 +320,10 @@
 - FilterToolbar: lines 153-156 quickParts join now covered
 - Note: FilterToolbar quick apply button shows user's preferences
 
+## Iteration 47
+- File: MessageCard.tsx
+- Tested: Clicking Edit button shows editing mode with textarea, Save and Cancel buttons
+- Coverage: 15.66% statements, 16.41% lines
+- MessageCard: lines 64-71 edit state handling now covered, lines 87-114 edit UI now covered
+- Note: Tests admin message editing workflow
+
