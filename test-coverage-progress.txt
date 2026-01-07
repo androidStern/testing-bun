@@ -1090,3 +1090,10 @@
 - JobSubmissionCard: line 254 (contactMethod onChange) now covered
 - Note: Tests admin workflow for switching contact method between phone/email
 
+## Iteration 157
+- File: JobSubmissionCard.tsx
+- Tested: City input updates value when admin types in edit mode
+- Coverage: 21.33% statements, 22.44% lines
+- JobSubmissionCard: line 270 (locationCity onChange) now covered
+- Note: Tests admin workflow for editing job location city
+
