@@ -684,3 +684,10 @@
 - JobPreferencesForm: 91.66% → 93.75% lines (line 101 loading state now covered)
 - Note: Tests loading UX - users see a spinner while their preferences load from server
 
+## Iteration 99
+- File: FilterToolbar.tsx
+- Tested: Generic transit indicator displays when no specific bus/rail mode selected
+- Coverage: 18.94% statements, 19.92% lines
+- FilterToolbar: 96.29% → 98.14% lines (line 114 now covered)
+- Note: Tests display edge case - '20min transit' shows when transit required but no specific mode
+
