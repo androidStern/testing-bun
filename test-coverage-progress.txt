@@ -208,3 +208,10 @@
 - JobRow: 0% → covered (new test file)
 - Note: Tests critical job search UI - users see job details in list and can expand for more info or apply
 
+## Iteration 31
+- File: FilterToolbar.tsx
+- Tested: Schedule preferences display shows "X shifts" when user has 3+ shifts selected
+- Coverage: 14.51% statements, 15.35% lines
+- FilterToolbar: 57.37% → 63.93% statements, 64.81% → 66.66% lines
+- Note: Tests UX for schedule filters - users with many shift preferences see compact "3 shifts" instead of "AM/PM/Eve"
+
