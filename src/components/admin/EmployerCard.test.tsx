@@ -127,5 +127,20 @@ describe('EmployerCard', () => {
       // Verify the input value was updated
       expect((nameInput.element() as HTMLInputElement).value).toBe('John Director')
     })
+
+    test('typing in email field updates the input value', async () => {
+      const screen = await render(<EmployerCard employer={mockEmployer} />)
+
+      // Enter editing mode
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Find the email input and type new content
+      const emailInput = screen.getByPlaceholder('Email')
+      await emailInput.fill('newemail@company.com')
+
+      // Verify the input value was updated
+      expect((await emailInput.element() as HTMLInputElement).value).toBe('newemail@company.com')
+    })
   })
 })
