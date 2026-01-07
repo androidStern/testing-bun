@@ -128,5 +128,20 @@ describe('SenderCard', () => {
       // Verify the input value was updated
       expect((nameInput.element() as HTMLInputElement).value).toBe('Jane Smith')
     })
+
+    test('typing in company field updates the input value', async () => {
+      const screen = await render(<SenderCard sender={mockSender} />)
+
+      // Enter editing mode
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Find the company input and type new content
+      const companyInput = screen.getByPlaceholder('Company')
+      await companyInput.fill('XYZ Industries')
+
+      // Verify the input value was updated
+      expect((companyInput.element() as HTMLInputElement).value).toBe('XYZ Industries')
+    })
   })
 })
