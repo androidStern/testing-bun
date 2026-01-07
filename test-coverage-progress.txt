@@ -187,3 +187,10 @@
 - expandable-textarea: 44.44% → 55.55% statements, 50% → 62.5% lines
 - Note: Core text entry behavior - user types in textarea and onChange is called with the content
 
+## Iteration 28
+- File: HomeLocationCard.tsx
+- Tested: City name and "Transit zones ready" display when location is set with computed isochrones
+- Coverage: 14.1% statements, 15.04% lines
+- Note: Tests key user feedback - users see their city name + confirmation that transit zones are computed
+- Note: Added mock for @/lib/geo module to handle async getCityFromCoords call
+
