@@ -418,4 +418,31 @@ describe('ResumeForm', () => {
         .toBeVisible()
     })
   })
+
+  describe('Section Guide', () => {
+    test('user can expand section guidance to view tips for filling out personal info', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      // Initially, the tip content should NOT be visible (guidance is collapsed)
+      expect(screen.container.textContent).not.toContain('Make a Strong First Impression')
+
+      // Click the "Master Your Personal Information" guide button to expand
+      const guideButton = screen.getByRole('button', { name: /Master Your Personal Information/i })
+      await guideButton.click()
+
+      // Now the expanded tip content should be visible
+      await expect.element(screen.getByText('Make a Strong First Impression')).toBeVisible()
+      await expect
+        .element(
+          screen.getByText(
+            /Include a professional email address and ensure your phone number is current/i,
+          ),
+        )
+        .toBeVisible()
+    })
+  })
 })
