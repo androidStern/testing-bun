@@ -460,3 +460,10 @@
 - SearchProvenance: 64.51% → higher (lines 47, 51, 55-56 buildFilterIcons now covered)
 - Note: Users see visual icons indicating their active job search filters
 
+## Iteration 67
+- File: FilterToolbar.tsx
+- Tested: Rail transit mode indicator displays "30min rail" for rail-only commute preferences
+- Coverage: 17.16% statements, 17.99% lines
+- FilterToolbar: 83.33% → higher (lines 111-112 rail transit path now covered)
+- Note: Tests commute preferences display when user selects rail-only transit mode
+
