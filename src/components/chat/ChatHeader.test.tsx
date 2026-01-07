@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { resetAllMocks } from '@/test/setup'
@@ -78,6 +78,33 @@ describe('ChatHeader', () => {
 
       // User should see loading state
       await expect.element(screen.getByText('Searching...')).toBeVisible()
+    })
+  })
+
+  describe('Saved Jobs Toggle', () => {
+    test('shows saved jobs toggle button when user is authenticated', async () => {
+      // Mock useQuery for saved jobs
+      vi.mocked(useQuery).mockReturnValue({
+        data: [],
+        error: null,
+        isLoading: false,
+        refetch: vi.fn(),
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <ChatHeader
+            onForceSearch={vi.fn()}
+            isSearching={false}
+            hasActiveThread={true}
+            isAuthenticated={true}
+          />
+        </TestWrapper>,
+      )
+
+      // User should see the saved jobs toggle
+      const savedJobsButton = screen.getByRole('button', { name: /saved/i })
+      await expect.element(savedJobsButton).toBeVisible()
     })
   })
 
