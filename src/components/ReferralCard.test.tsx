@@ -64,5 +64,38 @@ describe('ReferralCard', () => {
       // Verify the button text changes to "Copied"
       await expect.element(screen.getByText('Copied')).toBeVisible()
     })
+
+    test('shows error toast when clipboard copy fails', async () => {
+      // Mock clipboard to fail
+      vi.stubGlobal('navigator', {
+        clipboard: {
+          writeText: vi.fn().mockRejectedValue(new Error('Clipboard unavailable')),
+        },
+      })
+
+      // Mock referral stats data
+      vi.mocked(useSuspenseQuery).mockReturnValue({
+        data: {
+          code: 'TESTCODE456',
+          totalReferrals: 2,
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <ReferralCard workosUserId="user_test123" />
+        </TestWrapper>,
+      )
+
+      // Click the Copy button (will fail)
+      const copyButton = screen.getByRole('button', { name: /copy/i })
+      await copyButton.click()
+
+      // Button should NOT change to "Copied" since copy failed
+      // The error toast is shown but the button stays in Copy state
+      await expect.element(screen.getByText('Copy')).toBeVisible()
+    })
   })
 })
