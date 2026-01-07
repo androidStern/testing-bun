@@ -419,6 +419,21 @@ describe('ProfileForm', () => {
 
       expect((linkedinInput.element() as HTMLInputElement).value).toBe('https://linkedin.com/in/johndoe')
     })
+
+    test('can fill optional Instagram URL field', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ProfileForm onSuccess={vi.fn()} user={mockUser as never} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText(/additional information/i).click()
+
+      const instagramInput = screen.getByLabelText(/instagram/i)
+      await instagramInput.fill('https://instagram.com/johndoe')
+
+      expect((instagramInput.element() as HTMLInputElement).value).toBe('https://instagram.com/johndoe')
+    })
   })
 
   describe('AI Polish Feature', () => {
