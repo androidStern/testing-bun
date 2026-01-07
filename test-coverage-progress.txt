@@ -229,3 +229,10 @@
 - FilterDrawer: 40% → partial (line 531 onCheckedChange handler now covered)
 - Note: Tests Quick Apply filter UX - users can prioritize jobs with urgent hiring
 
+## Iteration 34
+- File: FilterSummaryBanner.tsx
+- Tested: Bus-only transit mode displays "30 min by bus" when user has commute time + bus-only transit preference
+- Coverage: 14.77% statements, 15.63% lines
+- FilterSummaryBanner: covers line 94-95 (requireBusAccessible branch)
+- Note: Tests user-facing filter summary when commuting by specific transit mode
+
