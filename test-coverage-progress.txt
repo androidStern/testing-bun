@@ -817,3 +817,10 @@
 - SenderCard: line 136 email onChange handler now covered
 - Note: Tests admin sender editing - updating email address in edit mode
 
+## Iteration 118
+- File: SenderCard.tsx
+- Tested: Name field input updates value in editing mode
+- Coverage: 20.01% statements, 21.04% lines
+- SenderCard: line 145 name onChange handler now covered
+- Note: Tests admin sender editing - updating sender name in edit mode
+
