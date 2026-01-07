@@ -782,3 +782,10 @@
 - ProfileForm: line 400 resumeLink onChange handler now covered
 - Note: Tests user filling resume link - important for job seekers to share their resume externally
 
+## Iteration 113
+- File: HomeLocationCard.tsx
+- Tested: Cancel button click closes manual entry dialog without saving
+- Coverage: 19.86% statements, 20.88% lines
+- HomeLocationCard: line 191 Cancel button onClick handler now covered
+- Note: Tests dialog dismiss UX - users can close dialog without making changes
+
