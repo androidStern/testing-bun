@@ -110,3 +110,10 @@
 - FilterSummaryBanner: 0% → partial (generateFilterSummary logic covered)
 - Note: Big coverage jump - this component has significant logic for summarizing user preferences
 
+## Iteration 17
+- File: ResumePreview.tsx
+- Tested: User personal info, professional summary, and work experience display correctly
+- Coverage: 10.62% statements, 11.28% lines
+- ResumePreview: 0% → 48.93% statements, 0% → 52.27% lines
+- Note: Tests user-facing resume preview - important for users to verify their data looks correct
+
