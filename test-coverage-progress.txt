@@ -138,3 +138,10 @@
 - JobResultCard: 0% → partial
 - Note: Tests key job search UX - users need to see job info clearly to decide whether to apply
 
+## Iteration 21
+- File: ChatHeader.tsx
+- Tested: New button, Redo button, and Searching loading state display correctly based on thread state
+- Coverage: 12.64% statements, 13.45% lines
+- ChatHeader: 0% → 62.5% statements
+- Note: Big coverage increase - this component also exercises FilterToolbar and other imported components
+
