@@ -740,3 +740,10 @@
 - SenderCard: 54.83% → 58.06% lines (lines 89-91 handleCancel now covered)
 - Note: Tests admin workflow - cancel editing sender without saving changes
 
+## Iteration 107
+- File: EmployerCard.tsx
+- Tested: Clicking Cancel in editing mode returns to normal display
+- Coverage: 19.57% statements, 20.57% lines
+- EmployerCard: 51.35% → 54.05% lines (handleCancel now covered)
+- Note: Tests admin workflow - cancel editing employer without saving changes
+
