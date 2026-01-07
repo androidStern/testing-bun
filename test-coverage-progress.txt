@@ -453,3 +453,10 @@
 - JobResultCard: 76.47% → higher (lines 211-217 suggestions display now covered)
 - Note: Tests user-facing suggestions shown alongside job results
 
+## Iteration 66
+- File: SearchProvenance.tsx
+- Tested: Filter icons (bus, fair chance, shift) display for active preferences
+- Coverage: 17.1% statements, 17.93% lines
+- SearchProvenance: 64.51% → higher (lines 47, 51, 55-56 buildFilterIcons now covered)
+- Note: Users see visual icons indicating their active job search filters
+
