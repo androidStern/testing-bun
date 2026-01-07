@@ -1013,3 +1013,10 @@
 - ResumeForm: line 1294 (workExperience endDate onChange) now covered
 - Note: Tests user typing end date - End Date has unique placeholder "MM/YYYY or Present"
 
+## Iteration 146
+- File: ResumeForm.tsx
+- Tested: Institution input updates value in education section
+- Coverage: 21.07% statements, 22.16% lines
+- ResumeForm: line 1423 (education institution onChange) now covered
+- Note: Tests user typing school name in education section
+
