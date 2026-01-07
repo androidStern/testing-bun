@@ -222,3 +222,10 @@
 - FilterSummaryBanner: 52% → partial (line 109 now covered)
 - Note: Tests user preference for transit without time limit - covers else branch at line 108-113
 
+## Iteration 33
+- File: FilterDrawer.tsx
+- Tested: Quick Apply checkbox toggling - user clicks "Prioritize urgent hiring" checkbox to toggle on/off
+- Coverage: 14.56% statements, 15.41% lines
+- FilterDrawer: 40% → partial (line 531 onCheckedChange handler now covered)
+- Note: Tests Quick Apply filter UX - users can prioritize jobs with urgent hiring
+
