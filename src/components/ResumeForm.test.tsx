@@ -325,6 +325,21 @@ describe('ResumeForm', () => {
       // Verify the input value was updated
       expect((companyInput.element() as HTMLInputElement).value).toBe('Acme Corporation')
     })
+
+    test('typing in Position input updates the value', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      // Find the Position/Job Title input by placeholder and fill it
+      const positionInput = screen.getByPlaceholder('Job Title')
+      await positionInput.fill('Software Engineer')
+
+      // Verify the input value was updated
+      expect((positionInput.element() as HTMLInputElement).value).toBe('Software Engineer')
+    })
   })
 
   describe('Form Dirty State', () => {
