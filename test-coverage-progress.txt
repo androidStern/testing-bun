@@ -726,3 +726,10 @@
 - ResumeToolbar: 69.23% → 100% lines! (lines 38-42 Import and Preview cases now covered)
 - Note: Tests toolbar buttons - users can import and preview their resume via toolbar
 
+## Iteration 105
+- File: ChatHeader.tsx
+- Tested: Clicking filter category button opens the filter drawer
+- Coverage: 19.52% statements, 20.51% lines
+- ChatHeader: 62.5% → 75% lines (line 40 handleCategoryClick now covered)
+- Note: Tests filter category interaction - user clicks Fair Chance to open filter drawer
+
