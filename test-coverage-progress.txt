@@ -544,3 +544,10 @@
 - JobPreferencesForm: line 326 preferUrgent handler now covered
 - Note: Tests urgent hiring preference - users can indicate they want to see urgent job postings first
 
+## Iteration 79
+- File: JobPreferencesForm.tsx
+- Tested: Easy apply checkbox toggle - user clicks "Prioritize easy apply jobs" to prefer simpler applications
+- Coverage: 17.59% statements, 18.46% lines
+- JobPreferencesForm: line 339 preferEasyApply handler now covered
+- Note: Tests easy apply preference - users can indicate they want to prioritize jobs with simpler application processes
+
