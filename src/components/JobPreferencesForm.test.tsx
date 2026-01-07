@@ -353,6 +353,23 @@ describe('JobPreferencesForm', () => {
 
       expect(busCheckbox?.getAttribute('data-state')).toBe('checked')
     })
+
+    test('can toggle require rail access checkbox', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <JobPreferencesForm />
+        </TestWrapper>,
+      )
+
+      const railLabel = screen.getByText('Require rail access')
+      await railLabel.click()
+
+      const railCheckbox = screen.container.querySelector(
+        'button[role="checkbox"][id*="requireRailAccessible"]',
+      ) as HTMLElement | null
+
+      expect(railCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
   })
 
   describe('Max Commute Time Select', () => {
