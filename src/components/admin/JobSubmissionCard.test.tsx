@@ -585,6 +585,32 @@ describe('JobSubmissionCard', () => {
       expect(salaryUnitSelect.value).toBe('hr')
     })
 
+    test('changing employment type select updates the value', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // Find the employment type select (has 'full-time' option)
+      const selects = screen.container.querySelectorAll('select')
+      const employmentTypeSelect = Array.from(selects).find(s =>
+        Array.from(s.options).some(o => o.value === 'full-time'),
+      ) as HTMLSelectElement
+
+      expect(employmentTypeSelect).not.toBeNull()
+
+      // Change the select value from full-time to contract
+      employmentTypeSelect.value = 'contract'
+      employmentTypeSelect.dispatchEvent(new Event('change', { bubbles: true }))
+
+      // Verify the select value was updated
+      expect(employmentTypeSelect.value).toBe('contract')
+    })
+
     test('typing in skills input updates the value', async () => {
       const job = createMockJob({ status: 'pending_approval' })
       const screen = await render(
