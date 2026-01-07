@@ -1111,3 +1111,10 @@
 - JobSubmissionCard: line 298 (workArrangement onChange) now covered
 - Note: Tests admin workflow for changing work arrangement (remote/on-site/hybrid)
 
+## Iteration 160
+- File: JobSubmissionCard.tsx
+- Tested: Company name input updates value when admin types in edit mode
+- Coverage: 21.42% statements, 22.53% lines
+- JobSubmissionCard: line 198 (companyName onChange) now covered
+- Note: Tests admin workflow for editing company name in job submission
+
