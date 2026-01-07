@@ -1298,3 +1298,10 @@
 - TooltipIconButton: 0% → 100%
 - Note: Tests accessible icon button used throughout chat UI
 
+## Iteration 187
+- File: plan.tsx (tool-ui/plan)
+- Tested: Title, progress bar, and todo items display correctly
+- Coverage: 26.02% statements, 27.1% lines (+1.15%, +1.18%)
+- Plan: 0% → 90.32% statements - BIG coverage gain!
+- Note: Tests Plan component showing job search progress with todo list
+
