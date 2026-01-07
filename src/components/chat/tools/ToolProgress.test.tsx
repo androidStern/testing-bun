@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { ToolProgress } from './ToolProgress'
+import { ToolCard, ToolProgress } from './ToolProgress'
 
 describe('ToolProgress', () => {
   describe('Basic Display', () => {
@@ -38,5 +38,21 @@ describe('ToolProgress', () => {
       await expect.element(screen.getByText('Filtering results')).toBeVisible()
       await expect.element(screen.getByText('Ranking matches')).toBeVisible()
     })
+  })
+})
+
+describe('ToolCard', () => {
+  test('shows title and detail when provided', async () => {
+    const screen = await render(
+      <ToolCard
+        icon={<span>📋</span>}
+        title="Resume Uploaded"
+        status="complete"
+        detail="resume.pdf"
+      />,
+    )
+
+    await expect.element(screen.getByText('Resume Uploaded')).toBeVisible()
+    await expect.element(screen.getByText('resume.pdf')).toBeVisible()
   })
 })
