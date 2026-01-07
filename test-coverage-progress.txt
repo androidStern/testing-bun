@@ -124,3 +124,10 @@
 - HomeLocationCard: 0% → partial
 - Note: Tests initial state when user hasn't set home location - key for transit accessibility feature
 
+## Iteration 19
+- File: ThemeToggle.tsx
+- Tested: Toggle button renders with accessible screen reader label
+- Coverage: 11.17% statements, 11.87% lines
+- ThemeToggle: 0% → 75% statements
+- Note: Simple component but important for accessibility - users with screen readers can toggle theme
+
