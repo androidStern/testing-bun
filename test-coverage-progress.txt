@@ -502,3 +502,10 @@
 - FilterToolbar: 87.03% → higher (lines 108 and 120 bus/rail and checkmark now covered)
 - Note: Tests commute display when user selects both bus and rail transit with zones computed
 
+## Iteration 73
+- File: FilterToolbar.tsx
+- Tested: Transit only display when transit required but no max commute time set
+- Coverage: 17.42% statements, 18.27% lines
+- FilterToolbar: 90.74% → higher (line 123 "Transit only" now covered)
+- Note: Tests commute preferences for users who need transit but don't care about commute time
+
