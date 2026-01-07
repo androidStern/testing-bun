@@ -98,6 +98,39 @@ describe('OptionList', () => {
       expect(onConfirm).toHaveBeenCalledTimes(1)
       expect(onConfirm).toHaveBeenCalledWith(expect.arrayContaining(['opt1', 'opt3']))
     })
+
+    test('clicking a selected option deselects it', async () => {
+      const onConfirm = vi.fn()
+      const options = [
+        { id: 'opt1', label: 'Morning' },
+        { id: 'opt2', label: 'Afternoon' },
+      ]
+
+      const screen = await render(
+        <OptionList
+          question="Which shifts?"
+          options={options}
+          selectionMode="multi"
+          onConfirm={onConfirm}
+        />,
+      )
+
+      const morningOption = screen.getByRole('option', { name: 'Morning' })
+      const afternoonOption = screen.getByRole('option', { name: 'Afternoon' })
+
+      // Select both
+      await morningOption.click()
+      await afternoonOption.click()
+
+      // Confirm button shows count of 2
+      await expect.element(screen.getByRole('button', { name: /Confirm \(2\)/i })).toBeVisible()
+
+      // Deselect Morning by clicking again
+      await morningOption.click()
+
+      // Confirm button should now show count of 1
+      await expect.element(screen.getByRole('button', { name: /Confirm \(1\)/i })).toBeVisible()
+    })
   })
 
   describe('Confirmed State', () => {
