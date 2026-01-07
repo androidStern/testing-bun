@@ -276,6 +276,23 @@ describe('ProfileForm', () => {
       )
       expect(checkboxes.length).toBe(1)
     })
+
+    test('shows validation error when all options are deselected', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ProfileForm onSuccess={vi.fn()} user={mockUser as never} />
+        </TestWrapper>,
+      )
+
+      // Select an option first
+      await screen.getByText('To find a job').click()
+
+      // Now deselect it (user changes their mind)
+      await screen.getByText('To find a job').click()
+
+      // Error message should appear since onChange validator triggers
+      await expect.element(screen.getByText('Please select at least one option')).toBeVisible()
+    })
   })
 
   describe('Form Submission', () => {
