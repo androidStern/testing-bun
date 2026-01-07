@@ -113,6 +113,21 @@ describe('ResumeForm', () => {
       // Verify the input value was updated
       expect((phoneInput.element() as HTMLInputElement).value).toBe('(555) 123-4567')
     })
+
+    test('typing in Location input updates the value', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      // Find the Location input by placeholder
+      const locationInput = screen.getByPlaceholder('City, State')
+      await locationInput.fill('Miami, FL')
+
+      // Verify the input value was updated
+      expect((locationInput.element() as HTMLInputElement).value).toBe('Miami, FL')
+    })
   })
 
   describe('Personal Info Validation', () => {
