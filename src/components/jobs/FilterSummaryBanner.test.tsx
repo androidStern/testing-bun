@@ -190,6 +190,28 @@ describe('FilterSummaryBanner', () => {
       await expect.element(screen.getByText('Morning & Evening')).toBeVisible()
     })
 
+    test('shows shift count when user has more than 2 shift preferences', async () => {
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          shiftAfternoon: true,
+          shiftOvernight: true,
+          shiftFlexible: true,
+          // 3 shifts - should show count instead of names
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <FilterSummaryBanner />
+        </TestWrapper>,
+      )
+
+      // User should see "3 shift types" when more than 2 shifts are selected
+      await expect.element(screen.getByText('3 shift types')).toBeVisible()
+    })
+
     test('shows quick apply preferences when user prioritizes urgent and easy apply', async () => {
       vi.mocked(useQuery).mockReturnValue({
         data: {
