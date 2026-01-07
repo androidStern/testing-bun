@@ -201,3 +201,10 @@
 - expandable-textarea: 55.55% → 88.88% statements, 62.5% → 87.5% lines
 - Note: Tests important UX behavior - onBlur is called when user closes expanded editor so form can validate/save
 
+## Iteration 30
+- File: JobRow.tsx
+- Tested: Job listing display (title, company, location, salary), icons (Fair Chance, transit, shift), Apply button, expand/collapse interaction
+- Coverage: 14.39% statements, 15.32% lines
+- JobRow: 0% → covered (new test file)
+- Note: Tests critical job search UI - users see job details in list and can expand for more info or apply
+
