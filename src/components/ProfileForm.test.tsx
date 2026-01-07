@@ -389,6 +389,21 @@ describe('ProfileForm', () => {
 
       expect((locationInput.element() as HTMLInputElement).value).toBe('Miami, FL')
     })
+
+    test('can fill optional website URL field', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ProfileForm onSuccess={vi.fn()} user={mockUser as never} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText(/additional information/i).click()
+
+      const websiteInput = screen.getByLabelText(/website/i)
+      await websiteInput.fill('https://myportfolio.com')
+
+      expect((websiteInput.element() as HTMLInputElement).value).toBe('https://myportfolio.com')
+    })
   })
 
   describe('AI Polish Feature', () => {
