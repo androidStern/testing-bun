@@ -1097,3 +1097,10 @@
 - JobSubmissionCard: line 270 (locationCity onChange) now covered
 - Note: Tests admin workflow for editing job location city
 
+## Iteration 158
+- File: JobSubmissionCard.tsx
+- Tested: State input updates value when admin types in edit mode
+- Coverage: 21.36% statements, 22.47% lines
+- JobSubmissionCard: line 284 (locationState onChange) now covered
+- Note: Tests admin workflow for editing job location state
+
