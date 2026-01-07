@@ -950,3 +950,10 @@
 - ChatHeader: 75% → 87.5% statements, line 44 (handleDrawerClose) now covered
 - Note: Tests drawer close UX - user can click Cancel to dismiss filter drawer without saving
 
+## Iteration 137
+- File: MessageCard.tsx
+- Tested: Approve button triggers status update for pending message
+- Coverage: 20.81% statements, 21.88% lines
+- MessageCard: 77.77% → 81.48% statements, line 47 (handleApprove) now covered
+- Note: Tests admin approval workflow - admin clicks Approve to change message status
+
