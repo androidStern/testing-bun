@@ -173,3 +173,10 @@
 - MessageCard: 0% → partial
 - Note: Admin-facing component for reviewing inbound SMS messages
 
+## Iteration 26
+- File: SavedJobsToggle.tsx
+- Tested: Saved jobs count badge shows correctly (count, 99+ for large counts, hidden when 0)
+- Coverage: 13.99% statements, 14.92% lines
+- SavedJobsToggle: 0% → 100%
+- Note: User-facing badge showing how many jobs they've saved
+
