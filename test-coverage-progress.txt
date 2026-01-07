@@ -656,3 +656,10 @@
 - JobRow: 90.9% → 100% lines! (line 108 now covered)
 - Note: Tests UX behavior - user can click Apply without expanding/collapsing the job row
 
+## Iteration 95
+- File: FilterToolbar.tsx
+- Tested: Fair Chance "Preferred" indicator displays when preferSecondChance is true
+- Coverage: 18.83% statements, 19.80% lines
+- FilterToolbar: 94.44% → 96.29% lines (line 93 now covered)
+- Note: Tests user preference display - users who prefer second-chance employers see "Preferred" on filter
+
