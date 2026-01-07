@@ -768,3 +768,10 @@
 - ProfileForm: line 438 linkedinUrl onChange handler now covered
 - Note: Tests user filling LinkedIn profile URL - important for professional networking
 
+## Iteration 111
+- File: ProfileForm.tsx
+- Tested: Instagram URL field input in optional fields section
+- Coverage: 19.8% statements, 20.82% lines
+- ProfileForm: line 457 instagramUrl onChange handler now covered
+- Note: Tests user filling Instagram profile URL - social media for personal branding
+
