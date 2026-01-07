@@ -1,7 +1,8 @@
 Test Coverage Progress
 ======================
-Current: 28.01% statements (target: 90%)
+Current: 28.47% statements (target: 90%)
 
-Latest iteration: 199
-- Added test for PlanErrorBoundary
-- plan/error-boundary.tsx coverage: 0% → 100%
+Latest iteration: 200
+- Added tests for usePromptOverride hook
+- Tests cover: load from localStorage, set value, clear value
+- hooks folder coverage: 37.03% → 96.29%
