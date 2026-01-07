@@ -1250,3 +1250,10 @@
 - OptionList: 60.6% → 81.81% statements
 - Note: Tests multi-select UX - user selects multiple options, clicks Confirm with count
 
+## Iteration 180
+- File: OptionList.tsx
+- Tested: Confirmed state displays user's previous selections with checkmarks
+- Coverage: 23.49% statements, 24.52% lines (+0.11%, +0.09%)
+- OptionList: 81.81% → 93.93% statements (only line 50 uncovered - deselect toggle)
+- Note: Tests confirmed state view - shows selected options after submission
+
