@@ -1146,3 +1146,10 @@
 - JobSubmissionCard: line 169 (title onChange) now covered
 - Note: Tests admin workflow for editing job title in job submission
 
+## Iteration 165
+- File: JobSubmissionCard.tsx
+- Tested: Job description textarea updates value when admin types in edit mode
+- Coverage: 21.56% statements, 22.69% lines
+- JobSubmissionCard: line 183 (description onChange) now covered
+- Note: Tests admin workflow for editing job description in job submission
+
