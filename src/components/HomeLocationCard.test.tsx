@@ -114,6 +114,35 @@ describe('HomeLocationCard', () => {
       // Button should show "Update" instead of "Use my location"
       await expect.element(screen.getByText('Update')).toBeVisible()
     })
+
+    test('shows "Computing transit zones..." when location set but isochrones not yet computed', async () => {
+      // Mock profile with location but no isochrones (still computing)
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          workosUserId: 'user_123',
+          homeLat: 27.9506,
+          homeLon: -82.4572,
+          isochrones: null, // Not yet computed
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      // Mock getCityFromCoords to return a city name
+      vi.mocked(geo.getCityFromCoords).mockResolvedValue('Tampa')
+
+      const screen = await render(
+        <TestWrapper>
+          <HomeLocationCard workosUserId="user_123" />
+        </TestWrapper>,
+      )
+
+      // User should see their city name displayed
+      await expect.element(screen.getByText('Tampa')).toBeVisible()
+
+      // User should see indication that zones are being computed
+      await expect.element(screen.getByText('Computing transit zones...')).toBeVisible()
+    })
   })
 
   describe('Manual Entry Dialog', () => {
