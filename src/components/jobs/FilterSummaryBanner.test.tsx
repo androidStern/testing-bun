@@ -147,5 +147,26 @@ describe('FilterSummaryBanner', () => {
       // User should see "30 min by rail" - their commute time with rail-only transit
       await expect.element(screen.getByText('30 min by rail')).toBeVisible()
     })
+
+    test('shows "30 min by transit" when user requires generic transit without specific mode', async () => {
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          maxCommuteMinutes: 30,
+          requirePublicTransit: true,
+          // Neither requireBusAccessible nor requireRailAccessible set - any transit is ok
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <FilterSummaryBanner />
+        </TestWrapper>,
+      )
+
+      // User should see generic transit text when no specific mode is selected
+      await expect.element(screen.getByText('30 min by transit')).toBeVisible()
+    })
   })
 })
