@@ -1243,3 +1243,10 @@
 - OptionList: 36.36% → 60.6% statements
 - Note: Tests key UX - clicking option in single-select confirms selection immediately
 
+## Iteration 179
+- File: OptionList.tsx
+- Tested: Multi-select mode toggle and Confirm button submission
+- Coverage: 23.38% statements, 24.43% lines (+0.21%, +0.22%)
+- OptionList: 60.6% → 81.81% statements
+- Note: Tests multi-select UX - user selects multiple options, clicks Confirm with count
+
