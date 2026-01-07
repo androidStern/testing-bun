@@ -143,5 +143,20 @@ describe('SenderCard', () => {
       // Verify the input value was updated
       expect((companyInput.element() as HTMLInputElement).value).toBe('XYZ Industries')
     })
+
+    test('typing in notes field updates the input value', async () => {
+      const screen = await render(<SenderCard sender={mockSender} />)
+
+      // Enter editing mode
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Find the notes input and type new content
+      const notesInput = screen.getByPlaceholder('Admin notes')
+      await notesInput.fill('Important sender - follow up needed')
+
+      // Verify the input value was updated
+      expect((notesInput.element() as HTMLInputElement).value).toBe('Important sender - follow up needed')
+    })
   })
 })
