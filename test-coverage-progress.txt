@@ -1069,3 +1069,10 @@
 - JobSubmissionCard: line 316 (employmentType onChange) now covered
 - Note: Tests admin workflow for changing job employment type (full-time, part-time, contract, etc.)
 
+## Iteration 154
+- File: JobSubmissionCard.tsx
+- Tested: Salary min input updates value when admin types in edit mode
+- Coverage: 21.24% statements, 22.35% lines
+- JobSubmissionCard: line 337 (salaryMin onChange) now covered
+- Note: Tests admin workflow for setting job minimum salary
+
