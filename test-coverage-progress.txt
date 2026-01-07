@@ -614,3 +614,10 @@
 - SavedJobsDrawer: 0% → partial (lines 40-57 empty state rendering now covered)
 - Note: Tests empty state UX - helps users understand how to save jobs when their list is empty
 
+## Iteration 89
+- File: ResumeForm.tsx
+- Tested: Removing education entry - user clicks Remove button to delete added education entry
+- Coverage: 18.54% statements, 19.49% lines
+- ResumeForm: eduField.removeValue handler now covered (line 1407)
+- Note: Tests education array manipulation - users can remove extra education entries they've added
+
