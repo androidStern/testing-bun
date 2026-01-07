@@ -46,5 +46,23 @@ describe('ResumeUploadCard', () => {
       // onComplete should not be called when onSkip is provided
       expect(onComplete).not.toHaveBeenCalled()
     })
+
+    test('clicking Skip calls onComplete with uploaded: false when onSkip not provided', async () => {
+      const onComplete = vi.fn()
+
+      const screen = await render(
+        <TestWrapper>
+          <ResumeUploadCard onComplete={onComplete} />
+        </TestWrapper>,
+      )
+
+      // User clicks Skip without onSkip prop - should fall back to onComplete
+      const skipButton = screen.getByRole('button', { name: /Skip for now/i })
+      await skipButton.click()
+
+      // onComplete should be called with { uploaded: false }
+      expect(onComplete).toHaveBeenCalledTimes(1)
+      expect(onComplete).toHaveBeenCalledWith({ uploaded: false })
+    })
   })
 })
