@@ -194,3 +194,10 @@
 - Note: Tests key user feedback - users see their city name + confirmation that transit zones are computed
 - Note: Added mock for @/lib/geo module to handle async getCityFromCoords call
 
+## Iteration 29
+- File: expandable-textarea.tsx
+- Tested: Closing modal dialog triggers onBlur callback for validation/save state
+- Coverage: 14.19% statements, 15.1% lines
+- expandable-textarea: 55.55% → 88.88% statements, 62.5% → 87.5% lines
+- Note: Tests important UX behavior - onBlur is called when user closes expanded editor so form can validate/save
+
