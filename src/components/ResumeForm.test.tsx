@@ -270,6 +270,21 @@ describe('ResumeForm', () => {
       // Education 1 should still exist
       await expect.element(screen.getByText('Education 1')).toBeVisible()
     })
+
+    test('typing in Field of Study input updates the value', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      // Find the Field of Study input and fill it
+      const fieldInput = screen.getByPlaceholder('General Studies, Business, Healthcare, etc.')
+      await fieldInput.fill('Computer Science')
+
+      // Verify the input value was updated
+      expect((fieldInput.element() as HTMLInputElement).value).toBe('Computer Science')
+    })
   })
 
   describe('Form Dirty State', () => {
