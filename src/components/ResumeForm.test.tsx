@@ -355,7 +355,23 @@ describe('ResumeForm', () => {
       // Verify the input value was updated
       expect((endDateInput.element() as HTMLInputElement).value).toBe('12/2024')
     })
+  })
 
+  describe('Education Input Fields', () => {
+    test('typing in Institution input updates the value', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      // Find the Institution input by placeholder
+      const institutionInput = screen.getByPlaceholder('School or Institution Name')
+      await institutionInput.fill('Community College')
+
+      // Verify the input value was updated
+      expect((institutionInput.element() as HTMLInputElement).value).toBe('Community College')
+    })
   })
 
   describe('Form Dirty State', () => {
