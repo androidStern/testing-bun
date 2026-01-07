@@ -397,3 +397,10 @@
 - FilterDrawer: line 341 requireSecondChance onCheckedChange now covered
 - Note: Tests stricter fair-chance filter - users with backgrounds who want to exclusively see fair-chance employers
 
+## Iteration 58
+- File: FilterDrawer.tsx
+- Tested: Bus transit checkbox toggling updates commute preferences
+- Coverage: 16.09% statements, 16.87% lines
+- FilterDrawer: line 409 requireBusAccessible onCheckedChange now covered
+- Note: Tests bus transit filter - users who commute by bus want to filter jobs by bus accessibility
+
