@@ -64,5 +64,25 @@ describe('FilterSummaryBanner', () => {
       // User should see their fair chance preference summarized
       await expect.element(screen.getByText('Fair chance preferred')).toBeVisible()
     })
+
+    test('shows "Transit accessible" when user requires public transit without commute time', async () => {
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          requirePublicTransit: true,
+          // No maxCommuteMinutes set - user just wants transit access, no time limit
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <FilterSummaryBanner />
+        </TestWrapper>,
+      )
+
+      // User should see transit accessibility is enabled without time restriction
+      await expect.element(screen.getByText('Transit accessible')).toBeVisible()
+    })
   })
 })
