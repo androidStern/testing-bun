@@ -964,3 +964,10 @@
 - MessageCard: 81.48% → 85.18% statements, line 51 (handleReject) now covered
 - Note: Tests admin rejection workflow - admin clicks Reject to change message status
 
+## Iteration 139
+- File: MessageCard.tsx
+- Tested: Mark Processed button triggers status update for approved message
+- Coverage: 20.87% statements, 21.94% lines
+- MessageCard: 85.18% → 88.88% statements, line 55 (handleMarkProcessed) now covered
+- Note: Tests admin workflow - admin can mark approved messages as processed
+
