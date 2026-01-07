@@ -1319,3 +1319,10 @@
 - parseSerializablePlan: 0% → 100%
 - Note: Tests schema parsing utility for Plan tool UI component
 
+## Iteration 190
+- File: shared/parse.ts
+- Tested: parseWithSchema and formatZodError utilities
+- Coverage: 26.6% statements, 27.72% lines (+0.23%, +0.25%)
+- parse.ts: 0% → 91.66%
+- Note: Tests schema parsing utilities used by all tool-ui components
+
