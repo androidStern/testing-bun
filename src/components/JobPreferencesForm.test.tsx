@@ -370,6 +370,23 @@ describe('JobPreferencesForm', () => {
 
       expect(railCheckbox?.getAttribute('data-state')).toBe('checked')
     })
+
+    test('can toggle require public transit checkbox', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <JobPreferencesForm />
+        </TestWrapper>,
+      )
+
+      const transitLabel = screen.getByText('Only show jobs reachable by public transit')
+      await transitLabel.click()
+
+      const transitCheckbox = screen.container.querySelector(
+        'button[role="checkbox"][id*="requirePublicTransit"]',
+      ) as HTMLElement | null
+
+      expect(transitCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
   })
 
   describe('Max Commute Time Select', () => {
