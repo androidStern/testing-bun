@@ -1257,3 +1257,10 @@
 - OptionList: 81.81% → 93.93% statements (only line 50 uncovered - deselect toggle)
 - Note: Tests confirmed state view - shows selected options after submission
 
+## Iteration 181
+- File: ToolProgress.tsx
+- Tested: Title and running status display
+- Coverage: 23.55% statements, 24.58% lines (+0.06%, +0.06%)
+- ToolProgress: 0% → 50% statements
+- Note: Tests basic tool progress display for job searching UI feedback
+
