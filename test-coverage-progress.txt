@@ -1181,3 +1181,10 @@
 - ChatHeader: line 62 (SavedJobsToggle rendering) now covered
 - Note: Tests that authenticated users see the saved jobs toggle button
 
+## Iteration 170
+- File: FilterSummaryBanner.tsx
+- Tested: Shows shift count when more than 2 shifts selected
+- Coverage: 22.14% statements, 23.18% lines
+- FilterSummaryBanner: lines 119, 121-122, 125 (shift branches) now covered
+- Note: Tests afternoon/overnight/flexible shifts and count summary
+
