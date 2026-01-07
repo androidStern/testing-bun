@@ -649,3 +649,10 @@
 - FilterToolbar: 92.59% → 94.44% lines (line 91 now covered)
 - Note: Tests user preference display - users who require only second-chance employers see "Required" on filter
 
+## Iteration 94
+- File: JobRow.tsx
+- Tested: Clicking Apply button doesn't trigger row toggle (stopPropagation behavior)
+- Coverage: 18.8% statements, 19.76% lines
+- JobRow: 90.9% → 100% lines! (line 108 now covered)
+- Note: Tests UX behavior - user can click Apply without expanding/collapsing the job row
+
