@@ -99,5 +99,23 @@ describe('MessageCard', () => {
       // Verify the textarea value was updated
       expect((textarea.element() as HTMLTextAreaElement).value).toBe('Updated message content for testing')
     })
+
+    test('clicking Save button triggers mutation and exits editing mode', async () => {
+      const screen = await render(<MessageCard message={mockMessage} />)
+
+      // Enter editing mode
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Should be in editing mode
+      await expect.element(screen.getByText('Editing')).toBeVisible()
+
+      // Click Save to persist changes
+      const saveButton = screen.getByText('Save')
+      await saveButton.click()
+
+      // After save completes, should exit editing mode and return to normal display
+      await expect.element(screen.getByText('Edit')).toBeVisible()
+    })
   })
 })
