@@ -152,3 +152,10 @@
 - StatusBadge: 0% → 100%
 - Note: Admin-facing component for displaying job submission statuses
 
+## Iteration 23
+- File: EmployerCard.tsx
+- Tested: Employer name/company display, contact info, status badge, and action buttons (Approve/Reject/Edit/Delete)
+- Coverage: 13.1% statements, 13.95% lines
+- EmployerCard: 0% → 43.24% statements
+- Note: Admin-facing component for reviewing employer applications
+
