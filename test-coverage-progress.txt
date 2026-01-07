@@ -853,3 +853,10 @@
 - Note: Tests admin employer editing - updating employer email address in edit mode
 - Note: SavedJobsDrawer remove button click test removed due to vitest-browser-react portal click limitations
 
+## Iteration 123
+- File: EmployerCard.tsx
+- Tested: Phone field input updates value in editing mode
+- Coverage: 20.15% statements, 21.19% lines
+- EmployerCard: line 148 phone onChange handler now covered
+- Note: Tests admin employer editing - updating employer phone number in edit mode
+
