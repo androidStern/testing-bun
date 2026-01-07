@@ -629,6 +629,24 @@ describe('JobSubmissionCard', () => {
       expect((salaryMinInput.element() as HTMLInputElement).value).toBe('50000')
     })
 
+    test('typing in salary max input updates the value', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // Find the salary max input by placeholder
+      const salaryMaxInput = screen.getByPlaceholder('Max')
+      await salaryMaxInput.fill('100000')
+
+      // Verify the input value was updated
+      expect((salaryMaxInput.element() as HTMLInputElement).value).toBe('100000')
+    })
+
     test('typing in skills input updates the value', async () => {
       const job = createMockJob({ status: 'pending_approval' })
       const screen = await render(
