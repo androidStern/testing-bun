@@ -1068,7 +1068,10 @@ export function ResumeForm({ user, backLink }: ResumeFormProps) {
                       />
                       <FieldError
                         errors={field.state.meta.errors.map(e => ({
-                          message: typeof e === 'string' ? e : String(e),
+                          message:
+                            typeof e === 'string'
+                              ? e
+                              : (e as { message?: string })?.message ?? String(e),
                         }))}
                       />
                     </div>
@@ -1090,7 +1093,10 @@ export function ResumeForm({ user, backLink }: ResumeFormProps) {
                       />
                       <FieldError
                         errors={field.state.meta.errors.map(e => ({
-                          message: typeof e === 'string' ? e : String(e),
+                          message:
+                            typeof e === 'string'
+                              ? e
+                              : (e as { message?: string })?.message ?? String(e),
                         }))}
                       />
                     </div>
@@ -1140,7 +1146,10 @@ export function ResumeForm({ user, backLink }: ResumeFormProps) {
                       />
                       <FieldError
                         errors={field.state.meta.errors.map(e => ({
-                          message: typeof e === 'string' ? e : String(e),
+                          message:
+                            typeof e === 'string'
+                              ? e
+                              : (e as { message?: string })?.message ?? String(e),
                         }))}
                       />
                     </div>
