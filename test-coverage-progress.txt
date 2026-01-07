@@ -516,3 +516,10 @@
 - JobPreferencesForm: 47.91% → higher (line 291 shiftOvernight handler now covered)
 - Note: Tests shift preference checkbox - users can select overnight shift preference
 
+## Iteration 75
+- File: JobPreferencesForm.tsx
+- Tested: Flexible shift checkbox toggle
+- Coverage: 17.47% statements, 18.34% lines
+- JobPreferencesForm: 50% → 52.08% statements (line 304 shiftFlexible handler now covered)
+- Note: Tests flexible schedule preference - users with flexible availability can indicate this preference
+
