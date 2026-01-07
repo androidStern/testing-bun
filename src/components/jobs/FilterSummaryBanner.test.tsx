@@ -209,5 +209,29 @@ describe('FilterSummaryBanner', () => {
       // User should see both quick apply preferences joined
       await expect.element(screen.getByText('Urgent & Easy apply')).toBeVisible()
     })
+
+    test('clicking a filter chip calls onCategoryClick with the category', async () => {
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          requireSecondChance: true,
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const onCategoryClick = vi.fn()
+      const screen = await render(
+        <TestWrapper>
+          <FilterSummaryBanner onCategoryClick={onCategoryClick} />
+        </TestWrapper>,
+      )
+
+      // Click the Fair Chance filter chip
+      const fairChanceChip = screen.getByText('Fair chance only')
+      await fairChanceChip.click()
+
+      // Callback should be called with the fairChance category
+      expect(onCategoryClick).toHaveBeenCalledWith('fairChance')
+    })
   })
 })
