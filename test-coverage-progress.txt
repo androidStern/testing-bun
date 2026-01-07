@@ -236,3 +236,10 @@
 - FilterSummaryBanner: covers line 94-95 (requireBusAccessible branch)
 - Note: Tests user-facing filter summary when commuting by specific transit mode
 
+## Iteration 35
+- File: ResumePreview.tsx
+- Tested: Clicking ATS Tips tab shows optimization guidance headings (Keywords, Formatting, File Format, etc.)
+- Coverage: 14.77% statements, 15.63% lines (unchanged)
+- ResumePreview: 52.27% lines (same - ATS content rendered but printResume/downloadAsPDF at lines 40-145 uncovered)
+- Note: Tests tab navigation to ATS Tips - important for users learning resume optimization
+
