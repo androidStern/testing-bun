@@ -565,3 +565,10 @@
 - JobPreferencesForm: line 185 requireRailAccessible handler now covered
 - Note: Tests rail commute filter - users who rely on rail transit can filter jobs by rail accessibility
 
+## Iteration 82
+- File: JobPreferencesForm.tsx
+- Tested: Require public transit checkbox toggle - user clicks "Only show jobs reachable by public transit" to filter jobs
+- Coverage: 17.67% statements, 18.55% lines
+- JobPreferencesForm: line 156 requirePublicTransit handler now covered
+- Note: Tests public transit commute filter - users who rely on public transit can filter jobs by accessibility
+
