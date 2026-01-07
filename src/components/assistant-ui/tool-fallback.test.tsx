@@ -23,4 +23,30 @@ describe('ToolFallback', () => {
       await expect.element(screen.getByText('search_jobs')).toBeVisible()
     })
   })
+
+  describe('Expand/Collapse', () => {
+    test('clicking expand button shows tool arguments and result', async () => {
+      const screen = await render(
+        <ToolFallback
+          toolName="find_jobs"
+          argsText='{"location": "NYC"}'
+          result="Found 5 jobs"
+          status={{ type: 'complete' }}
+        />,
+      )
+
+      // Initially args should be hidden (collapsed state)
+      const argsText = screen.getByText('{"location": "NYC"}')
+      expect(argsText.query()).toBeNull()
+
+      // Click expand button to show details
+      const expandButton = screen.getByRole('button')
+      await expandButton.click()
+
+      // Now args should be visible
+      await expect.element(screen.getByText('{"location": "NYC"}')).toBeVisible()
+      // Result should also be visible
+      await expect.element(screen.getByText('Found 5 jobs')).toBeVisible()
+    })
+  })
 })
