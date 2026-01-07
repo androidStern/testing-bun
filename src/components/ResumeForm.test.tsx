@@ -1,7 +1,7 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, useSuspenseQuery } from '@tanstack/react-query'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { resetAllMocks } from '@/test/setup'
+import { mockExistingResume, resetAllMocks } from '@/test/setup'
 import { ResumeForm } from './ResumeForm'
 
 const mockUser = {
@@ -288,6 +288,30 @@ describe('ResumeForm', () => {
       )
 
       await expect.element(screen.getByText('Build Your Resume')).toBeVisible()
+    })
+
+    test('shows "Edit Your Resume" title when user has an existing resume', async () => {
+      // Mock useSuspenseQuery to return existing resume data
+      vi.mocked(useSuspenseQuery).mockReturnValue({
+        data: mockExistingResume,
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      await expect.element(screen.getByText('Edit Your Resume')).toBeVisible()
+
+      // Reset mock back to null for other tests
+      vi.mocked(useSuspenseQuery).mockReturnValue({
+        data: null,
+        error: null,
+        isLoading: false,
+      } as never)
     })
   })
 
