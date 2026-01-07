@@ -943,3 +943,10 @@
 - HomeLocationCard: line 183 (keydown handler) + lines 75-92 (handleManualSubmit) now covered
 - Note: Tests keyboard shortcut for form submission - users can press Enter after typing address instead of clicking button
 
+## Iteration 136
+- File: ChatHeader.tsx
+- Tested: Cancel button in filter drawer closes the drawer
+- Coverage: 20.78% statements, 21.85% lines
+- ChatHeader: 75% → 87.5% statements, line 44 (handleDrawerClose) now covered
+- Note: Tests drawer close UX - user can click Cancel to dismiss filter drawer without saving
+
