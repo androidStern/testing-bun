@@ -1209,3 +1209,10 @@
 - FilterDrawer: line 163 (maxCommuteMinutes dirty submission) now covered
 - Note: Tests that user changing commute time and clicking Apply submits the preference
 
+## Iteration 174
+- File: ResumeUploadCard.tsx
+- Tested: Skip button click triggers onSkip callback when provided
+- Coverage: 22.57% statements, 23.59% lines (+0.35%, +0.37%)
+- ResumeUploadCard: 0% → partial (lines 40-46 handleSkip now covered)
+- Note: Tests "Skip for now" UX - users who don't want to upload a resume can skip the step
+
