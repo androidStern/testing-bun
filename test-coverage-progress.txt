@@ -895,3 +895,9 @@
 - MessageCard: 74.07% → 77.77% statements, handleSave function lines 74-79 now covered
 - Note: Tests admin message editing - Save button calls adminUpdate mutation and exits editing mode on success
 
+## Iteration 129
+- File: HomeLocationCard.tsx
+- Tested: Computing transit zones message when location set but isochrones not yet computed
+- Coverage: 20.29% statements (no change - behavior already covered by existing code paths)
+- Note: Tests the user-facing message shown while transit zones are being computed after location is set
+
