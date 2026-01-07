@@ -100,5 +100,31 @@ describe('ChatHeader', () => {
       // After clicking, the filter drawer should open with Fair Chance options
       await expect.element(screen.getByText('Prioritize fair-chance employers')).toBeVisible()
     })
+
+    test('clicking Cancel button in filter drawer closes the drawer', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ChatHeader
+            onForceSearch={vi.fn()}
+            isSearching={false}
+            hasActiveThread={true}
+          />
+        </TestWrapper>,
+      )
+
+      // Open the filter drawer
+      const fairChanceButton = screen.getByRole('button', { name: /fair chance/i })
+      await fairChanceButton.click()
+
+      // Verify drawer is open
+      await expect.element(screen.getByText('Prioritize fair-chance employers')).toBeVisible()
+
+      // Click Cancel to close the drawer (this triggers handleDrawerClose)
+      const cancelButton = screen.getByRole('button', { name: 'Cancel' })
+      await cancelButton.click()
+
+      // Drawer should be closed - fair chance checkbox should no longer be visible
+      await expect.element(screen.getByText('Prioritize fair-chance employers')).not.toBeInTheDocument()
+    })
   })
 })
