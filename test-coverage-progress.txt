@@ -495,3 +495,10 @@
 - ThemeToggle: 75% → 100% (line 11 toggleTheme now covered)
 - Note: Tests theme toggle interaction - core UX feature
 
+## Iteration 72
+- File: FilterToolbar.tsx
+- Tested: Bus/rail combined transit indicator with checkmark when transit zones are ready
+- Coverage: 17.39% statements, 18.24% lines
+- FilterToolbar: 87.03% → higher (lines 108 and 120 bus/rail and checkmark now covered)
+- Note: Tests commute display when user selects both bus and rail transit with zones computed
+
