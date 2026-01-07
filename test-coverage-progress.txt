@@ -425,3 +425,10 @@
 - FilterDrawer: 52.94% → 54.11% statements, line 277 onChange handler now covered
 - Note: Tests location drawer address entry - users without GPS can manually type their home address
 
+## Iteration 62
+- File: FilterDrawer.tsx
+- Tested: Pressing Enter key in address input triggers submission - keyboard accessibility UX
+- Coverage: 16.41% statements, 17.22% lines
+- FilterDrawer: lines 278-283 onKeyDown handler now covered
+- Note: Tests keyboard shortcut for address submission - users can press Enter after typing address instead of clicking "Set" button
+
