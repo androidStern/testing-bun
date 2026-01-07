@@ -285,6 +285,29 @@ describe('ResumeForm', () => {
       // Verify the input value was updated
       expect((fieldInput.element() as HTMLInputElement).value).toBe('Computer Science')
     })
+
+    test('typing in Graduation Date input updates the value', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      // Find the Graduation Date label and then the input next to it
+      // The education section has a unique "Graduation Date" label
+      const gradDateLabel = screen.getByText('Graduation Date')
+      // Get the parent div and find the input within it
+      const gradDateInput = gradDateLabel.element().parentElement?.querySelector('input')
+      expect(gradDateInput).not.toBeNull()
+
+      // Fill the input
+      await gradDateInput!.focus()
+      gradDateInput!.value = ''
+      await screen.getByRole('textbox', { name: 'MM/YYYY' }).nth(2).fill('05/2023')
+
+      // Verify the input value was updated
+      expect(gradDateInput!.value).toBe('05/2023')
+    })
   })
 
   describe('Form Dirty State', () => {
