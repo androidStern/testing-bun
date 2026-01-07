@@ -1,7 +1,7 @@
 Test Coverage Progress
 ======================
-Current: 28.62% statements (target: 90%)
+Current: 28.64% statements (target: 90%)
 
-Latest iteration: 202
-- Added test for useActionButtons hook (Escape key cancels confirmation)
-- use-action-buttons.tsx coverage: 77.55% → 85.71%
+Latest iteration: 203
+- Added test for OptionList multi-select deselection
+- OptionList.tsx coverage: 93.93% → 96.96%
