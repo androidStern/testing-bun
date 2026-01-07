@@ -602,6 +602,24 @@ describe('JobSubmissionCard', () => {
       // Verify the input value was updated
       expect((skillsInput.element() as HTMLInputElement).value).toBe('Python, Go, Rust')
     })
+
+    test('typing in requirements input updates the value', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // Find the requirements input by placeholder
+      const requirementsInput = screen.getByPlaceholder('req1, req2, req3')
+      await requirementsInput.fill('5+ years experience, Bachelor degree')
+
+      // Verify the input value was updated
+      expect((requirementsInput.element() as HTMLInputElement).value).toBe('5+ years experience, Bachelor degree')
+    })
   })
 
   describe('Edge Cases', () => {
