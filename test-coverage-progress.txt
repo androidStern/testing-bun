@@ -600,3 +600,10 @@
 - JobPreferencesForm: 70.83% → 91.66% statements, lines 111-112 (form onSubmit handler) now covered
 - Note: Tests user clicking Save Preferences after changing preferences - exercises form submission path
 
+## Iteration 87
+- File: FilterCategoryRow.tsx
+- Tested: Clicking Fair Chance button calls onCategoryClick with fairChance category
+- Coverage: 18.37% statements, 19.3% lines
+- FilterCategoryRow: 0% → 100% statements, new test file
+- Note: Tests filter category button interaction - users click buttons to open filter drawers for specific categories
+
