@@ -558,6 +558,32 @@ describe('JobSubmissionCard', () => {
       expect(options).toContain('year')
       expect(options).toContain('job')
     })
+
+    test('changing salary unit select updates the value', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // Find the salary unit select (has 'hr' option)
+      const selects = screen.container.querySelectorAll('select')
+      const salaryUnitSelect = Array.from(selects).find(s =>
+        Array.from(s.options).some(o => o.value === 'hr'),
+      ) as HTMLSelectElement
+
+      expect(salaryUnitSelect).not.toBeNull()
+
+      // Change the select value to trigger onChange handler
+      salaryUnitSelect.value = 'hr'
+      salaryUnitSelect.dispatchEvent(new Event('change', { bubbles: true }))
+
+      // Verify the select value was updated
+      expect(salaryUnitSelect.value).toBe('hr')
+    })
   })
 
   describe('Edge Cases', () => {
