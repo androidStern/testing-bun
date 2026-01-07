@@ -257,3 +257,10 @@
 - FilterSummaryBanner: line 74-79 requireSecondChance branch now covered
 - Note: Complements iteration 16's "preferred" test - this tests the stricter "required" option
 
+## Iteration 38
+- File: FilterSummaryBanner.tsx
+- Tested: Rail-only transit mode displays "30 min by rail" when user has rail but not bus access
+- Coverage: 14.88% statements, 15.76% lines
+- FilterSummaryBanner: line 96-97 requireRailAccessible branch now covered
+- Note: Tests the rail-only commute mode UX path
+
