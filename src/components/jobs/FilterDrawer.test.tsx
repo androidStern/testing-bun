@@ -270,5 +270,25 @@ describe('FilterDrawer', () => {
       await checkbox?.click()
       expect(checkbox?.getAttribute('data-state')).toBe('unchecked')
     })
+
+    test('toggling schedule shift checkboxes updates their state', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <FilterDrawer category='schedule' onClose={vi.fn()} />
+        </TestWrapper>,
+      )
+
+      // Test Flexible schedule checkbox (unique to schedule drawer)
+      const flexibleLabel = screen.getByText('Flexible schedule')
+      const flexibleCheckbox = flexibleLabel.element().closest('div')?.querySelector('[role="checkbox"]')
+      expect(flexibleCheckbox).not.toBeNull()
+
+      // Initially unchecked
+      expect(flexibleCheckbox?.getAttribute('data-state')).toBe('unchecked')
+
+      // Click to check
+      await flexibleCheckbox?.click()
+      expect(flexibleCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
   })
 })
