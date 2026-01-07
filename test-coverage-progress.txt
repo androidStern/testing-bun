@@ -313,3 +313,10 @@
 - FilterToolbar: lines 109-110 bus transit path now covered
 - Note: Tests commute filter button showing specific transit mode
 
+## Iteration 46
+- File: FilterToolbar.tsx
+- Tested: Quick apply preferences display "Urgent/Easy" when both are enabled
+- Coverage: 15.57% statements, 16.31% lines
+- FilterToolbar: lines 153-156 quickParts join now covered
+- Note: FilterToolbar quick apply button shows user's preferences
+
