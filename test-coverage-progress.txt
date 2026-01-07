@@ -1104,3 +1104,10 @@
 - JobSubmissionCard: line 284 (locationState onChange) now covered
 - Note: Tests admin workflow for editing job location state
 
+## Iteration 159
+- File: JobSubmissionCard.tsx
+- Tested: Work arrangement select updates value when admin changes it in edit mode
+- Coverage: 21.39% statements, 22.5% lines
+- JobSubmissionCard: line 298 (workArrangement onChange) now covered
+- Note: Tests admin workflow for changing work arrangement (remote/on-site/hybrid)
+
