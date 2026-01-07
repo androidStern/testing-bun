@@ -52,5 +52,18 @@ describe('SenderCard', () => {
       await expect.element(screen.getByText('Approve')).toBeVisible()
       await expect.element(screen.getByText('Block')).toBeVisible()
     })
+
+    test('clicking Edit button shows editing mode with form fields', async () => {
+      const screen = await render(<SenderCard sender={mockSender} />)
+
+      // Click Edit button
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Admin should see editing UI with form fields
+      await expect.element(screen.getByText('Editing')).toBeVisible()
+      await expect.element(screen.getByText('Save')).toBeVisible()
+      await expect.element(screen.getByText('Cancel')).toBeVisible()
+    })
   })
 })
