@@ -663,3 +663,10 @@
 - FilterToolbar: 94.44% → 96.29% lines (line 93 now covered)
 - Note: Tests user preference display - users who prefer second-chance employers see "Preferred" on filter
 
+## Iteration 96
+- File: expandable-textarea.tsx
+- Tested: Typing in modal textarea triggers onChange callback
+- Coverage: 18.85% statements, 19.83% lines
+- expandable-textarea: 87.5% → 100% lines! (line 72 now covered)
+- Note: Tests modal editing UX - users can type in expanded modal view and changes propagate
+
