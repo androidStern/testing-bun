@@ -369,3 +369,10 @@
 - FilterDrawer: line 466 shiftAfternoon onCheckedChange now covered
 - Note: Tests schedule filter checkbox for afternoon shift preference
 
+## Iteration 54
+- File: FilterDrawer.tsx
+- Tested: Morning shift checkbox toggling updates schedule filter preferences
+- Coverage: 15.98% statements, 16.75% lines
+- FilterDrawer: line 451 shiftMorning onCheckedChange now covered
+- Note: Tests schedule filter checkbox for morning shift preference
+
