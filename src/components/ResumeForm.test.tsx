@@ -402,6 +402,29 @@ describe('ResumeForm', () => {
       // Verify the input value was updated
       expect((fieldInput.element() as HTMLInputElement).value).toBe('Business Administration')
     })
+
+    test('typing in Graduation Date input updates the value', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      // Find all MM/YYYY placeholders and get the second one (first is in work experience Start Date)
+      // The education Graduation Date appears after the Field of Study field
+      const allMMYYYYInputs = screen.container.querySelectorAll('input[placeholder="MM/YYYY"]')
+      // First MM/YYYY is work experience start date, second is education graduation date
+      const gradDateInput = allMMYYYYInputs[1] as HTMLInputElement
+      expect(gradDateInput).not.toBeNull()
+
+      // Focus and fill
+      gradDateInput.focus()
+      gradDateInput.value = '05/2020'
+      gradDateInput.dispatchEvent(new Event('input', { bubbles: true }))
+
+      // Verify the input value was updated
+      expect(gradDateInput.value).toBe('05/2020')
+    })
   })
 
   describe('Form Dirty State', () => {
