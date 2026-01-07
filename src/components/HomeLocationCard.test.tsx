@@ -246,5 +246,42 @@ describe('HomeLocationCard', () => {
       // Verify the input value updated
       expect((input.element() as HTMLInputElement).value).toBe('Miami, FL 33101')
     })
+
+    test('pressing Enter key in address input triggers location submission', async () => {
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          workosUserId: 'user_123',
+          homeLat: null,
+          homeLon: null,
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      // Mock geocodeAddress to simulate finding the location
+      vi.mocked(geo.geocodeAddress).mockResolvedValue({ lat: 25.7617, lon: -80.1918 })
+      vi.mocked(geo.getCityFromCoords).mockResolvedValue('Miami')
+
+      const screen = await render(
+        <TestWrapper>
+          <HomeLocationCard workosUserId="user_123" />
+        </TestWrapper>,
+      )
+
+      // Open the dialog
+      const manualButton = screen.getByText('Enter manually')
+      await manualButton.click()
+
+      // Type an address in the input field
+      const input = screen.getByPlaceholder('e.g. Tampa, FL or 33602')
+      await input.fill('Miami, FL 33101')
+
+      // Press Enter key to submit (keyboard shortcut for form submission)
+      const inputElement = input.element()
+      inputElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+
+      // geocodeAddress should have been called with the address
+      expect(geo.geocodeAddress).toHaveBeenCalledWith('Miami, FL 33101')
+    })
   })
 })

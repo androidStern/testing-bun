@@ -340,6 +340,7 @@ describe('ResumeForm', () => {
       // Verify the input value was updated
       expect((positionInput.element() as HTMLInputElement).value).toBe('Software Engineer')
     })
+
   })
 
   describe('Form Dirty State', () => {
