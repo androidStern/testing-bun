@@ -418,3 +418,10 @@
 - FilterDrawer: lines 363-366 onValueChange handler now covered
 - Note: Tests commute time selection - users set max commute time to filter jobs within their travel distance
 
+## Iteration 61
+- File: FilterDrawer.tsx
+- Tested: Manual address input - user types address and field value updates
+- Coverage: 16.18% statements, 16.97% lines
+- FilterDrawer: 52.94% → 54.11% statements, line 277 onChange handler now covered
+- Note: Tests location drawer address entry - users without GPS can manually type their home address
+
