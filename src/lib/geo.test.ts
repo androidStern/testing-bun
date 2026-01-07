@@ -81,4 +81,48 @@ describe('geo', () => {
       expect(result).toBe('Unknown location')
     })
   })
+
+  describe('geocodeAddress', () => {
+    beforeEach(() => {
+      vi.stubGlobal('fetch', vi.fn())
+    })
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    test('returns coordinates from address', async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([
+          { lat: '40.7128', lon: '-74.0060' },
+        ]),
+      } as Response)
+
+      const result = await geocodeAddress('New York, NY')
+
+      expect(result).toEqual({ lat: 40.7128, lon: -74.006 })
+    })
+
+    test('throws error when address not found', async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([]),
+      } as Response)
+
+      await expect(geocodeAddress('nonexistent place xyz')).rejects.toThrow(
+        'Address not found',
+      )
+    })
+
+    test('throws error when API request fails', async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: false,
+      } as Response)
+
+      await expect(geocodeAddress('New York')).rejects.toThrow(
+        'Geocoding request failed',
+      )
+    })
+  })
 })
