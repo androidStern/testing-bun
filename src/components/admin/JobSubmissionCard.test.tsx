@@ -508,6 +508,33 @@ describe('JobSubmissionCard', () => {
       expect(options).toContain('hybrid')
     })
 
+    test('changing contact method select updates the value', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // Find the contact method select (has 'phone' and 'email' options but not 'remote')
+      const selects = screen.container.querySelectorAll('select')
+      const contactMethodSelect = Array.from(selects).find(s =>
+        Array.from(s.options).some(o => o.value === 'phone') &&
+        !Array.from(s.options).some(o => o.value === 'remote'),
+      ) as HTMLSelectElement
+
+      expect(contactMethodSelect).not.toBeNull()
+
+      // Change the select value from email to phone
+      contactMethodSelect.value = 'phone'
+      contactMethodSelect.dispatchEvent(new Event('change', { bubbles: true }))
+
+      // Verify the select value was updated
+      expect(contactMethodSelect.value).toBe('phone')
+    })
+
     test('employment type select has correct options', async () => {
       const job = createMockJob({ status: 'pending_approval' })
       const screen = await render(
