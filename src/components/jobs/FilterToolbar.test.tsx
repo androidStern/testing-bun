@@ -208,6 +208,37 @@ describe('FilterToolbar', () => {
     })
   })
 
+  describe('Fair Chance Preferences Display', () => {
+    test('shows Required when user requires second chance employers only', async () => {
+      vi.mocked(useQuery)
+        .mockReturnValueOnce({
+          // Job preferences with requireSecondChance enabled
+          data: {
+            requireSecondChance: true,
+            preferSecondChance: false,
+          },
+          error: null,
+          isLoading: false,
+        } as never)
+        .mockReturnValueOnce({
+          // Profile data
+          data: { homeLat: null, homeLon: null },
+          error: null,
+          isLoading: false,
+        } as never)
+
+      const onCategoryClick = vi.fn()
+      const screen = await render(
+        <TestWrapper>
+          <FilterToolbar onCategoryClick={onCategoryClick} />
+        </TestWrapper>,
+      )
+
+      // User should see "Required" indicator for Fair Chance filter
+      await expect.element(screen.getByText('Required')).toBeVisible()
+    })
+  })
+
   describe('Quick Apply Preferences Display', () => {
     test('shows Urgent/Easy when both quick apply preferences are set', async () => {
       vi.mocked(useQuery)
