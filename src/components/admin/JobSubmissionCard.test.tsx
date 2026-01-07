@@ -670,6 +670,24 @@ describe('JobSubmissionCard', () => {
       expect((contactPhoneInput.element() as HTMLInputElement).value).toBe('+15551234567')
     })
 
+    test('typing in job title input updates the value', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // Find the job title input by placeholder
+      const titleInput = screen.getByPlaceholder('Job title')
+      await titleInput.fill('Senior Software Engineer')
+
+      // Verify the input value was updated
+      expect((titleInput.element() as HTMLInputElement).value).toBe('Senior Software Engineer')
+    })
+
     test('employment type select has correct options', async () => {
       const job = createMockJob({ status: 'pending_approval' })
       const screen = await render(
