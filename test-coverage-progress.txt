@@ -957,3 +957,10 @@
 - MessageCard: 77.77% → 81.48% statements, line 47 (handleApprove) now covered
 - Note: Tests admin approval workflow - admin clicks Approve to change message status
 
+## Iteration 138
+- File: MessageCard.tsx
+- Tested: Reject button triggers status update for pending message
+- Coverage: 20.84% statements, 21.91% lines
+- MessageCard: 81.48% → 85.18% statements, line 51 (handleReject) now covered
+- Note: Tests admin rejection workflow - admin clicks Reject to change message status
+
