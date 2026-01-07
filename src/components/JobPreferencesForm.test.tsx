@@ -404,6 +404,23 @@ describe('JobPreferencesForm', () => {
 
       expect(secondChanceCheckbox?.getAttribute('data-state')).toBe('checked')
     })
+
+    test('can toggle require second chance checkbox', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <JobPreferencesForm />
+        </TestWrapper>,
+      )
+
+      const requireSecondChanceLabel = screen.getByText('Only show second-chance employers')
+      await requireSecondChanceLabel.click()
+
+      const requireSecondChanceCheckbox = screen.container.querySelector(
+        'button[role="checkbox"][id*="requireSecondChance"]',
+      ) as HTMLElement | null
+
+      expect(requireSecondChanceCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
   })
 
   describe('Max Commute Time Select', () => {
