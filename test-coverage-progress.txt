@@ -1236,3 +1236,10 @@
 - OptionList: 0% → 36.36% statements
 - Note: Tests option list display for user selection in chat interface
 
+## Iteration 178
+- File: OptionList.tsx
+- Tested: Single-select mode triggers onConfirm immediately when user clicks option
+- Coverage: 23.17% statements, 24.21% lines (+0.23%, +0.22%)
+- OptionList: 36.36% → 60.6% statements
+- Note: Tests key UX - clicking option in single-select confirms selection immediately
+
