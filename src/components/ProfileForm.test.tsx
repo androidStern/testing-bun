@@ -434,6 +434,21 @@ describe('ProfileForm', () => {
 
       expect((instagramInput.element() as HTMLInputElement).value).toBe('https://instagram.com/johndoe')
     })
+
+    test('can fill optional resume link field', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ProfileForm onSuccess={vi.fn()} user={mockUser as never} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText(/additional information/i).click()
+
+      const resumeLinkInput = screen.getByLabelText(/resume link/i)
+      await resumeLinkInput.fill('https://example.com/resume.pdf')
+
+      expect((resumeLinkInput.element() as HTMLInputElement).value).toBe('https://example.com/resume.pdf')
+    })
   })
 
   describe('AI Polish Feature', () => {
