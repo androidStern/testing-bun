@@ -37,3 +37,9 @@
 - Coverage: 7.57% statements, 8.11% lines
 - ErrorBanner: 0% → 100%
 
+## Iteration 6
+- File: ProgressBar.tsx (job-search-results)
+- Tested: Progress display - remaining count, saved count, reviewed fraction, percentage, all-reviewed state
+- Coverage: 7.65% statements, 8.2% lines
+- ProgressBar: 0% → 100%
+
