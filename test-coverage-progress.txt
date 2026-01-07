@@ -1055,3 +1055,10 @@
 - ResumeForm: line 1127 (personalInfo location onChange) now covered
 - Note: Tests user typing location in personal info section
 
+## Iteration 152
+- File: ResumeForm.tsx
+- Tested: LinkedIn input updates value in personal info section
+- Coverage: 21.19% statements, 22.28% lines
+- ResumeForm: line 1142 (personalInfo linkedin onChange) now covered
+- Note: Tests user typing LinkedIn URL in personal info section
+
