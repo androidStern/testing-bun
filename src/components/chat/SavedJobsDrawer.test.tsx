@@ -93,5 +93,51 @@ describe('SavedJobsDrawer', () => {
       await expect.element(applyLink).toBeVisible()
       await expect.element(applyLink).toHaveAttribute('href', 'https://example.com/apply')
     })
+
+    test('handles saved job without jobSnapshot gracefully', async () => {
+      const mockSavedJobs = [
+        {
+          _id: 'review1',
+          jobId: 'job1',
+          jobSnapshot: undefined, // Job snapshot missing (job may have been deleted)
+          reviewedAt: Date.now(),
+        },
+        {
+          _id: 'review2',
+          jobId: 'job2',
+          jobSnapshot: {
+            title: 'Valid Job',
+            company: 'Valid Company',
+            location: 'Chicago, IL',
+            salary: '$50,000',
+            shifts: ['morning'],
+            isSecondChance: false,
+            url: 'https://example.com/apply',
+          },
+          reviewedAt: Date.now(),
+        },
+      ]
+
+      vi.mocked(useQuery).mockReturnValue({
+        data: mockSavedJobs,
+        error: null,
+        isLoading: false,
+        refetch: vi.fn(),
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <SavedJobsDrawer open={true} onOpenChange={vi.fn()} />
+        </TestWrapper>,
+      )
+
+      // Should show count of 2 (includes both saved job records)
+      await expect.element(screen.getByText('Saved Jobs (2)')).toBeVisible()
+      // Valid job should still display
+      await expect.element(screen.getByText('Valid Job')).toBeVisible()
+      await expect.element(screen.getByText('Valid Company')).toBeVisible()
+      // The job without snapshot should not render card content (returns null)
+      // but shouldn't crash the component
+    })
   })
 })
