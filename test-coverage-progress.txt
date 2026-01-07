@@ -691,3 +691,10 @@
 - FilterToolbar: 96.29% → 98.14% lines (line 114 now covered)
 - Note: Tests display edge case - '20min transit' shows when transit required but no specific mode
 
+## Iteration 100
+- File: SearchProvenance.tsx
+- Tested: Long search query truncation with ellipsis on mobile view
+- Coverage: 18.97% statements, 19.95% lines
+- SearchProvenance: 97.36% → 100% lines! (line 65 truncation path now covered)
+- Note: Tests query truncation UX - mobile users see truncated query with "..." for long searches
+
