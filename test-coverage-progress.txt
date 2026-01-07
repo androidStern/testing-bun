@@ -264,3 +264,10 @@
 - FilterSummaryBanner: line 96-97 requireRailAccessible branch now covered
 - Note: Tests the rail-only commute mode UX path
 
+## Iteration 39
+- File: JobRow.tsx
+- Tested: Enter key triggers toggle for keyboard accessibility - important a11y behavior
+- Coverage: 14.97% statements, 15.85% lines
+- JobRow: lines 27-29 keyboard handler now covered (Enter key path)
+- Note: Tests keyboard navigation for screen reader and keyboard-only users
+
