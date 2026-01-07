@@ -112,5 +112,20 @@ describe('EmployerCard', () => {
       // "Editing" label should no longer be visible
       await expect.element(screen.getByText('Editing')).not.toBeInTheDocument()
     })
+
+    test('typing in name field updates the input value', async () => {
+      const screen = await render(<EmployerCard employer={mockEmployer} />)
+
+      // Enter editing mode
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Find the name input and type new content
+      const nameInput = screen.getByPlaceholder('Name')
+      await nameInput.fill('John Director')
+
+      // Verify the input value was updated
+      expect((nameInput.element() as HTMLInputElement).value).toBe('John Director')
+    })
   })
 })
