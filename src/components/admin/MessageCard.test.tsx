@@ -163,5 +163,22 @@ describe('MessageCard', () => {
       // Button should still exist (we're not testing mutation result, just that handler fires)
       await expect.element(markProcessedButton).toBeVisible()
     })
+
+    test('clicking Delete button shows confirmation dialog', async () => {
+      vi.stubGlobal('confirm', vi.fn(() => true))
+
+      const screen = await render(<MessageCard message={mockMessage} />)
+
+      // Admin wants to delete a message
+      const deleteButton = screen.getByRole('button', { name: 'Delete' })
+      await deleteButton.click()
+
+      // Confirm dialog should be called
+      expect(window.confirm).toHaveBeenCalledWith(
+        'Delete this message?\n\nThis cannot be undone.',
+      )
+
+      vi.unstubAllGlobals()
+    })
   })
 })
