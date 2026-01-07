@@ -65,6 +65,42 @@ describe('FilterToolbar', () => {
       // This is the expected behavior when they have 3+ shifts selected
       await expect.element(screen.getByText('3 shifts')).toBeVisible()
     })
+
+    test('shows overnight and flexible shift preferences when selected', async () => {
+      vi.mocked(useQuery)
+        .mockReturnValueOnce({
+          // Job preferences with overnight and flexible shifts
+          data: {
+            shiftMorning: false,
+            shiftAfternoon: false,
+            shiftEvening: false,
+            shiftOvernight: true,
+            shiftFlexible: true,
+          },
+          error: null,
+          isLoading: false,
+        } as never)
+        .mockReturnValueOnce({
+          // Profile data (no location set)
+          data: {
+            homeLat: null,
+            homeLon: null,
+            location: null,
+          },
+          error: null,
+          isLoading: false,
+        } as never)
+
+      const onCategoryClick = vi.fn()
+      const screen = await render(
+        <TestWrapper>
+          <FilterToolbar onCategoryClick={onCategoryClick} />
+        </TestWrapper>,
+      )
+
+      // User should see "Night/Flex" for overnight and flexible shifts
+      await expect.element(screen.getByText('Night/Flex')).toBeVisible()
+    })
   })
 
   describe('Commute Preferences Display', () => {
