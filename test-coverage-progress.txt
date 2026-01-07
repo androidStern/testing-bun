@@ -1188,3 +1188,10 @@
 - FilterSummaryBanner: lines 119, 121-122, 125 (shift branches) now covered
 - Note: Tests afternoon/overnight/flexible shifts and count summary
 
+## Iteration 171
+- File: FilterToolbar.tsx
+- Tested: Shows overnight and flexible shift preferences when selected
+- Coverage: 22.19% statements, 23.18% lines
+- FilterToolbar: lines 138-139 (shiftOvernight, shiftFlexible branches) now covered
+- Note: Tests Night/Flex display when user selects overnight and flexible shifts
+
