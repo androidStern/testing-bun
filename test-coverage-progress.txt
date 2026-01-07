@@ -1167,3 +1167,10 @@
 - JobSubmissionCard: lines 146-148 (form onSubmit handler) now covered
 - Note: Tests admin workflow for saving edited job submission
 
+## Iteration 168
+- File: ReferralCard.tsx
+- Tested: Component renders nothing when stats data is null
+- Coverage: 22.02% statements, 23.15% lines
+- ReferralCard: line 28 (early return when no stats) now covered
+- Note: Tests the null stats early return branch
+
