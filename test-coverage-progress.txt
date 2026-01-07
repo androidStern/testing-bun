@@ -642,3 +642,10 @@
 - ResumeToolbar: 53.84% → 69.23% lines (lines 47-48 Print handler now covered)
 - Note: Tests resume print UX - users can print their resume from the toolbar
 
+## Iteration 93
+- File: FilterToolbar.tsx
+- Tested: Fair Chance "Required" indicator displays when requireSecondChance is true
+- Coverage: 18.77% statements, 19.73% lines
+- FilterToolbar: 92.59% → 94.44% lines (line 91 now covered)
+- Note: Tests user preference display - users who require only second-chance employers see "Required" on filter
+
