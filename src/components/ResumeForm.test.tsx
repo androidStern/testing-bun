@@ -341,6 +341,21 @@ describe('ResumeForm', () => {
       expect((positionInput.element() as HTMLInputElement).value).toBe('Software Engineer')
     })
 
+    test('typing in End Date input updates the value', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      // Find the End Date input by its unique placeholder
+      const endDateInput = screen.getByPlaceholder('MM/YYYY or Present')
+      await endDateInput.fill('12/2024')
+
+      // Verify the input value was updated
+      expect((endDateInput.element() as HTMLInputElement).value).toBe('12/2024')
+    })
+
   })
 
   describe('Form Dirty State', () => {

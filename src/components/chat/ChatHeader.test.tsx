@@ -127,4 +127,5 @@ describe('ChatHeader', () => {
       await expect.element(screen.getByText('Prioritize fair-chance employers')).not.toBeInTheDocument()
     })
   })
+
 })
