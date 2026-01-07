@@ -572,3 +572,10 @@
 - JobPreferencesForm: line 156 requirePublicTransit handler now covered
 - Note: Tests public transit commute filter - users who rely on public transit can filter jobs by accessibility
 
+## Iteration 83
+- File: JobPreferencesForm.tsx
+- Tested: Prefer second chance checkbox toggle - user clicks "Prioritize second-chance employers in results" to boost second-chance jobs
+- Coverage: 17.7% statements, 18.58% lines
+- JobPreferencesForm: line 210 preferSecondChance handler now covered
+- Note: Tests second-chance employer preference - users with criminal backgrounds can prioritize fair-chance employers
+
