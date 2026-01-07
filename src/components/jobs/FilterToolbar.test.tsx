@@ -175,6 +175,42 @@ describe('FilterToolbar', () => {
       await expect.element(screen.getByText('45min bus/rail ✓')).toBeVisible()
     })
 
+    test('shows generic transit indicator when public transit required but no specific mode', async () => {
+      vi.mocked(useQuery)
+        .mockReturnValueOnce({
+          // Job preferences with commute and transit but no specific bus/rail
+          data: {
+            maxCommuteMinutes: 20,
+            requirePublicTransit: true,
+            requireBusAccessible: false,
+            requireRailAccessible: false,
+          },
+          error: null,
+          isLoading: false,
+        } as never)
+        .mockReturnValueOnce({
+          // Profile without transit zones
+          data: {
+            homeLat: 27.95,
+            homeLon: -82.45,
+            location: 'Tampa',
+            isochrones: null,
+          },
+          error: null,
+          isLoading: false,
+        } as never)
+
+      const onCategoryClick = vi.fn()
+      const screen = await render(
+        <TestWrapper>
+          <FilterToolbar onCategoryClick={onCategoryClick} />
+        </TestWrapper>,
+      )
+
+      // User should see generic transit indicator (no bus/rail specified)
+      await expect.element(screen.getByText('20min transit')).toBeVisible()
+    })
+
     test('shows Transit only when transit required without commute time', async () => {
       vi.mocked(useQuery)
         .mockReturnValueOnce({
