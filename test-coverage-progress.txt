@@ -285,3 +285,10 @@
 - FilterDrawer: line 423-433 requireRailAccessible onCheckedChange now covered
 - Note: Tests commute transit filter for rail-only users
 
+## Iteration 42
+- File: FilterSummaryBanner.tsx
+- Tested: Generic transit mode displays "30 min by transit" when user wants any transit without specific mode
+- Coverage: 15.05% statements, 15.94% lines
+- FilterSummaryBanner: line 99 generic transit branch now covered
+- Note: Covers edge case where user enables transit but doesn't pick bus or rail specifically
+
