@@ -157,5 +157,20 @@ describe('JobRow', () => {
       const container = screen.container
       expect(container.textContent).not.toContain('Fair Chance Employer')
     })
+
+    test('pressing Enter key on row triggers toggle for keyboard accessibility', async () => {
+      const job = createMockJob()
+      const onToggle = vi.fn()
+
+      const screen = await render(<JobRow isExpanded={false} job={job} onToggle={onToggle} />)
+
+      const row = screen.container.querySelector('[role="button"]')
+      expect(row).not.toBeNull()
+
+      // Simulate Enter keydown for keyboard users to expand/collapse
+      row!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+
+      expect(onToggle).toHaveBeenCalledTimes(1)
+    })
   })
 })
