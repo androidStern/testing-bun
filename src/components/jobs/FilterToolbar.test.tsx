@@ -66,4 +66,41 @@ describe('FilterToolbar', () => {
       await expect.element(screen.getByText('3 shifts')).toBeVisible()
     })
   })
+
+  describe('Commute Preferences Display', () => {
+    test('shows commute time with bus transit mode indicator', async () => {
+      vi.mocked(useQuery)
+        .mockReturnValueOnce({
+          // Job preferences with commute time and bus transit
+          data: {
+            maxCommuteMinutes: 30,
+            requirePublicTransit: true,
+            requireBusAccessible: true,
+          },
+          error: null,
+          isLoading: false,
+        } as never)
+        .mockReturnValueOnce({
+          // Profile without transit zones computed yet
+          data: {
+            homeLat: 27.95,
+            homeLon: -82.45,
+            location: 'Tampa',
+            isochrones: null,
+          },
+          error: null,
+          isLoading: false,
+        } as never)
+
+      const onCategoryClick = vi.fn()
+      const screen = await render(
+        <TestWrapper>
+          <FilterToolbar onCategoryClick={onCategoryClick} />
+        </TestWrapper>,
+      )
+
+      // User should see their commute time with bus indicator
+      await expect.element(screen.getByText('30min bus')).toBeVisible()
+    })
+  })
 })
