@@ -509,3 +509,10 @@
 - FilterToolbar: 90.74% → higher (line 123 "Transit only" now covered)
 - Note: Tests commute preferences for users who need transit but don't care about commute time
 
+## Iteration 74
+- File: JobPreferencesForm.tsx
+- Tested: Overnight shift checkbox toggle
+- Coverage: 17.44% statements, 18.3% lines
+- JobPreferencesForm: 47.91% → higher (line 291 shiftOvernight handler now covered)
+- Note: Tests shift preference checkbox - users can select overnight shift preference
+
