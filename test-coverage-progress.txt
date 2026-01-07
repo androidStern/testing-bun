@@ -551,3 +551,10 @@
 - JobPreferencesForm: line 339 preferEasyApply handler now covered
 - Note: Tests easy apply preference - users can indicate they want to prioritize jobs with simpler application processes
 
+## Iteration 80
+- File: JobPreferencesForm.tsx
+- Tested: Require bus access checkbox toggle - user clicks "Require bus access" to filter jobs by bus accessibility
+- Coverage: 17.62% statements, 18.49% lines
+- JobPreferencesForm: line 172 requireBusAccessible handler now covered
+- Note: Tests bus commute filter - users who rely on bus transit can filter jobs by bus accessibility
+
