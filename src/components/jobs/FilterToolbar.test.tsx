@@ -103,4 +103,35 @@ describe('FilterToolbar', () => {
       await expect.element(screen.getByText('30min bus')).toBeVisible()
     })
   })
+
+  describe('Quick Apply Preferences Display', () => {
+    test('shows Urgent/Easy when both quick apply preferences are set', async () => {
+      vi.mocked(useQuery)
+        .mockReturnValueOnce({
+          // Job preferences with both quick apply options
+          data: {
+            preferUrgent: true,
+            preferEasyApply: true,
+          },
+          error: null,
+          isLoading: false,
+        } as never)
+        .mockReturnValueOnce({
+          // Profile data
+          data: { homeLat: null, homeLon: null },
+          error: null,
+          isLoading: false,
+        } as never)
+
+      const onCategoryClick = vi.fn()
+      const screen = await render(
+        <TestWrapper>
+          <FilterToolbar onCategoryClick={onCategoryClick} />
+        </TestWrapper>,
+      )
+
+      // User should see their quick apply preferences
+      await expect.element(screen.getByText('Urgent/Easy')).toBeVisible()
+    })
+  })
 })
