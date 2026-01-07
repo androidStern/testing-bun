@@ -57,6 +57,40 @@ describe('ExpandableTextarea', () => {
       expect(modalTextarea.value).toBe('My professional experience includes...')
     })
 
+    test('typing in modal textarea triggers onChange with new value', async () => {
+      const onChange = vi.fn()
+      const screen = await render(
+        <ExpandableTextarea
+          modalTitle="Edit Content"
+          onChange={onChange}
+          placeholder="Enter text..."
+          value="Initial content"
+        />,
+      )
+
+      // Open the modal
+      const expandButton = screen.getByRole('button', { name: /expand editor/i })
+      await expandButton.click()
+
+      // Modal should be open
+      await expect.element(screen.getByText('Edit Content')).toBeVisible()
+
+      // Find the modal textarea (there are 2 textareas, modal is second)
+      const allTextareas = document.querySelectorAll('textarea')
+      const modalTextarea = allTextareas[1] as HTMLTextAreaElement
+
+      // Use native setter to update value and dispatch input event (React controlled input)
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLTextAreaElement.prototype,
+        'value',
+      )?.set
+      nativeInputValueSetter?.call(modalTextarea, 'Updated in modal')
+      modalTextarea.dispatchEvent(new Event('input', { bubbles: true }))
+
+      // onChange should have been called with the new value
+      expect(onChange).toHaveBeenCalledWith('Updated in modal')
+    })
+
     test('closing modal triggers onBlur callback', async () => {
       const onChange = vi.fn()
       const onBlur = vi.fn()
