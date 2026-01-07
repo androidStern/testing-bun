@@ -180,3 +180,10 @@
 - SavedJobsToggle: 0% → 100%
 - Note: User-facing badge showing how many jobs they've saved
 
+## Iteration 27
+- File: expandable-textarea.tsx
+- Tested: User typing in textarea triggers onChange with new value
+- Coverage: 14.02% statements, 14.95% lines
+- expandable-textarea: 44.44% → 55.55% statements, 50% → 62.5% lines
+- Note: Core text entry behavior - user types in textarea and onChange is called with the content
+
