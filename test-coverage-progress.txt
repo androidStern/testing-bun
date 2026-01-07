@@ -1020,3 +1020,10 @@
 - ResumeForm: line 1423 (education institution onChange) now covered
 - Note: Tests user typing school name in education section
 
+## Iteration 147
+- File: ResumeForm.tsx
+- Tested: Degree input updates value in education section
+- Coverage: 21.1% statements, 22.19% lines
+- ResumeForm: line 1438 (education degree onChange) now covered
+- Note: Tests user typing degree type in education section
+
