@@ -1332,3 +1332,10 @@
 - Coverage: 26.8% statements, 27.94% lines (+0.2%, +0.22%)
 - Note: Tests "click again to confirm" UX pattern for destructive actions
 
+## Iteration 192
+- File: tool-fallback.tsx
+- Tested: Expand button reveals tool arguments and result
+- Coverage: 26.83% statements, 27.97% lines (+0.03%, +0.03%)
+- ToolFallback: 83.33% → 100% (line 51 setIsCollapsed now covered)
+- Note: Tests expand/collapse for viewing tool call details in chat
+
