@@ -586,3 +586,10 @@
 - JobPreferencesForm: line 225 requireSecondChance handler now covered
 - Note: Tests stricter second-chance filter - users who ONLY want second-chance employers use this option
 
+## Iteration 85
+- File: HomeLocationCard.tsx
+- Tested: Manual entry dialog opens with address input and submit buttons
+- Coverage: 17.76% statements, 18.65% lines
+- HomeLocationCard: lines 161-167 (dialog opening, Cancel button) now covered
+- Note: Tests manual location entry UX - users who can't or don't want to share GPS can type address manually
+
