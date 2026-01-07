@@ -992,3 +992,10 @@
 - JobSubmissionCard: line 366 (salaryUnit onChange) now covered
 - Note: Tests form field interaction - admin can change salary unit in edit mode
 
+## Iteration 143
+- File: JobSubmissionCard.tsx
+- Tested: Skills input onChange handler
+- Coverage: 20.99% statements, 22.07% lines
+- JobSubmissionCard: line 387 (skills onChange) now covered
+- Note: Tests form field interaction - admin can edit skills in edit mode
+
