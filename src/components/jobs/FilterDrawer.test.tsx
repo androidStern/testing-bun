@@ -546,6 +546,23 @@ describe('FilterDrawer', () => {
       // The checkbox state should remain checked after form submit
       expect(preferCheckbox?.getAttribute('data-state')).toBe('checked')
     })
+
+    test('clicking Apply without changes calls onClose', async () => {
+      const onClose = vi.fn()
+      const screen = await render(
+        <TestWrapper>
+          <FilterDrawer category='fairChance' onClose={onClose} />
+        </TestWrapper>,
+      )
+
+      // User opens the drawer but doesn't modify any preferences
+      // Then clicks Apply - should just close without mutating
+      const applyButton = screen.getByRole('button', { name: 'Apply' })
+      await applyButton.click()
+
+      // onClose should be called since there are no changes
+      expect(onClose).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('Location Drawer Address Input', () => {
