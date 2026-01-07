@@ -66,5 +66,23 @@ describe('MessageCard', () => {
       await expect.element(screen.getByText('Save')).toBeVisible()
       await expect.element(screen.getByText('Cancel')).toBeVisible()
     })
+
+    test('clicking Cancel in editing mode returns to normal display', async () => {
+      const screen = await render(<MessageCard message={mockMessage} />)
+
+      // Enter editing mode
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Should be in editing mode
+      await expect.element(screen.getByText('Editing')).toBeVisible()
+
+      // Click Cancel to exit editing mode
+      const cancelButton = screen.getByText('Cancel')
+      await cancelButton.click()
+
+      // Should return to normal display - editing UI should be gone
+      await expect.element(screen.getByText('Edit')).toBeVisible()
+    })
   })
 })
