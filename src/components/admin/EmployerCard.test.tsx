@@ -61,5 +61,18 @@ describe('EmployerCard', () => {
       await expect.element(screen.getByText('Edit')).toBeVisible()
       await expect.element(screen.getByText('Delete')).toBeVisible()
     })
+
+    test('clicking Edit button shows editing mode with form fields', async () => {
+      const screen = await render(<EmployerCard employer={mockEmployer} />)
+
+      // Click Edit button
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Admin should see editing UI with form fields
+      await expect.element(screen.getByText('Editing')).toBeVisible()
+      await expect.element(screen.getByText('Save')).toBeVisible()
+      await expect.element(screen.getByText('Cancel')).toBeVisible()
+    })
   })
 })
