@@ -65,5 +65,23 @@ describe('SenderCard', () => {
       await expect.element(screen.getByText('Save')).toBeVisible()
       await expect.element(screen.getByText('Cancel')).toBeVisible()
     })
+
+    test('clicking Cancel in editing mode returns to normal display', async () => {
+      const screen = await render(<SenderCard sender={mockSender} />)
+
+      // Enter editing mode
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Should be in editing mode
+      await expect.element(screen.getByText('Editing')).toBeVisible()
+
+      // Click Cancel to exit editing mode
+      const cancelButton = screen.getByText('Cancel')
+      await cancelButton.click()
+
+      // Should return to normal display - Edit button visible again
+      await expect.element(screen.getByText('Edit')).toBeVisible()
+    })
   })
 })
