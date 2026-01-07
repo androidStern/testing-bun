@@ -103,7 +103,9 @@ describe('FilterDrawer', () => {
         </TestWrapper>,
       )
 
-      await expect.element(screen.getByText('Maximum commute time')).toBeVisible()
+      await expect
+        .element(screen.getByText('Maximum commute time', { exact: true }))
+        .toBeVisible()
     })
 
     test('shows public transit checkbox', async () => {
@@ -241,6 +243,32 @@ describe('FilterDrawer', () => {
       )
 
       await expect.element(screen.getByText('Close')).toBeVisible()
+    })
+  })
+
+  describe('Checkbox Interactions', () => {
+    test('toggling fair-chance checkbox updates its state', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <FilterDrawer category='fairChance' onClose={vi.fn()} />
+        </TestWrapper>,
+      )
+
+      // Find the checkbox by its label association
+      const label = screen.getByText('Prioritize fair-chance employers')
+      const checkbox = label.element().closest('div')?.querySelector('[role="checkbox"]')
+      expect(checkbox).not.toBeNull()
+
+      // Initially unchecked
+      expect(checkbox?.getAttribute('data-state')).toBe('unchecked')
+
+      // Click to check
+      await checkbox?.click()
+      expect(checkbox?.getAttribute('data-state')).toBe('checked')
+
+      // Click again to uncheck
+      await checkbox?.click()
+      expect(checkbox?.getAttribute('data-state')).toBe('unchecked')
     })
   })
 })

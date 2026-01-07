@@ -43,8 +43,8 @@ USER agent
 COPY --chown=agent:agent package.json bun.lock* ./
 RUN bun install
 
-# Install Playwright with system deps (needs sudo)
-RUN sudo npx playwright install --with-deps chromium
+# Install Playwright - use bunx for browser, npx for system deps (sudo doesn't have bunx)
+RUN bunx playwright install chromium && sudo npx playwright install-deps chromium
 
 # Copy project
 COPY --chown=agent:agent . .

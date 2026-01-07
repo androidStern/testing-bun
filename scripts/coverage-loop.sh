@@ -54,10 +54,13 @@ ONLY WRITE ONE TEST PER ITERATION.
 If statement coverage reaches 90%, output <complete>DONE</complete>.
 EOF
 
+TMPFILE=$(mktemp)
+trap "rm -f $TMPFILE" EXIT
+
 for ((i=1; i<=$ITERATIONS; i++)); do
   echo "=== Iteration $i of $ITERATIONS ==="
 
-  result=$(docker run --rm \
+  script -q "$TMPFILE" docker run -t --rm \
     --ipc=host \
     -e CLAUDE_CONFIG_DIR=/home/agent/.claude \
     -e CLAUDE_PROMPT="$PROMPT" \
@@ -66,9 +69,9 @@ for ((i=1; i<=$ITERATIONS; i++)); do
     -v "$HOME/.gitconfig:/home/agent/.gitconfig:ro" \
     -v "$HOME/.config/gh:/home/agent/.config/gh:ro" \
     claude-sandbox \
-    bash -c 'sudo chown -R agent:agent /home/agent/.claude 2>/dev/null; echo "{\"bypassPermissionsModeAccepted\":true}" > /home/agent/.claude.json; claude --dangerously-skip-permissions -p "$CLAUDE_PROMPT"')
+    bash -c 'sudo chown -R agent:agent /home/agent/.claude 2>/dev/null; echo "{\"bypassPermissionsModeAccepted\":true}" > /home/agent/.claude.json; claude --dangerously-skip-permissions --verbose --output-format stream-json -p "$CLAUDE_PROMPT"'
 
-  echo "$result"
+  result=$(cat "$TMPFILE")
 
   if [[ "$result" == *"<complete>DONE</complete>"* ]]; then
     echo ""
