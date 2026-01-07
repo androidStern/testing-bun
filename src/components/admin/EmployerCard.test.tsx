@@ -187,5 +187,20 @@ describe('EmployerCard', () => {
       // Verify the input value was updated
       expect((await roleInput.element() as HTMLInputElement).value).toBe('Senior Recruiter')
     })
+
+    test('typing in website field updates the input value', async () => {
+      const screen = await render(<EmployerCard employer={mockEmployer} />)
+
+      // Enter editing mode
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Find the website input and type new content
+      const websiteInput = screen.getByPlaceholder('https://...')
+      await websiteInput.fill('https://newcompany.com')
+
+      // Verify the input value was updated
+      expect((await websiteInput.element() as HTMLInputElement).value).toBe('https://newcompany.com')
+    })
   })
 })
