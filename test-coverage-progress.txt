@@ -705,3 +705,10 @@
 - FilterDrawer: 63.09% → 75% lines (lines 310-312 form submission now covered)
 - Note: Tests user workflow - user modifies filter, clicks Apply to save preferences
 
+## Iteration 102
+- File: FilterDrawer.tsx
+- Tested: Clicking Apply without changes calls onClose (no-op path)
+- Coverage: 19.29% statements, 20.29% lines
+- FilterDrawer: 75% → 76.19% lines (line 190 no-changes onClose path now covered)
+- Note: Tests edge case - user opens drawer, clicks Apply without changing anything
+
