@@ -688,6 +688,26 @@ describe('JobSubmissionCard', () => {
       expect((titleInput.element() as HTMLInputElement).value).toBe('Senior Software Engineer')
     })
 
+    test('typing in job description textarea updates the value', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // Find the description textarea by placeholder
+      const descriptionTextarea = screen.getByPlaceholder('Job description')
+      await descriptionTextarea.fill('Build amazing software products for our customers.')
+
+      // Verify the textarea value was updated
+      expect((descriptionTextarea.element() as HTMLTextAreaElement).value).toBe(
+        'Build amazing software products for our customers.',
+      )
+    })
+
     test('employment type select has correct options', async () => {
       const job = createMockJob({ status: 'pending_approval' })
       const screen = await render(
