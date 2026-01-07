@@ -635,3 +635,10 @@
 - SavedJobsDrawer: 52.94% → 58.82% statements (line 96 null return now covered)
 - Note: Tests edge case where job record exists but snapshot is undefined - component doesn't crash
 
+## Iteration 92
+- File: ResumeToolbar.tsx
+- Tested: Print button click - user clicks Print button twice to trigger print callback
+- Coverage: 18.74% statements, 19.70% lines
+- ResumeToolbar: 53.84% → 69.23% lines (lines 47-48 Print handler now covered)
+- Note: Tests resume print UX - users can print their resume from the toolbar
+
