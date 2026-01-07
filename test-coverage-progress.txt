@@ -775,3 +775,10 @@
 - ProfileForm: line 457 instagramUrl onChange handler now covered
 - Note: Tests user filling Instagram profile URL - social media for personal branding
 
+## Iteration 112
+- File: ProfileForm.tsx
+- Tested: Resume link field input in optional fields section
+- Coverage: 19.83% statements, 20.85% lines
+- ProfileForm: line 400 resumeLink onChange handler now covered
+- Note: Tests user filling resume link - important for job seekers to share their resume externally
+
