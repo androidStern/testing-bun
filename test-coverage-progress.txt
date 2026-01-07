@@ -49,3 +49,9 @@
 - Coverage: 8.26% statements, 8.82% lines
 - SearchProvenance: 0% → 65.62%
 
+## Iteration 8
+- File: formatRelativeTime.ts
+- Tested: Relative time formatting - just now, minutes/hours/days ago, boundary cases
+- Coverage: 8.49% statements, 9.01% lines
+- formatRelativeTime: 27.27% → 100%
+
