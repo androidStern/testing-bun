@@ -467,3 +467,10 @@
 - FilterToolbar: 83.33% → higher (lines 111-112 rail transit path now covered)
 - Note: Tests commute preferences display when user selects rail-only transit mode
 
+## Iteration 68
+- File: JobResultCard.tsx (JobResultsList)
+- Tested: Suggestions display with "Try:" header when no jobs found
+- Coverage: 17.18% statements, 18.02% lines
+- JobResultCard: 94.11% → higher (line 185 no-results suggestions now covered)
+- Note: Users see helpful tips when search returns no results
+
