@@ -1312,3 +1312,10 @@
 - normalizeActionsConfig: 0% → 100%
 - Note: Tests utility function that normalizes action props for tool UIs
 
+## Iteration 189
+- File: plan/schema.ts
+- Tested: parseSerializablePlan parses valid plan data with todos
+- Coverage: 26.37% statements, 27.47% lines (+0.23%, +0.24%)
+- parseSerializablePlan: 0% → 100%
+- Note: Tests schema parsing utility for Plan tool UI component
+
