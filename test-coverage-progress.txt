@@ -166,3 +166,10 @@
 - SenderCard: 0% → partial
 - Note: Admin-facing component for reviewing message senders
 
+## Iteration 25
+- File: MessageCard.tsx
+- Tested: Message phone/body display, sender name, and action buttons (Approve/Reject/Edit/Delete)
+- Coverage: 13.93% statements, 14.85% lines
+- MessageCard: 0% → partial
+- Note: Admin-facing component for reviewing inbound SMS messages
+
