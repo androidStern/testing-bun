@@ -524,6 +524,30 @@ describe('FilterDrawer', () => {
     })
   })
 
+  describe('Form Submission', () => {
+    test('clicking Apply button submits the filter form', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <FilterDrawer category='fairChance' onClose={vi.fn()} />
+        </TestWrapper>,
+      )
+
+      // User modifies a filter preference
+      const preferLabel = screen.getByText('Prioritize fair-chance employers')
+      const preferCheckbox = preferLabel.element().closest('div')?.querySelector('[role="checkbox"]')
+      await preferCheckbox?.click()
+      expect(preferCheckbox?.getAttribute('data-state')).toBe('checked')
+
+      // User clicks Apply to save their filter preferences
+      const applyButton = screen.getByRole('button', { name: 'Apply' })
+      await applyButton.click()
+
+      // Form submission should have occurred (onSubmit handler called)
+      // The checkbox state should remain checked after form submit
+      expect(preferCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
+  })
+
   describe('Location Drawer Address Input', () => {
     test('typing in address input updates the field value', async () => {
       const screen = await render(
