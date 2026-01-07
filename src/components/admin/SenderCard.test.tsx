@@ -190,5 +190,19 @@ describe('SenderCard', () => {
       // Button should still exist (we're not testing mutation result, just that handler fires)
       await expect.element(approveButton).toBeVisible()
     })
+
+    test('clicking Block button triggers status update for pending sender', async () => {
+      const screen = await render(<SenderCard sender={mockSender} showActions={true} />)
+
+      // Admin wants to block a pending sender
+      const blockButton = screen.getByText('Block')
+      await expect.element(blockButton).toBeVisible()
+
+      // Click Block - this triggers updateStatus mutation
+      await blockButton.click()
+
+      // Button should still exist (we're not testing mutation result, just that handler fires)
+      await expect.element(blockButton).toBeVisible()
+    })
   })
 })
