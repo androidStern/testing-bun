@@ -796,3 +796,10 @@
 - HomeLocationCard: line 181 setManualAddress onChange handler now covered
 - Note: Tests text input UX - users can type their address in the dialog input
 
+## Iteration 115
+- File: MessageCard.tsx
+- Tested: Edit textarea updates content when admin types in editing mode
+- Coverage: 19.92% statements, 20.95% lines
+- MessageCard: line 99 setEditBody onChange handler now covered
+- Note: Tests admin message editing - updating message body text in edit mode
+
