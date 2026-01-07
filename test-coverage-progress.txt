@@ -250,3 +250,10 @@
 - FilterDrawer: line 546 onCheckedChange handler now covered
 - Note: Tests Quick Apply filter UX - users can prioritize easy-to-apply jobs
 
+## Iteration 37
+- File: FilterSummaryBanner.tsx
+- Tested: "Fair chance only" displays when user requires (not just prefers) fair-chance employers
+- Coverage: 14.82% statements, 15.69% lines
+- FilterSummaryBanner: line 74-79 requireSecondChance branch now covered
+- Note: Complements iteration 16's "preferred" test - this tests the stricter "required" option
+
