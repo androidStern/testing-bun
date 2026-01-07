@@ -103,3 +103,10 @@
 - FilterDrawer: 38.82% → 40% statements, 39.28% → 40.47% lines
 - Note: Tests onCheckedChange handler for schedule shift preferences
 
+## Iteration 16
+- File: FilterSummaryBanner.tsx
+- Tested: Shows "Showing all jobs" when no filters, shows filter summary chips when preferences set
+- Coverage: 9.96% statements, 10.56% lines
+- FilterSummaryBanner: 0% → partial (generateFilterSummary logic covered)
+- Note: Big coverage jump - this component has significant logic for summarizing user preferences
+
