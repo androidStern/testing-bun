@@ -108,4 +108,17 @@ describe('SearchProvenance', () => {
     expect(container.textContent).toContain('fair chance only')
     expect(container.textContent).toContain('⏱️') // commute time icon
   })
+
+  test('truncates long search query with ellipsis on mobile view', async () => {
+    // Query longer than 25 characters should be truncated
+    const longQuery = 'warehouse associate forklift operator'
+    const context = createContext({ query: longQuery })
+
+    const screen = await render(<SearchProvenance jobCount={3} searchContext={context} />)
+
+    // Mobile view truncates queries longer than 25 chars
+    // The truncated query should show first 25 chars + "..."
+    const container = screen.container
+    expect(container.textContent).toContain('warehouse associate forkl...')
+  })
 })
