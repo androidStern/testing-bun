@@ -670,3 +670,10 @@
 - expandable-textarea: 87.5% → 100% lines! (line 72 now covered)
 - Note: Tests modal editing UX - users can type in expanded modal view and changes propagate
 
+## Iteration 97
+- File: ReferralCard.tsx
+- Tested: Error handling when clipboard copy fails
+- Coverage: 18.88% statements, 19.86% lines
+- ReferralCard: 91.66% → 100% lines! (line 41 error path now covered)
+- Note: Tests error path - when clipboard fails, button stays in Copy state and error toast shown
+
