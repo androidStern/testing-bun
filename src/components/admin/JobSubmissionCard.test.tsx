@@ -535,6 +535,24 @@ describe('JobSubmissionCard', () => {
       expect(contactMethodSelect.value).toBe('phone')
     })
 
+    test('typing in city input updates the value', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // Find the city input by placeholder
+      const cityInput = screen.getByPlaceholder('City')
+      await cityInput.fill('New York')
+
+      // Verify the input value was updated
+      expect((cityInput.element() as HTMLInputElement).value).toBe('New York')
+    })
+
     test('employment type select has correct options', async () => {
       const job = createMockJob({ status: 'pending_approval' })
       const screen = await render(
