@@ -159,3 +159,10 @@
 - EmployerCard: 0% → 43.24% statements
 - Note: Admin-facing component for reviewing employer applications
 
+## Iteration 24
+- File: SenderCard.tsx
+- Tested: Sender phone/email display, name/company, message count, and action buttons (Approve/Block)
+- Coverage: 13.5% statements, 14.39% lines
+- SenderCard: 0% → partial
+- Note: Admin-facing component for reviewing message senders
+
