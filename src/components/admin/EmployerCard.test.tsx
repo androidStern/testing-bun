@@ -203,4 +203,53 @@ describe('EmployerCard', () => {
       expect((await websiteInput.element() as HTMLInputElement).value).toBe('https://newcompany.com')
     })
   })
+
+  describe('Confirmation Dialogs', () => {
+    test('clicking Approve with confirmation triggers approve mutation', async () => {
+      vi.stubGlobal('confirm', vi.fn(() => true))
+
+      const screen = await render(
+        <EmployerCard employer={mockEmployer} showActions={true} />,
+      )
+
+      const approveButton = screen.getByRole('button', { name: 'Approve' })
+      await approveButton.click()
+
+      expect(window.confirm).toHaveBeenCalledWith(
+        'Approve this employer account? They will be able to view candidates.',
+      )
+
+      vi.unstubAllGlobals()
+    })
+
+    test('clicking Reject with confirmation triggers reject mutation', async () => {
+      vi.stubGlobal('confirm', vi.fn(() => true))
+
+      const screen = await render(
+        <EmployerCard employer={mockEmployer} showActions={true} />,
+      )
+
+      const rejectButton = screen.getByRole('button', { name: 'Reject' })
+      await rejectButton.click()
+
+      expect(window.confirm).toHaveBeenCalledWith('Reject this employer account?')
+
+      vi.unstubAllGlobals()
+    })
+
+    test('clicking Delete with confirmation triggers delete mutation', async () => {
+      vi.stubGlobal('confirm', vi.fn(() => true))
+
+      const screen = await render(<EmployerCard employer={mockEmployer} />)
+
+      const deleteButton = screen.getByRole('button', { name: 'Delete' })
+      await deleteButton.click()
+
+      expect(window.confirm).toHaveBeenCalledWith(
+        expect.stringContaining('Delete employer account for Jane Recruiter'),
+      )
+
+      vi.unstubAllGlobals()
+    })
+  })
 })
