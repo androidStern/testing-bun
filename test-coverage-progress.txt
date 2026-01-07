@@ -306,3 +306,10 @@
 - FilterSummaryBanner: line 139 quickParts join now covered
 - Note: FilterSummaryBanner now at high coverage (92%+) - most branches tested
 
+## Iteration 45
+- File: FilterToolbar.tsx
+- Tested: Commute time with bus transit mode displays "30min bus"
+- Coverage: 15.49% statements, 16.28% lines
+- FilterToolbar: lines 109-110 bus transit path now covered
+- Note: Tests commute filter button showing specific transit mode
+
