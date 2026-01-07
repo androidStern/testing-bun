@@ -319,6 +319,23 @@ describe('JobPreferencesForm', () => {
 
       expect(urgentCheckbox?.getAttribute('data-state')).toBe('checked')
     })
+
+    test('can toggle prefer easy apply checkbox', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <JobPreferencesForm />
+        </TestWrapper>,
+      )
+
+      const easyApplyLabel = screen.getByText('Prioritize easy apply jobs')
+      await easyApplyLabel.click()
+
+      const easyApplyCheckbox = screen.container.querySelector(
+        'button[role="checkbox"][id*="preferEasyApply"]',
+      ) as HTMLElement | null
+
+      expect(easyApplyCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
   })
 
   describe('Max Commute Time Select', () => {
