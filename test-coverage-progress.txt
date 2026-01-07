@@ -1062,3 +1062,10 @@
 - ResumeForm: line 1142 (personalInfo linkedin onChange) now covered
 - Note: Tests user typing LinkedIn URL in personal info section
 
+## Iteration 153
+- File: JobSubmissionCard.tsx
+- Tested: Employment type select updates value when admin changes it in edit mode
+- Coverage: 21.22% statements, 22.31% lines
+- JobSubmissionCard: line 316 (employmentType onChange) now covered
+- Note: Tests admin workflow for changing job employment type (full-time, part-time, contract, etc.)
+
