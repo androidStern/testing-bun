@@ -523,3 +523,10 @@
 - JobPreferencesForm: 50% → 52.08% statements (line 304 shiftFlexible handler now covered)
 - Note: Tests flexible schedule preference - users with flexible availability can indicate this preference
 
+## Iteration 76
+- File: JobPreferencesForm.tsx
+- Tested: Afternoon shift checkbox toggle
+- Coverage: 17.5% statements, 18.37% lines
+- JobPreferencesForm: 52.08% → 54.16% statements (line 265 shiftAfternoon handler now covered)
+- Note: Tests afternoon shift preference - users can indicate availability for afternoon work
+
