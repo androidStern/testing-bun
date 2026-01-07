@@ -61,4 +61,42 @@ describe('OptionList', () => {
       expect(onConfirm).toHaveBeenCalledWith(['opt1'])
     })
   })
+
+  describe('Multi Select Mode', () => {
+    test('clicking options toggles selection and Confirm button submits all selected', async () => {
+      const onConfirm = vi.fn()
+      const options = [
+        { id: 'opt1', label: 'Morning' },
+        { id: 'opt2', label: 'Afternoon' },
+        { id: 'opt3', label: 'Evening' },
+      ]
+
+      const screen = await render(
+        <OptionList
+          question="Which shifts can you work?"
+          options={options}
+          selectionMode="multi"
+          onConfirm={onConfirm}
+        />,
+      )
+
+      // User selects multiple options
+      const morningOption = screen.getByRole('option', { name: 'Morning' })
+      const eveningOption = screen.getByRole('option', { name: 'Evening' })
+
+      await morningOption.click()
+      await eveningOption.click()
+
+      // Should show Confirm button with count
+      const confirmButton = screen.getByRole('button', { name: /Confirm \(2\)/i })
+      await expect.element(confirmButton).toBeVisible()
+
+      // Click Confirm to submit selections
+      await confirmButton.click()
+
+      // onConfirm should be called with both selected IDs
+      expect(onConfirm).toHaveBeenCalledTimes(1)
+      expect(onConfirm).toHaveBeenCalledWith(expect.arrayContaining(['opt1', 'opt3']))
+    })
+  })
 })
