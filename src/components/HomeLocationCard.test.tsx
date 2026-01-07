@@ -115,4 +115,46 @@ describe('HomeLocationCard', () => {
       await expect.element(screen.getByText('Update')).toBeVisible()
     })
   })
+
+  describe('Manual Entry Dialog', () => {
+    test('clicking "Enter manually" opens dialog with address input and submit button', async () => {
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          workosUserId: 'user_123',
+          homeLat: null,
+          homeLon: null,
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <HomeLocationCard workosUserId="user_123" />
+        </TestWrapper>,
+      )
+
+      // Click "Enter manually" to open dialog
+      const manualButton = screen.getByText('Enter manually')
+      await manualButton.click()
+
+      // Dialog should open with title and description
+      await expect.element(screen.getByText('Enter your location')).toBeVisible()
+      await expect
+        .element(
+          screen.getByText(
+            'Enter your city, address, or zip code to find jobs accessible by public transit.',
+          ),
+        )
+        .toBeVisible()
+
+      // Dialog should have address input with placeholder
+      const input = screen.getByPlaceholder('e.g. Tampa, FL or 33602')
+      await expect.element(input).toBeVisible()
+
+      // Dialog should have Cancel and Submit buttons
+      await expect.element(screen.getByRole('button', { name: 'Cancel' })).toBeVisible()
+      await expect.element(screen.getByRole('button', { name: 'Use this location' })).toBeVisible()
+    })
+  })
 })
