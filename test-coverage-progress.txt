@@ -292,3 +292,10 @@
 - FilterSummaryBanner: line 99 generic transit branch now covered
 - Note: Covers edge case where user enables transit but doesn't pick bus or rail specifically
 
+## Iteration 43
+- File: FilterSummaryBanner.tsx
+- Tested: Shift names display "Morning & Evening" when user has 2 shift preferences
+- Coverage: 15.17% statements, 16% lines
+- FilterSummaryBanner: lines 125-126 shift display branch (2 or fewer shifts) now covered
+- Note: Tests friendly shift summary when user has limited shift preferences
+
