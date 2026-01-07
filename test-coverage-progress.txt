@@ -936,3 +936,10 @@
 - ResumeForm: line 1264 workExperience position onChange now covered
 - Note: Tests user typing job title/position - covers onChange handler for work experience position field
 
+## Iteration 135
+- File: HomeLocationCard.tsx
+- Tested: Enter key in address input triggers location submission
+- Coverage: 20.73% statements, 21.79% lines
+- HomeLocationCard: line 183 (keydown handler) + lines 75-92 (handleManualSubmit) now covered
+- Note: Tests keyboard shortcut for form submission - users can press Enter after typing address instead of clicking button
+
