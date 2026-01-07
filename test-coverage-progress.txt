@@ -1006,3 +1006,10 @@
 - JobSubmissionCard: line 401 (requirements onChange) now covered
 - Note: Tests form field interaction - admin can edit requirements in edit mode
 
+## Iteration 145
+- File: ResumeForm.tsx
+- Tested: End Date input updates value in work experience section
+- Coverage: 21.04% statements, 22.13% lines
+- ResumeForm: line 1294 (workExperience endDate onChange) now covered
+- Note: Tests user typing end date - End Date has unique placeholder "MM/YYYY or Present"
+
