@@ -1,7 +1,7 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { mockConvexMutation, resetAllMocks } from '@/test/setup'
+import { resetAllMocks } from '@/test/setup'
 import { JobPreferencesForm } from './JobPreferencesForm'
 
 function createTestQueryClient() {
@@ -476,6 +476,28 @@ describe('JobPreferencesForm', () => {
         'button[role="combobox"]',
       ) as HTMLButtonElement
       await expect.element(trigger).toHaveTextContent('30 minutes')
+    })
+  })
+
+  describe('Loading State', () => {
+    test('shows loading spinner while preferences are being fetched', async () => {
+      // Mock useQuery to return loading state
+      vi.mocked(useQuery).mockReturnValue({
+        data: undefined,
+        error: null,
+        isLoading: true,
+        refetch: vi.fn(),
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <JobPreferencesForm />
+        </TestWrapper>,
+      )
+
+      // Should show a loading spinner (Loader2 icon)
+      const spinner = screen.container.querySelector('svg.animate-spin')
+      expect(spinner).not.toBeNull()
     })
   })
 })
