@@ -1174,3 +1174,10 @@
 - ReferralCard: line 28 (early return when no stats) now covered
 - Note: Tests the null stats early return branch
 
+## Iteration 169
+- File: ChatHeader.tsx
+- Tested: Saved jobs toggle shows when user is authenticated
+- Coverage: 22.05% statements, 23.18% lines
+- ChatHeader: line 62 (SavedJobsToggle rendering) now covered
+- Note: Tests that authenticated users see the saved jobs toggle button
+
