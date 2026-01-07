@@ -271,3 +271,10 @@
 - JobRow: lines 27-29 keyboard handler now covered (Enter key path)
 - Note: Tests keyboard navigation for screen reader and keyboard-only users
 
+## Iteration 40
+- File: JobResultCard.tsx
+- Tested: Compact mode displays job title, company, and Apply button in condensed layout
+- Coverage: 15% statements, 15.88% lines
+- JobResultCard: lines 46-76 compact mode rendering now covered
+- Note: Tests compact card variant used in chat job listings
+
