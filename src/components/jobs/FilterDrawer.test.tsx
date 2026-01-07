@@ -458,5 +458,25 @@ describe('FilterDrawer', () => {
       await requireCheckbox?.click()
       expect(requireCheckbox?.getAttribute('data-state')).toBe('checked')
     })
+
+    test('toggling bus transit checkbox updates commute preferences', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <FilterDrawer category='commute' onClose={vi.fn()} />
+        </TestWrapper>,
+      )
+
+      // Test "Bus" transit checkbox - users who commute by bus want to filter by bus accessibility
+      const busLabel = screen.getByText('Bus')
+      const busCheckbox = busLabel.element().closest('div')?.querySelector('[role="checkbox"]')
+      expect(busCheckbox).not.toBeNull()
+
+      // Initially unchecked
+      expect(busCheckbox?.getAttribute('data-state')).toBe('unchecked')
+
+      // Click to check - user wants bus-accessible jobs
+      await busCheckbox?.click()
+      expect(busCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
   })
 })
