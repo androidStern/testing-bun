@@ -481,3 +481,10 @@
 - ResumeIncompleteCard: 0% → covered (new test file)
 - Note: Tests prompt shown when user's resume needs more detail before job matching
 
+## Iteration 70
+- File: SearchProvenance.tsx
+- Tested: Commute time display, "fair chance only" text, and clock icon when within commute zone
+- Coverage: 17.3% statements, 18.15% lines
+- SearchProvenance: 87.09% → higher (lines 19, 27, 43 now covered)
+- Note: Tests filter display text showing users their active search constraints
+
