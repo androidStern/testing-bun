@@ -156,5 +156,37 @@ describe('HomeLocationCard', () => {
       await expect.element(screen.getByRole('button', { name: 'Cancel' })).toBeVisible()
       await expect.element(screen.getByRole('button', { name: 'Use this location' })).toBeVisible()
     })
+
+    test('clicking Cancel button closes the dialog without saving', async () => {
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          workosUserId: 'user_123',
+          homeLat: null,
+          homeLon: null,
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <HomeLocationCard workosUserId="user_123" />
+        </TestWrapper>,
+      )
+
+      // Open the dialog
+      const manualButton = screen.getByText('Enter manually')
+      await manualButton.click()
+
+      // Verify dialog is open
+      await expect.element(screen.getByText('Enter your location')).toBeVisible()
+
+      // Click Cancel
+      const cancelButton = screen.getByRole('button', { name: 'Cancel' })
+      await cancelButton.click()
+
+      // Dialog should close - title should no longer be visible
+      await expect.element(screen.getByText('Enter your location')).not.toBeInTheDocument()
+    })
   })
 })
