@@ -45,4 +45,30 @@ describe('ActionButtons', () => {
       expect(onAction).toHaveBeenCalledWith('apply')
     })
   })
+
+  describe('Confirmation Flow', () => {
+    test('shows confirm label on first click when confirmLabel is set', async () => {
+      const onAction = vi.fn()
+      const actions = [
+        { id: 'delete', label: 'Delete', confirmLabel: 'Click again to confirm' },
+      ]
+
+      const screen = await render(
+        <ActionButtons actions={actions} onAction={onAction} />,
+      )
+
+      // Initial label is "Delete"
+      const deleteButton = screen.getByRole('button', { name: 'Delete' })
+      await expect.element(deleteButton).toBeVisible()
+
+      // First click shows confirmation label
+      await deleteButton.click()
+
+      // onAction should NOT be called yet
+      expect(onAction).not.toHaveBeenCalled()
+
+      // Button should now show confirm label
+      await expect.element(screen.getByRole('button', { name: 'Click again to confirm' })).toBeVisible()
+    })
+  })
 })
