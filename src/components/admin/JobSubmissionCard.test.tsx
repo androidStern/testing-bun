@@ -611,6 +611,24 @@ describe('JobSubmissionCard', () => {
       expect(employmentTypeSelect.value).toBe('contract')
     })
 
+    test('typing in salary min input updates the value', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // Find the salary min input by placeholder
+      const salaryMinInput = screen.getByPlaceholder('Min')
+      await salaryMinInput.fill('50000')
+
+      // Verify the input value was updated
+      expect((salaryMinInput.element() as HTMLInputElement).value).toBe('50000')
+    })
+
     test('typing in skills input updates the value', async () => {
       const job = createMockJob({ status: 'pending_approval' })
       const screen = await render(
