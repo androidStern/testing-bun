@@ -1083,3 +1083,10 @@
 - JobSubmissionCard: line 352 (salaryMax onChange) now covered
 - Note: Tests admin workflow for setting job maximum salary
 
+## Iteration 156
+- File: JobSubmissionCard.tsx
+- Tested: Contact method select updates value when admin changes it in edit mode
+- Coverage: 21.3% statements, 22.41% lines
+- JobSubmissionCard: line 254 (contactMethod onChange) now covered
+- Note: Tests admin workflow for switching contact method between phone/email
+
