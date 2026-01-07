@@ -579,3 +579,10 @@
 - JobPreferencesForm: line 210 preferSecondChance handler now covered
 - Note: Tests second-chance employer preference - users with criminal backgrounds can prioritize fair-chance employers
 
+## Iteration 84
+- File: JobPreferencesForm.tsx
+- Tested: Require second chance checkbox toggle - user clicks "Only show second-chance employers" for exclusive second-chance filter
+- Coverage: 17.73% statements, 18.61% lines
+- JobPreferencesForm: line 225 requireSecondChance handler now covered
+- Note: Tests stricter second-chance filter - users who ONLY want second-chance employers use this option
+
