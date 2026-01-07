@@ -299,3 +299,10 @@
 - FilterSummaryBanner: lines 125-126 shift display branch (2 or fewer shifts) now covered
 - Note: Tests friendly shift summary when user has limited shift preferences
 
+## Iteration 44
+- File: FilterSummaryBanner.tsx
+- Tested: Quick apply preferences display "Urgent & Easy apply" when both are enabled
+- Coverage: 15.26% statements, 16.03% lines
+- FilterSummaryBanner: line 139 quickParts join now covered
+- Note: FilterSummaryBanner now at high coverage (92%+) - most branches tested
+
