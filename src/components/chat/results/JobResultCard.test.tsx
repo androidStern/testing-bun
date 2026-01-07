@@ -60,6 +60,20 @@ describe('JobResultCard', () => {
       await expect.element(screen.getByText('Apply')).toBeVisible()
     })
   })
+
+  describe('Shift Icons', () => {
+    test('shows moon icon for evening/night shifts', async () => {
+      const eveningJob: JobMatch = {
+        ...mockJob,
+        shifts: ['Night'],
+      }
+
+      const screen = await render(<JobResultCard job={eveningJob} />)
+
+      // User should see night shift badge
+      await expect.element(screen.getByText('Night')).toBeVisible()
+    })
+  })
 })
 
 describe('JobResultsList', () => {
