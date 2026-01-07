@@ -888,3 +888,10 @@
 - SenderCard: 74.19% → 77.41% statements, handleSave function lines 94-105 now covered
 - Note: Tests admin sender editing - Save button calls adminUpdate mutation and exits editing mode on success
 
+## Iteration 128
+- File: MessageCard.tsx
+- Tested: Save button triggers mutation and exits editing mode
+- Coverage: 20.29% statements
+- MessageCard: 74.07% → 77.77% statements, handleSave function lines 74-79 now covered
+- Note: Tests admin message editing - Save button calls adminUpdate mutation and exits editing mode on success
+
