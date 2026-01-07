@@ -174,6 +174,38 @@ describe('FilterToolbar', () => {
       // User should see commute with bus/rail indicator and checkmark for ready zones
       await expect.element(screen.getByText('45min bus/rail ✓')).toBeVisible()
     })
+
+    test('shows Transit only when transit required without commute time', async () => {
+      vi.mocked(useQuery)
+        .mockReturnValueOnce({
+          // Job preferences with transit required but no commute time
+          data: {
+            maxCommuteMinutes: null,
+            requirePublicTransit: true,
+          },
+          error: null,
+          isLoading: false,
+        } as never)
+        .mockReturnValueOnce({
+          // Profile data
+          data: {
+            homeLat: null,
+            homeLon: null,
+          },
+          error: null,
+          isLoading: false,
+        } as never)
+
+      const onCategoryClick = vi.fn()
+      const screen = await render(
+        <TestWrapper>
+          <FilterToolbar onCategoryClick={onCategoryClick} />
+        </TestWrapper>,
+      )
+
+      // User should see Transit only indicator
+      await expect.element(screen.getByText('Transit only')).toBeVisible()
+    })
   })
 
   describe('Quick Apply Preferences Display', () => {
