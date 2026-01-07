@@ -1284,3 +1284,10 @@
 - Coverage: 24.64% statements, 25.67% lines (+0.37%, +0.37%)
 - Note: Tests onClick handler flowing through useActionButtons hook
 
+## Iteration 185
+- File: tool-fallback.tsx
+- Tested: Tool name displays with success indicator when tool completes
+- Coverage: 24.79% statements, 25.83% lines (+0.15%, +0.16%)
+- ToolFallback: 0% → partial
+- Note: Tests assistant-ui tool fallback display for completed tool calls
+
