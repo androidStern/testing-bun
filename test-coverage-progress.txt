@@ -362,3 +362,10 @@
 - EmployerCard: lines 62-90 (handleEdit), 161-191 (edit UI) now covered
 - Note: Tests admin employer editing workflow
 
+## Iteration 53
+- File: FilterDrawer.tsx
+- Tested: Afternoon shift checkbox toggling updates schedule filter preferences
+- Coverage: 15.95% statements, 16.72% lines
+- FilterDrawer: line 466 shiftAfternoon onCheckedChange now covered
+- Note: Tests schedule filter checkbox for afternoon shift preference
+
