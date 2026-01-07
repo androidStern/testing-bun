@@ -621,3 +621,10 @@
 - ResumeForm: eduField.removeValue handler now covered (line 1407)
 - Note: Tests education array manipulation - users can remove extra education entries they've added
 
+## Iteration 90
+- File: SavedJobsDrawer.tsx
+- Tested: Saved jobs list displays cards with title, company, location, salary, shifts, and Apply link
+- Coverage: 18.65% statements, 19.61% lines
+- SavedJobsDrawer: 29.41% → 52.94% statements (lines 58-99 SavedJobCard rendering now covered)
+- Note: Tests core UX - users see their saved jobs with all details and can click Apply to navigate to job
+
