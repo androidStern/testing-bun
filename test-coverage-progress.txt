@@ -31,3 +31,9 @@
 - ResumeForm: 21.6% → 22.29% (approx, testing validation path)
 - ProfileForm: Also fixed same bug in 3 locations
 
+## Iteration 5
+- File: ErrorBanner.tsx
+- Tested: Error message display, custom title, retry button visibility and click behavior
+- Coverage: 7.57% statements, 8.11% lines
+- ErrorBanner: 0% → 100%
+
