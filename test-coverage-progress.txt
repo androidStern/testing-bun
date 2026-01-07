@@ -89,3 +89,10 @@
 - expandable-textarea: 33% → 44.44% statements, 37.5% → 50% lines
 - Note: Component allows users to expand a textarea into full modal dialog - especially useful on mobile devices
 
+## Iteration 14
+- File: ReferralCard.tsx
+- Tested: Copy button copies referral URL to clipboard and shows "Copied" confirmation state
+- Coverage: 9.18% statements, 9.76% lines
+- ReferralCard: 0% → 78.57% statements, 0% → 91.66% lines
+- Note: Tests key sharing UX - users copy their invite link to share with friends
+
