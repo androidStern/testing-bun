@@ -96,3 +96,10 @@
 - ReferralCard: 0% → 78.57% statements, 0% → 91.66% lines
 - Note: Tests key sharing UX - users copy their invite link to share with friends
 
+## Iteration 15
+- File: FilterDrawer.tsx
+- Tested: Schedule drawer's Flexible schedule checkbox toggling
+- Coverage: 9.21% statements, 9.79% lines
+- FilterDrawer: 38.82% → 40% statements, 39.28% → 40.47% lines
+- Note: Tests onCheckedChange handler for schedule shift preferences
+
