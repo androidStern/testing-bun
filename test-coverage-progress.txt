@@ -1125,3 +1125,10 @@
 - JobSubmissionCard: line 212 (contactName onChange) now covered
 - Note: Tests admin workflow for editing contact name in job submission
 
+## Iteration 162
+- File: JobSubmissionCard.tsx
+- Tested: Contact email input updates value when admin types in edit mode
+- Coverage: 21.47% statements, 22.59% lines
+- JobSubmissionCard: line 226 (contactEmail onChange) now covered
+- Note: Tests admin workflow for editing contact email in job submission
+
