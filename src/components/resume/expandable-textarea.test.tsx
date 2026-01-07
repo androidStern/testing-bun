@@ -3,6 +3,28 @@ import { render } from 'vitest-browser-react'
 import { ExpandableTextarea } from './expandable-textarea'
 
 describe('ExpandableTextarea', () => {
+  describe('Text Entry', () => {
+    test('user typing in textarea triggers onChange with new value', async () => {
+      const onChange = vi.fn()
+      const screen = await render(
+        <ExpandableTextarea
+          onChange={onChange}
+          placeholder="Enter text..."
+          value=""
+        />,
+      )
+
+      // Find the inline textarea and type into it
+      const textarea = screen.getByRole('textbox')
+      await textarea.fill('New content')
+
+      // onChange should be called with the typed content
+      expect(onChange).toHaveBeenCalled()
+      // The last call should contain the full text
+      expect(onChange).toHaveBeenLastCalledWith('New content')
+    })
+  })
+
   describe('Expand to Modal', () => {
     test('clicking expand button opens modal with custom title for easier editing', async () => {
       const onChange = vi.fn()
