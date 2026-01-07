@@ -404,3 +404,10 @@
 - FilterDrawer: line 409 requireBusAccessible onCheckedChange now covered
 - Note: Tests bus transit filter - users who commute by bus want to filter jobs by bus accessibility
 
+## Iteration 59
+- File: FilterDrawer.tsx
+- Tested: Public transit checkbox toggling updates commute preferences
+- Coverage: 16.12% statements
+- FilterDrawer: 50.58% → 51.76% statements, line 390 requirePublicTransit onCheckedChange now covered
+- Note: Tests "Only show jobs reachable by public transit" filter - users who rely on public transit filter by accessibility
+
