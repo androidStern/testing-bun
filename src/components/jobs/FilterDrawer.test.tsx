@@ -438,5 +438,25 @@ describe('FilterDrawer', () => {
       await overnightCheckbox?.click()
       expect(overnightCheckbox?.getAttribute('data-state')).toBe('checked')
     })
+
+    test('toggling require fair-chance only checkbox updates preferences', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <FilterDrawer category='fairChance' onClose={vi.fn()} />
+        </TestWrapper>,
+      )
+
+      // Test "Only show fair-chance employers" checkbox - stricter filter for users with backgrounds
+      const requireLabel = screen.getByText('Only show fair-chance employers')
+      const requireCheckbox = requireLabel.element().closest('div')?.querySelector('[role="checkbox"]')
+      expect(requireCheckbox).not.toBeNull()
+
+      // Initially unchecked
+      expect(requireCheckbox?.getAttribute('data-state')).toBe('unchecked')
+
+      // Click to check - user requires fair-chance employers only (not just preferred)
+      await requireCheckbox?.click()
+      expect(requireCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
   })
 })
