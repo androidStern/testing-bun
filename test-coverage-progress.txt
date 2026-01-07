@@ -432,3 +432,10 @@
 - FilterDrawer: lines 278-283 onKeyDown handler now covered
 - Note: Tests keyboard shortcut for address submission - users can press Enter after typing address instead of clicking "Set" button
 
+## Iteration 63
+- File: JobCardContent.tsx
+- Tested: Job card displays title, company, location, salary, Fair Chance badge, shift badges, transit info, Urgent/Easy Apply badges, and Apply link
+- Coverage: 16.58% statements, 17.4% lines
+- JobCardContent: 0% → covered (new test file)
+- Note: Tests job card content in stack layout - users see all job details when swiping through jobs in review modal
+
