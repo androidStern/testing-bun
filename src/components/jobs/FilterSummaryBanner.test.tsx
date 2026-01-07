@@ -189,5 +189,25 @@ describe('FilterSummaryBanner', () => {
       // User should see shift names joined with "&" when 2 or fewer
       await expect.element(screen.getByText('Morning & Evening')).toBeVisible()
     })
+
+    test('shows quick apply preferences when user prioritizes urgent and easy apply', async () => {
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          preferUrgent: true,
+          preferEasyApply: true,
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <FilterSummaryBanner />
+        </TestWrapper>,
+      )
+
+      // User should see both quick apply preferences joined
+      await expect.element(screen.getByText('Urgent & Easy apply')).toBeVisible()
+    })
   })
 })
