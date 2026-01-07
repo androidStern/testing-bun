@@ -789,3 +789,10 @@
 - HomeLocationCard: line 191 Cancel button onClick handler now covered
 - Note: Tests dialog dismiss UX - users can close dialog without making changes
 
+## Iteration 114
+- File: HomeLocationCard.tsx
+- Tested: Address input field updates value when user types
+- Coverage: 19.89% statements, 20.92% lines
+- HomeLocationCard: line 181 setManualAddress onChange handler now covered
+- Note: Tests text input UX - users can type their address in the dialog input
+
