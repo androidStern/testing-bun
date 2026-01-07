@@ -1048,3 +1048,10 @@
 - ResumeForm: line 1112 (personalInfo phone onChange) now covered
 - Note: Tests user typing phone number in personal info section
 
+## Iteration 151
+- File: ResumeForm.tsx
+- Tested: Location input updates value in personal info section
+- Coverage: 21.16% statements, 22.25% lines
+- ResumeForm: line 1127 (personalInfo location onChange) now covered
+- Note: Tests user typing location in personal info section
+
