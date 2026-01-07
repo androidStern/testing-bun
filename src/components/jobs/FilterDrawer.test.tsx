@@ -314,5 +314,29 @@ describe('FilterDrawer', () => {
       await urgentCheckbox?.click()
       expect(urgentCheckbox?.getAttribute('data-state')).toBe('unchecked')
     })
+
+    test('toggling easy apply checkbox updates its state', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <FilterDrawer category='quickApply' onClose={vi.fn()} />
+        </TestWrapper>,
+      )
+
+      // Test "Prioritize easy apply jobs" checkbox
+      const easyApplyLabel = screen.getByText('Prioritize easy apply jobs')
+      const easyApplyCheckbox = easyApplyLabel.element().closest('div')?.querySelector('[role="checkbox"]')
+      expect(easyApplyCheckbox).not.toBeNull()
+
+      // Initially unchecked
+      expect(easyApplyCheckbox?.getAttribute('data-state')).toBe('unchecked')
+
+      // Click to check - user wants to see easy apply jobs first
+      await easyApplyCheckbox?.click()
+      expect(easyApplyCheckbox?.getAttribute('data-state')).toBe('checked')
+
+      // Click again to uncheck
+      await easyApplyCheckbox?.click()
+      expect(easyApplyCheckbox?.getAttribute('data-state')).toBe('unchecked')
+    })
   })
 })
