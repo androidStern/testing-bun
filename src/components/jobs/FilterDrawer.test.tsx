@@ -498,5 +498,29 @@ describe('FilterDrawer', () => {
       await transitCheckbox?.click()
       expect(transitCheckbox?.getAttribute('data-state')).toBe('checked')
     })
+
+    test('selecting max commute time updates the dropdown value', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <FilterDrawer category='commute' onClose={vi.fn()} />
+        </TestWrapper>,
+      )
+
+      // User wants to set their maximum commute time to filter jobs
+      // Find the Select trigger (initially shows "No limit")
+      const selectTrigger = screen.getByRole('combobox')
+      await expect.element(selectTrigger).toBeVisible()
+
+      // Click to open dropdown
+      await selectTrigger.click()
+
+      // Select "30 minutes" option - user sets max commute
+      const option30 = screen.getByRole('option', { name: '30 minutes' })
+      await expect.element(option30).toBeVisible()
+      await option30.click()
+
+      // Verify the selection is reflected in the trigger (now shows "30 minutes")
+      await expect.element(selectTrigger).toHaveTextContent('30 minutes')
+    })
   })
 })
