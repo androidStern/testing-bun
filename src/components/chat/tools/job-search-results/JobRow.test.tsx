@@ -172,5 +172,22 @@ describe('JobRow', () => {
 
       expect(onToggle).toHaveBeenCalledTimes(1)
     })
+
+    test('clicking Apply button does not trigger row toggle', async () => {
+      const job = createMockJob()
+      const onToggle = vi.fn()
+
+      const screen = await render(<JobRow isExpanded={false} job={job} onToggle={onToggle} />)
+
+      // Find the Apply link button
+      const applyLink = screen.getByRole('link', { name: /Apply/i })
+      await expect.element(applyLink).toBeVisible()
+
+      // Click the Apply button - should NOT toggle the row
+      await applyLink.click()
+
+      // Toggle should NOT have been called because e.stopPropagation()
+      expect(onToggle).not.toHaveBeenCalled()
+    })
   })
 })
