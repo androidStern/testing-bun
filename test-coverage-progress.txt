@@ -593,3 +593,10 @@
 - HomeLocationCard: lines 161-167 (dialog opening, Cancel button) now covered
 - Note: Tests manual location entry UX - users who can't or don't want to share GPS can type address manually
 
+## Iteration 86
+- File: JobPreferencesForm.tsx
+- Tested: Form submission triggers when clicking Save Preferences button after modifying checkbox
+- Coverage: 18.05% statements, 18.96% lines
+- JobPreferencesForm: 70.83% → 91.66% statements, lines 111-112 (form onSubmit handler) now covered
+- Note: Tests user clicking Save Preferences after changing preferences - exercises form submission path
+
