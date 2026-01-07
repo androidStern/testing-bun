@@ -1,0 +1,50 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { render } from 'vitest-browser-react'
+import { resetAllMocks } from '@/test/setup'
+import { ResumeUploadCard } from './ResumeUploadCard'
+
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  })
+}
+
+function TestWrapper({ children }: { children: React.ReactNode }) {
+  const queryClient = createTestQueryClient()
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+}
+
+describe('ResumeUploadCard', () => {
+  beforeEach(() => {
+    resetAllMocks()
+    vi.clearAllMocks()
+  })
+
+  describe('Skip Button', () => {
+    test('clicking Skip calls onSkip when provided', async () => {
+      const onComplete = vi.fn()
+      const onSkip = vi.fn()
+
+      const screen = await render(
+        <TestWrapper>
+          <ResumeUploadCard onComplete={onComplete} onSkip={onSkip} />
+        </TestWrapper>,
+      )
+
+      // User decides not to upload a resume and clicks Skip
+      const skipButton = screen.getByRole('button', { name: /Skip for now/i })
+      await expect.element(skipButton).toBeVisible()
+      await skipButton.click()
+
+      // onSkip should be called when skip button is clicked
+      expect(onSkip).toHaveBeenCalledTimes(1)
+      // onComplete should not be called when onSkip is provided
+      expect(onComplete).not.toHaveBeenCalled()
+    })
+  })
+})
