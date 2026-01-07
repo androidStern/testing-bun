@@ -418,5 +418,25 @@ describe('FilterDrawer', () => {
       await eveningCheckbox?.click()
       expect(eveningCheckbox?.getAttribute('data-state')).toBe('checked')
     })
+
+    test('toggling overnight shift checkbox updates schedule preferences', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <FilterDrawer category='schedule' onClose={vi.fn()} />
+        </TestWrapper>,
+      )
+
+      // Test "Overnight" shift checkbox - users who can work night shifts (e.g., night security, 24hr retail)
+      const overnightLabel = screen.getByText('Overnight')
+      const overnightCheckbox = overnightLabel.element().closest('div')?.querySelector('[role="checkbox"]')
+      expect(overnightCheckbox).not.toBeNull()
+
+      // Initially unchecked
+      expect(overnightCheckbox?.getAttribute('data-state')).toBe('unchecked')
+
+      // Click to check - user is available for overnight work
+      await overnightCheckbox?.click()
+      expect(overnightCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
   })
 })
