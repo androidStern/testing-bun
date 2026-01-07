@@ -348,3 +348,10 @@
 - JobResultCard: line 16 (getShiftIcon moon icon branch) now covered
 - Note: Tests shift icon rendering for night shifts
 
+## Iteration 51
+- File: SenderCard.tsx
+- Tested: Clicking Edit button shows editing mode with form fields and Save/Cancel
+- Coverage: 15.83% statements, 16.59% lines
+- SenderCard: lines 78-86 (handleEdit state), 113-181 (edit UI) now covered
+- Note: Tests admin sender editing workflow
+
