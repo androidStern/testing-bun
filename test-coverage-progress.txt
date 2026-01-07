@@ -838,3 +838,10 @@
 - SenderCard: line 164 notes onChange handler now covered
 - Note: Tests admin sender editing - updating admin notes in edit mode
 
+## Iteration 121
+- File: EmployerCard.tsx
+- Tested: Name field input updates value in editing mode
+- Coverage: 20.09% statements, 21.13% lines
+- EmployerCard: line 128 name onChange handler now covered
+- Note: Tests admin employer editing - updating employer name in edit mode
+
