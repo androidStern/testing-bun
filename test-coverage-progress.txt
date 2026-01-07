@@ -355,3 +355,10 @@
 - SenderCard: lines 78-86 (handleEdit state), 113-181 (edit UI) now covered
 - Note: Tests admin sender editing workflow
 
+## Iteration 52
+- File: EmployerCard.tsx
+- Tested: Clicking Edit button shows editing mode with form fields and Save/Cancel
+- Coverage: 15.92% statements, 16.69% lines
+- EmployerCard: lines 62-90 (handleEdit), 161-191 (edit UI) now covered
+- Note: Tests admin employer editing workflow
+
