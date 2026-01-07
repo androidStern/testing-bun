@@ -488,3 +488,10 @@
 - SearchProvenance: 87.09% → higher (lines 19, 27, 43 now covered)
 - Note: Tests filter display text showing users their active search constraints
 
+## Iteration 71
+- File: ThemeToggle.tsx
+- Tested: Clicking toggle button calls setTheme with 'dark' when in light mode
+- Coverage: 17.33% statements, 18.18% lines
+- ThemeToggle: 75% → 100% (line 11 toggleTheme now covered)
+- Note: Tests theme toggle interaction - core UX feature
+
