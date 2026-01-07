@@ -251,6 +251,23 @@ describe('JobPreferencesForm', () => {
 
       expect(overnightCheckbox?.getAttribute('data-state')).toBe('checked')
     })
+
+    test('can toggle flexible shift checkbox', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <JobPreferencesForm />
+        </TestWrapper>,
+      )
+
+      const flexibleLabel = screen.getByText('Flexible')
+      await flexibleLabel.click()
+
+      const flexibleCheckbox = screen.container.querySelector(
+        'button[role="checkbox"][id*="shiftFlexible"]',
+      ) as HTMLElement | null
+
+      expect(flexibleCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
   })
 
   describe('Max Commute Time Select', () => {
