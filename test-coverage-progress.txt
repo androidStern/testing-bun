@@ -867,3 +867,10 @@
 - EmployerCard: 75.67% → 78.37% statements, line 158 company onChange handler now covered
 - Note: Tests admin employer editing - updating company name in edit mode
 
+## Iteration 125
+- File: EmployerCard.tsx
+- Tested: Role field input updates value in editing mode
+- Coverage: 20.21% statements
+- EmployerCard: 78.37% → 81.08% statements, line 168 role onChange handler now covered
+- Note: Tests admin employer editing - updating employer role/title in edit mode
+
