@@ -616,6 +616,24 @@ describe('JobSubmissionCard', () => {
       expect((companyNameInput.element() as HTMLInputElement).value).toBe('Acme Inc')
     })
 
+    test('typing in contact name input updates the value', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // Find the contact name input by placeholder
+      const contactNameInput = screen.getByPlaceholder('Contact name')
+      await contactNameInput.fill('Jane Smith')
+
+      // Verify the input value was updated
+      expect((contactNameInput.element() as HTMLInputElement).value).toBe('Jane Smith')
+    })
+
     test('employment type select has correct options', async () => {
       const job = createMockJob({ status: 'pending_approval' })
       const screen = await render(
