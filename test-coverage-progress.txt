@@ -1027,3 +1027,10 @@
 - ResumeForm: line 1438 (education degree onChange) now covered
 - Note: Tests user typing degree type in education section
 
+## Iteration 148
+- File: ResumeForm.tsx
+- Tested: Field of Study input updates value in education section
+- Coverage: 21.1% statements, 22.19% lines (unchanged - line already covered)
+- ResumeForm: line 1453 (education field onChange) - already covered but test validates behavior
+- Note: Tests user typing field of study - no coverage gain but validates important UX
+
