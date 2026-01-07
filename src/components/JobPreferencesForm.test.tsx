@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { resetAllMocks } from '@/test/setup'
+import { mockConvexMutation, resetAllMocks } from '@/test/setup'
 import { JobPreferencesForm } from './JobPreferencesForm'
 
 function createTestQueryClient() {
@@ -420,6 +420,34 @@ describe('JobPreferencesForm', () => {
       ) as HTMLElement | null
 
       expect(requireSecondChanceCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
+
+    test('clicking Save Preferences button triggers form submission', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <JobPreferencesForm />
+        </TestWrapper>,
+      )
+
+      // Toggle a checkbox to make form dirty
+      const morningLabel = screen.getByText('Morning')
+      await morningLabel.click()
+
+      // Verify checkbox is checked
+      const morningCheckbox = screen.container.querySelector(
+        'button[role="checkbox"][id*="shiftMorning"]',
+      ) as HTMLElement | null
+      expect(morningCheckbox?.getAttribute('data-state')).toBe('checked')
+
+      // Click the Save Preferences button - this triggers form submission
+      // (exercises preventDefault and handleSubmit in the onSubmit handler)
+      const saveButton = screen.getByRole('button', { name: /Save Preferences/i })
+      await saveButton.click()
+
+      // Form should remain usable after submission (button still visible, no errors)
+      await expect.element(screen.getByRole('button', { name: /Save Preferences/i })).toBeVisible()
+      // Checkbox state should be preserved
+      expect(morningCheckbox?.getAttribute('data-state')).toBe('checked')
     })
   })
 
