@@ -1326,3 +1326,9 @@
 - parse.ts: 0% → 91.66%
 - Note: Tests schema parsing utilities used by all tool-ui components
 
+## Iteration 191
+- File: use-action-buttons.tsx
+- Tested: Confirmation flow shows confirmLabel on first click
+- Coverage: 26.8% statements, 27.94% lines (+0.2%, +0.22%)
+- Note: Tests "click again to confirm" UX pattern for destructive actions
+
