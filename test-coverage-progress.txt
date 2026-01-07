@@ -824,3 +824,10 @@
 - SenderCard: line 145 name onChange handler now covered
 - Note: Tests admin sender editing - updating sender name in edit mode
 
+## Iteration 119
+- File: SenderCard.tsx
+- Tested: Company field input updates value in editing mode
+- Coverage: 20.04% statements, 21.07% lines
+- SenderCard: line 154 company onChange handler now covered
+- Note: Tests admin sender editing - updating company name in edit mode
+
