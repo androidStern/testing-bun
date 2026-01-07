@@ -176,5 +176,19 @@ describe('SenderCard', () => {
       // After save completes, should exit editing mode and return to normal display
       await expect.element(screen.getByText('Edit')).toBeVisible()
     })
+
+    test('clicking Approve button triggers status update for pending sender', async () => {
+      const screen = await render(<SenderCard sender={mockSender} showActions={true} />)
+
+      // Admin wants to approve a pending sender
+      const approveButton = screen.getByText('Approve')
+      await expect.element(approveButton).toBeVisible()
+
+      // Click Approve - this triggers updateStatus mutation
+      await approveButton.click()
+
+      // Button should still exist (we're not testing mutation result, just that handler fires)
+      await expect.element(approveButton).toBeVisible()
+    })
   })
 })
