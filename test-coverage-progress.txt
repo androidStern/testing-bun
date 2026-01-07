@@ -677,3 +677,10 @@
 - ReferralCard: 91.66% → 100% lines! (line 41 error path now covered)
 - Note: Tests error path - when clipboard fails, button stays in Copy state and error toast shown
 
+## Iteration 98
+- File: JobPreferencesForm.tsx
+- Tested: Loading spinner displays while preferences are being fetched
+- Coverage: 18.91% statements, 19.89% lines
+- JobPreferencesForm: 91.66% → 93.75% lines (line 101 loading state now covered)
+- Note: Tests loading UX - users see a spinner while their preferences load from server
+
