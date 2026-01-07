@@ -327,3 +327,10 @@
 - MessageCard: lines 64-71 edit state handling now covered, lines 87-114 edit UI now covered
 - Note: Tests admin message editing workflow
 
+## Iteration 48
+- File: FilterSummaryBanner.tsx
+- Tested: Clicking filter chip calls onCategoryClick callback with correct category
+- Coverage: 15.69% statements, 16.44% lines
+- FilterSummaryBanner: line 39 onClick handler now covered - FilterSummaryBanner 100% lines!
+- Note: Tests interaction - user can click chips to open filter drawer for that category
+
