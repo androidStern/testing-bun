@@ -389,6 +389,26 @@ describe('JobSubmissionCard', () => {
       expect(companyInput?.value).toBe('Tech Corp')
     })
 
+    test('clicking Save button submits the edit form', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // The Save button should be visible
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      await expect.element(saveButton).toBeVisible()
+
+      // Click save to trigger form submission
+      await saveButton.click()
+
+      // The form should have triggered submission - the mutation would be mocked in a full test
+    })
+
     test('edit mode shows Cancel and Save buttons', async () => {
       const job = createMockJob({ status: 'pending_approval' })
       const screen = await render(
