@@ -31,6 +31,29 @@ describe('ReferralCard', () => {
     })
   })
 
+  describe('Referral Stats Display', () => {
+    test('shows singular "person" when exactly one referral', async () => {
+      // Mock referral stats with exactly 1 referral
+      vi.mocked(useSuspenseQuery).mockReturnValue({
+        data: {
+          code: 'SINGLE_REF',
+          totalReferrals: 1,
+        },
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <ReferralCard workosUserId="user_test123" />
+        </TestWrapper>,
+      )
+
+      // User should see singular "person" for single referral
+      await expect.element(screen.getByText('person joined with your link')).toBeVisible()
+    })
+  })
+
   describe('Copy Link Feature', () => {
     test('clicking Copy button copies referral URL and shows Copied confirmation', async () => {
       // Mock referral stats data
