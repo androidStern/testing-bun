@@ -117,3 +117,10 @@
 - ResumePreview: 0% → 48.93% statements, 0% → 52.27% lines
 - Note: Tests user-facing resume preview - important for users to verify their data looks correct
 
+## Iteration 18
+- File: HomeLocationCard.tsx
+- Tested: "No location set" state displays with "Use my location" and "Enter manually" buttons
+- Coverage: 11.08% statements, 11.78% lines
+- HomeLocationCard: 0% → partial
+- Note: Tests initial state when user hasn't set home location - key for transit accessibility feature
+
