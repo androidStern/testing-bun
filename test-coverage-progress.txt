@@ -1076,3 +1076,10 @@
 - JobSubmissionCard: line 337 (salaryMin onChange) now covered
 - Note: Tests admin workflow for setting job minimum salary
 
+## Iteration 155
+- File: JobSubmissionCard.tsx
+- Tested: Salary max input updates value when admin types in edit mode
+- Coverage: 21.27% statements, 22.38% lines
+- JobSubmissionCard: line 352 (salaryMax onChange) now covered
+- Note: Tests admin workflow for setting job maximum salary
+
