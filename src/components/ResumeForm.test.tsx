@@ -98,6 +98,23 @@ describe('ResumeForm', () => {
     })
   })
 
+  describe('Personal Info Input Fields', () => {
+    test('typing in Phone input updates the value', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      // Find the Phone input by placeholder
+      const phoneInput = screen.getByPlaceholder('(123) 456-7890')
+      await phoneInput.fill('(555) 123-4567')
+
+      // Verify the input value was updated
+      expect((phoneInput.element() as HTMLInputElement).value).toBe('(555) 123-4567')
+    })
+  })
+
   describe('Personal Info Validation', () => {
     // Note: The form validates on submit only (not on blur), so these tests
     // verify that validation works when the form is submitted.
