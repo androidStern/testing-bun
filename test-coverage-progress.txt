@@ -278,3 +278,10 @@
 - JobResultCard: lines 46-76 compact mode rendering now covered
 - Note: Tests compact card variant used in chat job listings
 
+## Iteration 41
+- File: FilterDrawer.tsx
+- Tested: Rail transit checkbox toggling - user clicks Rail checkbox to filter jobs by rail accessibility
+- Coverage: 15.03% statements, 15.91% lines
+- FilterDrawer: line 423-433 requireRailAccessible onCheckedChange now covered
+- Note: Tests commute transit filter for rail-only users
+
