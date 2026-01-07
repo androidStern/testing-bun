@@ -1223,3 +1223,16 @@
 - ResumeUploadCard: line 44 (else branch) now covered
 - Note: Tests that Skip button falls back to onComplete({ uploaded: false }) when no onSkip handler
 
+## Iteration 176
+- File: ResumeUploadCard.tsx
+- Tested: Custom reason displays in title and description (branch only, no statement increase)
+- Coverage: 22.6% statements (unchanged)
+- Note: Tests that "Upload Your Resume" title appears and reason is used as description
+
+## Iteration 177
+- File: OptionList.tsx
+- Tested: Question and options render correctly in chat tool
+- Coverage: 22.94% statements, 23.99% lines (+0.34%, +0.37%)
+- OptionList: 0% → 36.36% statements
+- Note: Tests option list display for user selection in chat interface
+
