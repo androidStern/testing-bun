@@ -523,4 +523,24 @@ describe('FilterDrawer', () => {
       await expect.element(selectTrigger).toHaveTextContent('30 minutes')
     })
   })
+
+  describe('Location Drawer Address Input', () => {
+    test('typing in address input updates the field value', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <FilterDrawer category='location' onClose={vi.fn()} />
+        </TestWrapper>,
+      )
+
+      // User wants to manually enter their home address (e.g., no GPS on their device)
+      const addressInput = screen.getByPlaceholder('123 Main St, City, State')
+      await expect.element(addressInput).toBeVisible()
+
+      // User types their address
+      await addressInput.fill('456 Oak Avenue, Chicago, IL')
+
+      // Verify the input value is updated
+      await expect.element(addressInput).toHaveValue('456 Oak Avenue, Chicago, IL')
+    })
+  })
 })
