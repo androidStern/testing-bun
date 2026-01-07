@@ -334,3 +334,10 @@
 - FilterSummaryBanner: line 39 onClick handler now covered - FilterSummaryBanner 100% lines!
 - Note: Tests interaction - user can click chips to open filter drawer for that category
 
+## Iteration 49
+- File: FilterSummaryBanner.tsx
+- Tested: "30 min by bus or rail" displays when user requires both transit modes
+- Coverage: 15.72% statements, 16.47% lines
+- FilterSummaryBanner: line 93 now covered - FilterSummaryBanner 100% lines achieved!
+- Note: Completes FilterSummaryBanner testing - all branches and lines covered
+
