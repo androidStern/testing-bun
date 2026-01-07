@@ -23,4 +23,26 @@ describe('ActionButtons', () => {
       await expect.element(screen.getByRole('button', { name: 'Cancel' })).toBeVisible()
     })
   })
+
+  describe('Click Handlers', () => {
+    test('clicking a button triggers onAction with the correct action id', async () => {
+      const onAction = vi.fn()
+      const actions = [
+        { id: 'apply', label: 'Apply Now' },
+        { id: 'skip', label: 'Skip' },
+      ]
+
+      const screen = await render(
+        <ActionButtons actions={actions} onAction={onAction} />,
+      )
+
+      // User clicks the Apply Now button
+      const applyButton = screen.getByRole('button', { name: 'Apply Now' })
+      await applyButton.click()
+
+      // onAction should be called with the correct action id
+      expect(onAction).toHaveBeenCalledTimes(1)
+      expect(onAction).toHaveBeenCalledWith('apply')
+    })
+  })
 })
