@@ -358,5 +358,25 @@ describe('FilterDrawer', () => {
       await railCheckbox?.click()
       expect(railCheckbox?.getAttribute('data-state')).toBe('checked')
     })
+
+    test('toggling afternoon shift checkbox updates schedule preferences', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <FilterDrawer category='schedule' onClose={vi.fn()} />
+        </TestWrapper>,
+      )
+
+      // Test "Afternoon" shift checkbox
+      const afternoonLabel = screen.getByText('Afternoon')
+      const afternoonCheckbox = afternoonLabel.element().closest('div')?.querySelector('[role="checkbox"]')
+      expect(afternoonCheckbox).not.toBeNull()
+
+      // Initially unchecked
+      expect(afternoonCheckbox?.getAttribute('data-state')).toBe('unchecked')
+
+      // Click to check - user wants afternoon shifts
+      await afternoonCheckbox?.click()
+      expect(afternoonCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
   })
 })
