@@ -584,6 +584,24 @@ describe('JobSubmissionCard', () => {
       // Verify the select value was updated
       expect(salaryUnitSelect.value).toBe('hr')
     })
+
+    test('typing in skills input updates the value', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // Find the skills input by placeholder
+      const skillsInput = screen.getByPlaceholder('skill1, skill2, skill3')
+      await skillsInput.fill('Python, Go, Rust')
+
+      // Verify the input value was updated
+      expect((skillsInput.element() as HTMLInputElement).value).toBe('Python, Go, Rust')
+    })
   })
 
   describe('Edge Cases', () => {
