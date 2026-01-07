@@ -99,4 +99,33 @@ describe('OptionList', () => {
       expect(onConfirm).toHaveBeenCalledWith(expect.arrayContaining(['opt1', 'opt3']))
     })
   })
+
+  describe('Confirmed State', () => {
+    test('displays confirmed selections with checkmarks when confirmed prop is provided', async () => {
+      const options = [
+        { id: 'opt1', label: 'Morning' },
+        { id: 'opt2', label: 'Afternoon' },
+        { id: 'opt3', label: 'Evening' },
+      ]
+
+      const screen = await render(
+        <OptionList
+          question="Which shifts can you work?"
+          options={options}
+          confirmed={['opt1', 'opt3']}
+        />,
+      )
+
+      // Question should still be visible
+      await expect.element(screen.getByText('Which shifts can you work?')).toBeVisible()
+
+      // Confirmed options should be displayed with checkmark styling
+      await expect.element(screen.getByText('Morning')).toBeVisible()
+      await expect.element(screen.getByText('Evening')).toBeVisible()
+
+      // Unconfirmed option (Afternoon) should NOT be visible in confirmed state
+      const afternoon = screen.getByText('Afternoon')
+      expect(afternoon.query()).toBeNull()
+    })
+  })
 })
