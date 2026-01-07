@@ -383,3 +383,10 @@
 - FilterDrawer: line 481 shiftEvening onCheckedChange now covered
 - Note: Tests schedule filter checkbox for evening shift preference
 
+## Iteration 56
+- File: FilterDrawer.tsx
+- Tested: Overnight shift checkbox toggling updates schedule filter preferences
+- Coverage: 16.03% statements, 16.81% lines
+- FilterDrawer: 47.05% → 48.23% statements, 47.61% → 48.8% lines, line 496 shiftOvernight onCheckedChange now covered
+- Note: Tests schedule filter checkbox for overnight shift preference - users who work 24hr retail, night security, etc.
+
