@@ -439,3 +439,10 @@
 - JobCardContent: 0% → covered (new test file)
 - Note: Tests job card content in stack layout - users see all job details when swiping through jobs in review modal
 
+## Iteration 64
+- File: ResumeToolbar.tsx
+- Tested: Download button triggers onDownload callback after 2 clicks (expand then execute pattern)
+- Coverage: 16.81% statements, 17.62% lines
+- ResumeToolbar: 30.76% → higher (handleTabChange case 3 now covered)
+- Note: Tests resume toolbar download action - user clicks Download twice to trigger resume download
+
