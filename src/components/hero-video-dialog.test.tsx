@@ -21,4 +21,29 @@ describe('HeroVideoDialog', () => {
       expect(thumbnailSrc).toContain('youtube.com/vi/dQw4w9WgXcQ')
     })
   })
+
+  describe('Video Modal', () => {
+    test('clicking thumbnail container opens video modal', async () => {
+      const screen = await render(
+        <HeroVideoDialog
+          videoSrc="https://www.youtube.com/embed/dQw4w9WgXcQ"
+          thumbnailAlt="Demo video"
+        />,
+      )
+
+      // Click the group container (parent of thumbnail) to open modal
+      const thumbnail = screen.getByRole('img', { name: 'Demo video' })
+      const container = thumbnail.element()?.parentElement
+      expect(container).toBeTruthy()
+      container?.click()
+
+      // Wait for modal animation
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // Modal should contain an iframe with the video
+      const iframe = screen.container.querySelector('iframe')
+      expect(iframe).toBeTruthy()
+      expect(iframe?.src).toContain('youtube.com/embed/dQw4w9WgXcQ')
+    })
+  })
 })
