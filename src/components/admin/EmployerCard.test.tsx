@@ -92,5 +92,25 @@ describe('EmployerCard', () => {
       // Should return to normal display - Edit button visible again
       await expect.element(screen.getByText('Edit')).toBeVisible()
     })
+
+    test('clicking Save button persists edits and exits editing mode', async () => {
+      const screen = await render(<EmployerCard employer={mockEmployer} />)
+
+      // Enter editing mode
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Should be in editing mode
+      await expect.element(screen.getByText('Editing')).toBeVisible()
+
+      // Click Save to persist changes
+      const saveButton = screen.getByText('Save')
+      await saveButton.click()
+
+      // After save completes, should exit editing mode and return to normal display
+      await expect.element(screen.getByText('Edit')).toBeVisible()
+      // "Editing" label should no longer be visible
+      await expect.element(screen.getByText('Editing')).not.toBeInTheDocument()
+    })
   })
 })
