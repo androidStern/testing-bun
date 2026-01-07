@@ -1,8 +1,8 @@
 Test Coverage Progress
 ======================
-Current: 27.72% statements (target: 90%)
+Current: 27.95% statements (target: 90%)
 
-Latest iteration: 197
-- Added tests for useIsMobile hook
-- Tests cover: mobile viewport (<768px), desktop viewport (>=768px)
-- use-mobile.ts coverage: 0% → 90.9%
+Latest iteration: 198
+- Added tests for ToolUIErrorBoundary
+- Tests cover: normal rendering, error fallback display, custom fallback
+- error-boundary.tsx coverage: 0% → 100%
