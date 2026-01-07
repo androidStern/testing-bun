@@ -372,6 +372,21 @@ describe('ResumeForm', () => {
       // Verify the input value was updated
       expect((institutionInput.element() as HTMLInputElement).value).toBe('Community College')
     })
+
+    test('typing in Degree input updates the value', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      // Find the Degree input by placeholder
+      const degreeInput = screen.getByPlaceholder('High School Diploma, GED, Associate Degree, etc.')
+      await degreeInput.fill('Associate Degree')
+
+      // Verify the input value was updated
+      expect((degreeInput.element() as HTMLInputElement).value).toBe('Associate Degree')
+    })
   })
 
   describe('Form Dirty State', () => {
