@@ -446,3 +446,10 @@
 - ResumeToolbar: 30.76% → higher (handleTabChange case 3 now covered)
 - Note: Tests resume toolbar download action - user clicks Download twice to trigger resume download
 
+## Iteration 65
+- File: JobResultCard.tsx (JobResultsList)
+- Tested: Suggestions to improve results display when jobs exist with suggestions
+- Coverage: 16.9% statements, 17.71% lines
+- JobResultCard: 76.47% → higher (lines 211-217 suggestions display now covered)
+- Note: Tests user-facing suggestions shown alongside job results
+
