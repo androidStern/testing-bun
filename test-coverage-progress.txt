@@ -390,3 +390,10 @@
 - FilterDrawer: 47.05% → 48.23% statements, 47.61% → 48.8% lines, line 496 shiftOvernight onCheckedChange now covered
 - Note: Tests schedule filter checkbox for overnight shift preference - users who work 24hr retail, night security, etc.
 
+## Iteration 57
+- File: FilterDrawer.tsx
+- Tested: "Only show fair-chance employers" checkbox toggling updates preferences
+- Coverage: 16.06% statements, 16.84% lines
+- FilterDrawer: line 341 requireSecondChance onCheckedChange now covered
+- Note: Tests stricter fair-chance filter - users with backgrounds who want to exclusively see fair-chance employers
+
