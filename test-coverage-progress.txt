@@ -985,3 +985,10 @@
 - SenderCard: 80.64% → 83.87% statements, line 61 (handleBlock) now covered
 - Note: Tests admin blocking workflow - admin can block pending senders
 
+## Iteration 142
+- File: JobSubmissionCard.tsx
+- Tested: Salary unit select onChange handler
+- Coverage: 20.96% statements, 22.03% lines
+- JobSubmissionCard: line 366 (salaryUnit onChange) now covered
+- Note: Tests form field interaction - admin can change salary unit in edit mode
+
