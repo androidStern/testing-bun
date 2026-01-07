@@ -607,3 +607,10 @@
 - FilterCategoryRow: 0% → 100% statements, new test file
 - Note: Tests filter category button interaction - users click buttons to open filter drawers for specific categories
 
+## Iteration 88
+- File: SavedJobsDrawer.tsx
+- Tested: Empty state displays "No saved jobs yet" with guidance text when user has no saved jobs
+- Coverage: 18.51% statements, 19.45% lines
+- SavedJobsDrawer: 0% → partial (lines 40-57 empty state rendering now covered)
+- Note: Tests empty state UX - helps users understand how to save jobs when their list is empty
+
