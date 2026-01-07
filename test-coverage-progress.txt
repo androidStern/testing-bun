@@ -712,3 +712,10 @@
 - FilterDrawer: 75% → 76.19% lines (line 190 no-changes onClose path now covered)
 - Note: Tests edge case - user opens drawer, clicks Apply without changing anything
 
+## Iteration 103
+- File: MessageCard.tsx
+- Tested: Clicking Cancel in editing mode returns to normal display
+- Coverage: 19.32% statements, 20.32% lines
+- MessageCard: 66.66% → 70.37% lines (lines 70-71 handleCancel now covered)
+- Note: Tests admin workflow - cancel editing without saving changes
+
