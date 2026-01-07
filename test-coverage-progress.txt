@@ -411,3 +411,10 @@
 - FilterDrawer: 50.58% → 51.76% statements, line 390 requirePublicTransit onCheckedChange now covered
 - Note: Tests "Only show jobs reachable by public transit" filter - users who rely on public transit filter by accessibility
 
+## Iteration 60
+- File: FilterDrawer.tsx
+- Tested: Max commute time dropdown selection - user opens Select, clicks "30 minutes", value updates
+- Coverage: 16.15% statements, 16.94% lines
+- FilterDrawer: lines 363-366 onValueChange handler now covered
+- Note: Tests commute time selection - users set max commute time to filter jobs within their travel distance
+
