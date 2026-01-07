@@ -82,3 +82,10 @@
 - ProfileForm: 62% → 65% branches
 - Note: Tests important UX distinction between new vs returning users - title and button text both change based on existingProfile
 
+## Iteration 13
+- File: expandable-textarea.tsx
+- Tested: Expand button opens modal dialog with custom title for easier editing (mobile UX feature)
+- Coverage: 8.86% statements, 9.41% lines
+- expandable-textarea: 33% → 44.44% statements, 37.5% → 50% lines
+- Note: Component allows users to expand a textarea into full modal dialog - especially useful on mobile devices
+
