@@ -71,4 +71,28 @@ describe('ResumePreview', () => {
       await expect.element(screen.getByText('Tech Corp')).toBeVisible()
     })
   })
+
+  describe('ATS Tips Tab', () => {
+    test('clicking ATS Tips tab shows optimization tips for job seekers', async () => {
+      const screen = await render(<ResumePreview formData={mockResumeData} />)
+
+      // User clicks the ATS Tips tab to learn how to optimize their resume
+      const atsTipsTab = screen.getByRole('tab', { name: 'ATS Tips' })
+      await atsTipsTab.click()
+
+      // User should see the ATS optimization guidance heading
+      await expect.element(screen.getByText('ATS Optimization Tips')).toBeVisible()
+
+      // User should see key tip category headings that help them improve their resume
+      await expect.element(screen.getByRole('heading', { name: 'Keywords' })).toBeVisible()
+      await expect.element(screen.getByRole('heading', { name: 'Formatting' })).toBeVisible()
+      await expect.element(screen.getByRole('heading', { name: 'File Format' })).toBeVisible()
+      await expect
+        .element(screen.getByRole('heading', { name: 'Quantifiable Achievements' }))
+        .toBeVisible()
+      await expect
+        .element(screen.getByRole('heading', { name: 'Job Title Alignment' }))
+        .toBeVisible()
+    })
+  })
 })
