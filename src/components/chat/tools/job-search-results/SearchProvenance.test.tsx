@@ -81,4 +81,31 @@ describe('SearchProvenance', () => {
     expect(container.textContent).toContain('⭐') // fair chance icon
     expect(container.textContent).toContain('☀️') // morning shift icon
   })
+
+  test('displays commute time with filter text when within commute zone', async () => {
+    const context = createContext({
+      query: 'cashier',
+      location: {
+        withinCommuteZone: true,
+        maxCommuteMinutes: 30,
+      },
+      filters: {
+        busRequired: false,
+        easyApplyOnly: false,
+        railRequired: false,
+        secondChancePreferred: false,
+        secondChanceRequired: true,
+        shifts: [],
+        urgentOnly: false,
+      },
+    })
+
+    const screen = await render(<SearchProvenance jobCount={5} searchContext={context} />)
+
+    // Users should see commute time and fair chance only text
+    const container = screen.container
+    expect(container.textContent).toContain('30min')
+    expect(container.textContent).toContain('fair chance only')
+    expect(container.textContent).toContain('⏱️') // commute time icon
+  })
 })
