@@ -23,3 +23,11 @@
 - Coverage: ~8% overall
 - JobPreferencesForm: 45.83% → 47.91%
 
+## Iteration 4
+- File: ResumeForm.tsx
+- Tested: Email validation error display - user enters invalid email, clicks Save, sees validation error message
+- Coverage: 7.98% → 8.08% lines
+- BUG FIX: Fixed FieldError components displaying "[object Object]" instead of Zod error messages
+- ResumeForm: 21.6% → 22.29% (approx, testing validation path)
+- ProfileForm: Also fixed same bug in 3 locations
+
