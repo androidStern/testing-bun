@@ -49,6 +49,17 @@ describe('JobResultCard', () => {
       await expect.element(screen.getByText('Apply Now')).toBeVisible()
     })
   })
+
+  describe('Compact Mode', () => {
+    test('displays job info in compact layout with Apply button', async () => {
+      const screen = await render(<JobResultCard job={mockJob} compact />)
+
+      // User should see essential info in compact view
+      await expect.element(screen.getByText('Software Developer')).toBeVisible()
+      await expect.element(screen.getByText(/Tech Corp/)).toBeVisible()
+      await expect.element(screen.getByText('Apply')).toBeVisible()
+    })
+  })
 })
 
 describe('JobResultsList', () => {
