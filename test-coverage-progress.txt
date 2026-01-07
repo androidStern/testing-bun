@@ -75,3 +75,10 @@
 - ProfileForm: 49.38% → 50.61% statements, 50% → 51.25% lines
 - Note: Tests onChange validator path for thingsICanOffer - validates that users see helpful error when they check then uncheck all options
 
+## Iteration 12
+- File: ProfileForm.tsx
+- Tested: Returning users with existing profile see "Your Profile" title and "Save Changes" button
+- Coverage: 8.83% statements (unchanged), 11.1% → 11.19% branches
+- ProfileForm: 62% → 65% branches
+- Note: Tests important UX distinction between new vs returning users - title and button text both change based on existingProfile
+
