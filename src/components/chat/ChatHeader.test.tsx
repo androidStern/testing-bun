@@ -80,4 +80,25 @@ describe('ChatHeader', () => {
       await expect.element(screen.getByText('Searching...')).toBeVisible()
     })
   })
+
+  describe('Filter Drawer Interaction', () => {
+    test('clicking filter category button opens the filter drawer', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ChatHeader
+            onForceSearch={vi.fn()}
+            isSearching={false}
+            hasActiveThread={true}
+          />
+        </TestWrapper>,
+      )
+
+      // Find and click one of the filter category buttons (e.g., Fair Chance)
+      const fairChanceButton = screen.getByRole('button', { name: /fair chance/i })
+      await fairChanceButton.click()
+
+      // After clicking, the filter drawer should open with Fair Chance options
+      await expect.element(screen.getByText('Prioritize fair-chance employers')).toBeVisible()
+    })
+  })
 })
