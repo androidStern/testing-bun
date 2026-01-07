@@ -1216,3 +1216,10 @@
 - ResumeUploadCard: 0% → partial (lines 40-46 handleSkip now covered)
 - Note: Tests "Skip for now" UX - users who don't want to upload a resume can skip the step
 
+## Iteration 175
+- File: ResumeUploadCard.tsx
+- Tested: Skip fallback to onComplete when onSkip prop not provided
+- Coverage: 22.6% statements, 23.62% lines (+0.03%, +0.03%)
+- ResumeUploadCard: line 44 (else branch) now covered
+- Note: Tests that Skip button falls back to onComplete({ uploaded: false }) when no onSkip handler
+
