@@ -598,6 +598,24 @@ describe('JobSubmissionCard', () => {
       expect(workArrangementSelect.value).toBe('hybrid')
     })
 
+    test('typing in company name input updates the value', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // Find the company name input by placeholder
+      const companyNameInput = screen.getByPlaceholder('Company name')
+      await companyNameInput.fill('Acme Inc')
+
+      // Verify the input value was updated
+      expect((companyNameInput.element() as HTMLInputElement).value).toBe('Acme Inc')
+    })
+
     test('employment type select has correct options', async () => {
       const job = createMockJob({ status: 'pending_approval' })
       const screen = await render(
