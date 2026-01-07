@@ -336,6 +336,23 @@ describe('JobPreferencesForm', () => {
 
       expect(easyApplyCheckbox?.getAttribute('data-state')).toBe('checked')
     })
+
+    test('can toggle require bus access checkbox', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <JobPreferencesForm />
+        </TestWrapper>,
+      )
+
+      const busLabel = screen.getByText('Require bus access')
+      await busLabel.click()
+
+      const busCheckbox = screen.container.querySelector(
+        'button[role="checkbox"][id*="requireBusAccessible"]',
+      ) as HTMLElement | null
+
+      expect(busCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
   })
 
   describe('Max Commute Time Select', () => {
