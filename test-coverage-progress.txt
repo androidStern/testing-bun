@@ -971,3 +971,10 @@
 - MessageCard: 85.18% → 88.88% statements, line 55 (handleMarkProcessed) now covered
 - Note: Tests admin workflow - admin can mark approved messages as processed
 
+## Iteration 140
+- File: SenderCard.tsx
+- Tested: Approve button triggers status update for pending sender
+- Coverage: 20.9% statements, 21.97% lines
+- SenderCard: 77.41% → 80.64% statements, line 57 (handleApprove) now covered
+- Note: Tests admin approval workflow - admin approves pending senders
+
