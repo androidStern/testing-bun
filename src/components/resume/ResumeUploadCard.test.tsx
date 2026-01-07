@@ -65,4 +65,24 @@ describe('ResumeUploadCard', () => {
       expect(onComplete).toHaveBeenCalledWith({ uploaded: false })
     })
   })
+
+  describe('Content Display', () => {
+    test('shows custom reason and title when reason prop is provided', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeUploadCard
+            onComplete={vi.fn()}
+            reason="We need your resume to find better matches"
+          />
+        </TestWrapper>,
+      )
+
+      // When reason is provided, title should change to "Upload Your Resume"
+      await expect.element(screen.getByText('Upload Your Resume')).toBeVisible()
+      // Custom reason should be displayed as description
+      await expect
+        .element(screen.getByText('We need your resume to find better matches'))
+        .toBeVisible()
+    })
+  })
 })
