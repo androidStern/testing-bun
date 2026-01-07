@@ -747,3 +747,10 @@
 - EmployerCard: 51.35% → 54.05% lines (handleCancel now covered)
 - Note: Tests admin workflow - cancel editing employer without saving changes
 
+## Iteration 108
+- File: ProfileForm.tsx
+- Tested: Website URL field input in optional fields section
+- Coverage: 19.6% statements, 20.6% lines
+- ProfileForm: 51.25% → 52.5% lines (line 419 website onChange now covered)
+- Note: Tests user filling optional website URL in profile
+
