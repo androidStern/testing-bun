@@ -235,4 +235,32 @@ describe('JobPreferencesForm', () => {
       expect(morningCheckbox?.getAttribute('data-state')).toBe('checked')
     })
   })
+
+  describe('Max Commute Time Select', () => {
+    test('can select a max commute time from dropdown', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <JobPreferencesForm />
+        </TestWrapper>,
+      )
+
+      // Click the select trigger to open the dropdown
+      const selectTrigger = screen.container.querySelector(
+        'button[role="combobox"]',
+      ) as HTMLButtonElement
+      expect(selectTrigger).not.toBeNull()
+      await selectTrigger.click()
+
+      // Wait for dropdown to open and select 30 minutes option using role
+      const option30 = screen.getByRole('option', { name: '30 minutes' })
+      await expect.element(option30).toBeVisible()
+      await option30.click()
+
+      // Verify the selection is reflected in the trigger (use combobox text content)
+      const trigger = screen.container.querySelector(
+        'button[role="combobox"]',
+      ) as HTMLButtonElement
+      await expect.element(trigger).toHaveTextContent('30 minutes')
+    })
+  })
 })

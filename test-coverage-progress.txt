@@ -15,4 +15,11 @@
 - Tested: Preview mode toggle - user clicks Preview twice (ExpandableTabs pattern) to switch to preview, Back to form returns
 - Coverage: 8.03% → 8.61% lines
 - expandable-tabs.tsx: 80.95% → 100%
+- Note: Skipped Preview Mode test due to flaky framer-motion animations
+
+## Iteration 3
+- File: JobPreferencesForm.tsx
+- Tested: Max commute time dropdown selection - user opens Select, clicks 30 minutes, verifies selection applied
+- Coverage: ~8% overall
+- JobPreferencesForm: 45.83% → 47.91%
 

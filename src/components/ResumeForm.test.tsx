@@ -117,6 +117,32 @@ describe('ResumeForm', () => {
       const container = screen.container
       expect(container.textContent).not.toContain('Please enter a valid email')
     })
+
+    test('shows email validation error when submitting form with invalid email', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      // Enter an invalid email
+      const emailInput = screen.getByPlaceholder('john@example.com')
+      await emailInput.fill('invalid-email')
+
+      // Submit the form by clicking the save button (first make form dirty)
+      const nameInput = screen.getByPlaceholder('John Doe')
+      await nameInput.fill('Test User Updated')
+
+      // Wait for dirty state to trigger save button
+      await expect.element(screen.getByText('Unsaved changes')).toBeVisible()
+
+      // Click save
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      await saveButton.click()
+
+      // Should see validation error for invalid email
+      await expect.element(screen.getByText('Please enter a valid email')).toBeVisible()
+    })
   })
 
   describe('Work Experience Array', () => {
