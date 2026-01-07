@@ -55,3 +55,23 @@
 - Coverage: 8.49% statements, 9.01% lines
 - formatRelativeTime: 27.27% → 100%
 
+## Iteration 9
+- File: ResumeForm.tsx (SectionGuide component)
+- Tested: Section guide expand/collapse - user clicks guidance button to reveal tips for filling out form sections
+- Coverage: 8.49% → 8.81% statements, 9.01% → 9.35% lines
+- ResumeForm: 22.22% → 22.53%
+- hero-video-dialog: 7.14% → 78.57% (used by SectionGuide)
+
+## Iteration 10
+- File: ResumeForm.tsx
+- Tested: Title displays "Edit Your Resume" when user has existing resume (vs "Build Your Resume" for new users)
+- Coverage: 8.81% statements (unchanged), 11.01% → 11.04% branches (+1)
+- Note: Tests title conditional based on existingResume data - important UX indicator for returning users
+
+## Iteration 11
+- File: ProfileForm.tsx
+- Tested: Validation error appears when user deselects all "What brings you here?" options
+- Coverage: 8.81% → 8.83% statements, 9.35% → 9.38% lines
+- ProfileForm: 49.38% → 50.61% statements, 50% → 51.25% lines
+- Note: Tests onChange validator path for thingsICanOffer - validates that users see helpful error when they check then uncheck all options
+

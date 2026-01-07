@@ -1,7 +1,7 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, useSuspenseQuery } from '@tanstack/react-query'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { mockConvexMutation, resetAllMocks } from '@/test/setup'
+import { mockConvexMutation, mockExistingProfile, resetAllMocks } from '@/test/setup'
 import { ProfileForm } from './ProfileForm'
 
 const mockUser = {
@@ -48,6 +48,35 @@ describe('ProfileForm', () => {
       )
 
       await expect.element(screen.getByText('Complete Your Profile')).toBeVisible()
+    })
+
+    test('shows "Your Profile" title and "Save Changes" button for returning users with existing profile', async () => {
+      // Mock useSuspenseQuery to return existing profile data
+      vi.mocked(useSuspenseQuery).mockReturnValue({
+        data: mockExistingProfile,
+        error: null,
+        isLoading: false,
+      } as never)
+
+      const screen = await render(
+        <TestWrapper>
+          <ProfileForm onSuccess={vi.fn()} user={mockUser as never} />
+        </TestWrapper>,
+      )
+
+      // Title should indicate editing, not completing
+      await expect.element(screen.getByText('Your Profile')).toBeVisible()
+
+      // Button should say "Save Changes" for existing profile
+      const submitButton = screen.getByRole('button', { name: /save changes/i })
+      await expect.element(submitButton).toBeVisible()
+
+      // Reset mock back to null for other tests
+      vi.mocked(useSuspenseQuery).mockReturnValue({
+        data: null,
+        error: null,
+        isLoading: false,
+      } as never)
     })
 
     test('displays all four "What brings you here" options', async () => {
