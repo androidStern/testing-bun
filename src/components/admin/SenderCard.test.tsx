@@ -83,5 +83,20 @@ describe('SenderCard', () => {
       // Should return to normal display - Edit button visible again
       await expect.element(screen.getByText('Edit')).toBeVisible()
     })
+
+    test('typing in phone field updates the input value', async () => {
+      const screen = await render(<SenderCard sender={mockSender} />)
+
+      // Enter editing mode
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Find the phone input and type new content
+      const phoneInput = screen.getByPlaceholder('Phone number')
+      await phoneInput.fill('+1999888777')
+
+      // Verify the input value was updated
+      expect((phoneInput.element() as HTMLInputElement).value).toBe('+1999888777')
+    })
   })
 })
