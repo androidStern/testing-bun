@@ -285,6 +285,23 @@ describe('JobPreferencesForm', () => {
 
       expect(afternoonCheckbox?.getAttribute('data-state')).toBe('checked')
     })
+
+    test('can toggle evening shift checkbox', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <JobPreferencesForm />
+        </TestWrapper>,
+      )
+
+      const eveningLabel = screen.getByText('Evening')
+      await eveningLabel.click()
+
+      const eveningCheckbox = screen.container.querySelector(
+        'button[role="checkbox"][id*="shiftEvening"]',
+      ) as HTMLElement | null
+
+      expect(eveningCheckbox?.getAttribute('data-state')).toBe('checked')
+    })
   })
 
   describe('Max Commute Time Select', () => {
