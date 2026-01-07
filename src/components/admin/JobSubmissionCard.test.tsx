@@ -553,6 +553,24 @@ describe('JobSubmissionCard', () => {
       expect((cityInput.element() as HTMLInputElement).value).toBe('New York')
     })
 
+    test('typing in state input updates the value', async () => {
+      const job = createMockJob({ status: 'pending_approval' })
+      const screen = await render(
+        <TestWrapper>
+          <JobSubmissionCard job={job} />
+        </TestWrapper>,
+      )
+
+      await screen.getByText('Edit').click()
+
+      // Find the state input by placeholder
+      const stateInput = screen.getByPlaceholder('State')
+      await stateInput.fill('NY')
+
+      // Verify the input value was updated
+      expect((stateInput.element() as HTMLInputElement).value).toBe('NY')
+    })
+
     test('employment type select has correct options', async () => {
       const job = createMockJob({ status: 'pending_approval' })
       const screen = await render(
