@@ -845,3 +845,11 @@
 - EmployerCard: line 128 name onChange handler now covered
 - Note: Tests admin employer editing - updating employer name in edit mode
 
+## Iteration 122
+- File: EmployerCard.tsx
+- Tested: Email field input updates value in editing mode
+- Coverage: 20.12% statements, 21.16% lines
+- EmployerCard: 70.27% → 72.97% statements, line 138 email onChange handler now covered
+- Note: Tests admin employer editing - updating employer email address in edit mode
+- Note: SavedJobsDrawer remove button click test removed due to vitest-browser-react portal click limitations
+
