@@ -53,5 +53,18 @@ describe('MessageCard', () => {
       await expect.element(screen.getByText('Edit')).toBeVisible()
       await expect.element(screen.getByText('Delete')).toBeVisible()
     })
+
+    test('clicking Edit button shows editing mode with textarea and Save/Cancel buttons', async () => {
+      const screen = await render(<MessageCard message={mockMessage} />)
+
+      // Click Edit button
+      const editButton = screen.getByText('Edit')
+      await editButton.click()
+
+      // Admin should see editing UI with message body in textarea
+      await expect.element(screen.getByText('Editing')).toBeVisible()
+      await expect.element(screen.getByText('Save')).toBeVisible()
+      await expect.element(screen.getByText('Cancel')).toBeVisible()
+    })
   })
 })
