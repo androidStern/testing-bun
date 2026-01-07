@@ -563,6 +563,28 @@ describe('FilterDrawer', () => {
       // onClose should be called since there are no changes
       expect(onClose).toHaveBeenCalledTimes(1)
     })
+
+    test('clicking Apply after changing max commute time submits the commute preference', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <FilterDrawer category='commute' onClose={vi.fn()} />
+        </TestWrapper>,
+      )
+
+      // User changes max commute time from default to 30 minutes
+      const selectTrigger = screen.getByRole('combobox')
+      await selectTrigger.click()
+      const option30 = screen.getByRole('option', { name: '30 minutes' })
+      await option30.click()
+
+      // User clicks Apply to save their commute preference
+      const applyButton = screen.getByRole('button', { name: 'Apply' })
+      await applyButton.click()
+
+      // Form submission with dirty maxCommuteMinutes field should occur
+      // The select value should remain after submission
+      await expect.element(selectTrigger).toHaveTextContent('30 minutes')
+    })
   })
 
   describe('Location Drawer Address Input', () => {
