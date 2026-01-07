@@ -698,3 +698,10 @@
 - SearchProvenance: 97.36% → 100% lines! (line 65 truncation path now covered)
 - Note: Tests query truncation UX - mobile users see truncated query with "..." for long searches
 
+## Iteration 101
+- File: FilterDrawer.tsx
+- Tested: Clicking Apply button submits the filter form (onSubmit handler)
+- Coverage: 19.26% statements, 20.26% lines
+- FilterDrawer: 63.09% → 75% lines (lines 310-312 form submission now covered)
+- Note: Tests user workflow - user modifies filter, clicks Apply to save preferences
+
