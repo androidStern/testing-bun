@@ -310,6 +310,23 @@ describe('ResumeForm', () => {
     })
   })
 
+  describe('Work Experience Input Fields', () => {
+    test('typing in Company input updates the value', async () => {
+      const screen = await render(
+        <TestWrapper>
+          <ResumeForm user={mockUser} />
+        </TestWrapper>,
+      )
+
+      // Find the Company input by placeholder and fill it
+      const companyInput = screen.getByPlaceholder('Company Name')
+      await companyInput.fill('Acme Corporation')
+
+      // Verify the input value was updated
+      expect((companyInput.element() as HTMLInputElement).value).toBe('Acme Corporation')
+    })
+  })
+
   describe('Form Dirty State', () => {
     test('form starts as clean (no unsaved indicator)', async () => {
       const screen = await render(
