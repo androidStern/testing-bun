@@ -901,3 +901,10 @@
 - Coverage: 20.29% statements (no change - behavior already covered by existing code paths)
 - Note: Tests the user-facing message shown while transit zones are being computed after location is set
 
+## Iteration 130
+- File: ReferralCard.tsx
+- Tested: Singular "person" text when exactly one referral
+- Coverage: 20.29% statements (no change - line coverage already counted)
+- ReferralCard: now at 100% line coverage, only early-return null check uncovered
+- Note: Tests the singular/plural grammar for referral count display
+
