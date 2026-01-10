@@ -17,17 +17,51 @@ vi.mock('convex/react', () => ({
   useMutation: () => mockConvexMutation,
 }))
 
+// Store mutation callbacks for testing onSuccess/onError
+export const mutationCallbacks: {
+  onSuccess?: (data: unknown, variables: unknown, context: unknown) => void
+  onError?: (error: Error, variables: unknown, context: unknown) => void
+} = {}
+
 vi.mock('@tanstack/react-query', async () => {
   const actual = await vi.importActual('@tanstack/react-query')
   return {
     ...actual,
-    useMutation: vi.fn(() => ({
-      error: null,
-      isError: false,
-      isPending: false,
-      mutate: mockConvexMutation,
-      mutateAsync: mockConvexMutation,
-    })),
+    useMutation: vi.fn(
+      (options: {
+        mutationFn?: (args: unknown) => Promise<unknown>
+        onSuccess?: (data: unknown, variables: unknown, context: unknown) => void
+        onError?: (error: Error, variables: unknown, context: unknown) => void
+      }) => {
+        // Store callbacks so tests can verify they're called
+        mutationCallbacks.onSuccess = options.onSuccess
+        mutationCallbacks.onError = options.onError
+
+        // Create a mutate function that captures payload and triggers callbacks
+        const mutate = async (args: unknown) => {
+          mockConvexMutation(args)
+          try {
+            // If mockConvexMutation was configured with mockResolvedValue/mockRejectedValue, use it
+            const result = await mockConvexMutation.mock.results[
+              mockConvexMutation.mock.results.length - 1
+            ]?.value
+            options.onSuccess?.(result, args, undefined)
+            return result
+          } catch (error) {
+            options.onError?.(error as Error, args, undefined)
+            throw error
+          }
+        }
+
+        return {
+          error: null,
+          isError: false,
+          isPending: false,
+          mutate,
+          mutateAsync: mutate,
+        }
+      },
+    ),
     useQuery: vi.fn(() => ({
       data: null,
       error: null,
@@ -157,4 +191,7 @@ export function resetAllMocks() {
   mockConvexQuery.mockClear()
   mockConvexMutation.mockClear()
   mockConvexAction.mockClear()
+  // Clear stored callbacks
+  mutationCallbacks.onSuccess = undefined
+  mutationCallbacks.onError = undefined
 }

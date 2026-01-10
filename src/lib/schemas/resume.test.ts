@@ -3,354 +3,42 @@ import {
   createDefaultResumeFormValues,
   createEmptyEducation,
   createEmptyWorkExperience,
-  resumeFormSchema,
   resumeMutationSchema,
 } from './resume'
 
-describe('resumeFormSchema', () => {
-  describe('personalInfo validation', () => {
-    test('requires name to be non-empty', () => {
-      expect(() =>
-        resumeFormSchema.parse({
-          education: [],
-          personalInfo: {
-            email: 'test@example.com',
-            linkedin: '',
-            location: '',
-            name: '',
-            phone: '',
-          },
-          skills: '',
-          summary: '',
-          workExperience: [],
-        }),
-      ).toThrow()
-    })
-
-    test('validates email format', () => {
-      expect(() =>
-        resumeFormSchema.parse({
-          education: [],
-          personalInfo: {
-            email: 'invalid',
-            linkedin: '',
-            location: '',
-            name: 'Test User',
-            phone: '',
-          },
-          skills: '',
-          summary: '',
-          workExperience: [],
-        }),
-      ).toThrow()
-    })
-
-    test('accepts valid email', () => {
-      const result = resumeFormSchema.parse({
-        education: [],
-        personalInfo: {
-          email: 'test@example.com',
-          linkedin: '',
-          location: '',
-          name: 'Test User',
-          phone: '',
-        },
-        skills: '',
-        summary: '',
-        workExperience: [],
-      })
-
-      expect(result.personalInfo.email).toBe('test@example.com')
-    })
-
-    test('validates linkedin URL format', () => {
-      expect(() =>
-        resumeFormSchema.parse({
-          education: [],
-          personalInfo: {
-            email: 'test@example.com',
-            linkedin: 'not-a-url',
-            location: '',
-            name: 'Test User',
-            phone: '',
-          },
-          skills: '',
-          summary: '',
-          workExperience: [],
-        }),
-      ).toThrow()
-    })
-
-    test('accepts valid linkedin URL', () => {
-      const result = resumeFormSchema.parse({
-        education: [],
-        personalInfo: {
-          email: 'test@example.com',
-          linkedin: 'https://linkedin.com/in/test',
-          location: '',
-          name: 'Test User',
-          phone: '',
-        },
-        skills: '',
-        summary: '',
-        workExperience: [],
-      })
-
-      expect(result.personalInfo.linkedin).toBe('https://linkedin.com/in/test')
-    })
-
-    test('transforms empty optional fields to undefined', () => {
-      const result = resumeFormSchema.parse({
-        education: [],
-        personalInfo: {
-          email: 'test@example.com',
-          linkedin: '',
-          location: '',
-          name: 'Test User',
-          phone: '',
-        },
-        skills: '',
-        summary: '',
-        workExperience: [],
-      })
-
-      expect(result.personalInfo.phone).toBeUndefined()
-      expect(result.personalInfo.location).toBeUndefined()
-      expect(result.personalInfo.linkedin).toBeUndefined()
-    })
-  })
-
-  describe('workExperience array transforms', () => {
-    test('transforms empty strings in work experience to undefined', () => {
-      const result = resumeFormSchema.parse({
-        education: [],
-        personalInfo: {
-          email: 'test@example.com',
-          linkedin: '',
-          location: '',
-          name: 'Test User',
-          phone: '',
-        },
-        skills: '',
-        summary: '',
-        workExperience: [
-          {
-            achievements: '',
-            company: '',
-            description: '',
-            endDate: '',
-            id: 'exp_1',
-            position: '',
-            startDate: '',
-          },
-        ],
-      })
-
-      expect(result.workExperience[0].company).toBeUndefined()
-      expect(result.workExperience[0].position).toBeUndefined()
-      expect(result.workExperience[0].startDate).toBeUndefined()
-      expect(result.workExperience[0].endDate).toBeUndefined()
-      expect(result.workExperience[0].description).toBeUndefined()
-      expect(result.workExperience[0].achievements).toBeUndefined()
-    })
-
-    test('preserves non-empty strings in work experience', () => {
-      const result = resumeFormSchema.parse({
-        education: [],
-        personalInfo: {
-          email: 'test@example.com',
-          linkedin: '',
-          location: '',
-          name: 'Test User',
-          phone: '',
-        },
-        skills: '',
-        summary: '',
-        workExperience: [
-          {
-            achievements: 'Did stuff',
-            company: 'Acme Corp',
-            description: 'Built things',
-            endDate: '2023-12',
-            id: 'exp_1',
-            position: 'Developer',
-            startDate: '2020-01',
-          },
-        ],
-      })
-
-      expect(result.workExperience[0].company).toBe('Acme Corp')
-      expect(result.workExperience[0].position).toBe('Developer')
-      expect(result.workExperience[0].startDate).toBe('2020-01')
-      expect(result.workExperience[0].endDate).toBe('2023-12')
-    })
-
-    test('preserves id in work experience', () => {
-      const result = resumeFormSchema.parse({
-        education: [],
-        personalInfo: {
-          email: 'test@example.com',
-          linkedin: '',
-          location: '',
-          name: 'Test User',
-          phone: '',
-        },
-        skills: '',
-        summary: '',
-        workExperience: [
-          {
-            achievements: '',
-            company: '',
-            description: '',
-            endDate: '',
-            id: 'exp_unique_123',
-            position: '',
-            startDate: '',
-          },
-        ],
-      })
-
-      expect(result.workExperience[0].id).toBe('exp_unique_123')
-    })
-  })
-
-  describe('education array transforms', () => {
-    test('transforms empty strings in education to undefined', () => {
-      const result = resumeFormSchema.parse({
-        education: [
-          {
-            degree: '',
-            description: '',
-            field: '',
-            graduationDate: '',
-            id: 'edu_1',
-            institution: '',
-          },
-        ],
-        personalInfo: {
-          email: 'test@example.com',
-          linkedin: '',
-          location: '',
-          name: 'Test User',
-          phone: '',
-        },
-        skills: '',
-        summary: '',
-        workExperience: [],
-      })
-
-      expect(result.education[0].institution).toBeUndefined()
-      expect(result.education[0].degree).toBeUndefined()
-      expect(result.education[0].field).toBeUndefined()
-      expect(result.education[0].graduationDate).toBeUndefined()
-      expect(result.education[0].description).toBeUndefined()
-    })
-
-    test('preserves non-empty strings in education', () => {
-      const result = resumeFormSchema.parse({
-        education: [
-          {
-            degree: 'BS',
-            description: 'Honors',
-            field: 'Computer Science',
-            graduationDate: '2019-05',
-            id: 'edu_1',
-            institution: 'State University',
-          },
-        ],
-        personalInfo: {
-          email: 'test@example.com',
-          linkedin: '',
-          location: '',
-          name: 'Test User',
-          phone: '',
-        },
-        skills: '',
-        summary: '',
-        workExperience: [],
-      })
-
-      expect(result.education[0].institution).toBe('State University')
-      expect(result.education[0].degree).toBe('BS')
-      expect(result.education[0].field).toBe('Computer Science')
-    })
-  })
-
-  describe('summary and skills transforms', () => {
-    test('transforms empty summary to undefined', () => {
-      const result = resumeFormSchema.parse({
-        education: [],
-        personalInfo: {
-          email: 'test@example.com',
-          linkedin: '',
-          location: '',
-          name: 'Test User',
-          phone: '',
-        },
-        skills: '',
-        summary: '',
-        workExperience: [],
-      })
-
-      expect(result.summary).toBeUndefined()
-      expect(result.skills).toBeUndefined()
-    })
-
-    test('preserves non-empty summary and skills', () => {
-      const result = resumeFormSchema.parse({
-        education: [],
-        personalInfo: {
-          email: 'test@example.com',
-          linkedin: '',
-          location: '',
-          name: 'Test User',
-          phone: '',
-        },
-        skills: 'JavaScript, TypeScript, React',
-        summary: 'Experienced developer',
-        workExperience: [],
-      })
-
-      expect(result.summary).toBe('Experienced developer')
-      expect(result.skills).toBe('JavaScript, TypeScript, React')
-    })
-  })
-})
-
+/**
+ * Only test mutation schema and factory functions.
+ *
+ * resumeFormSchema tests were removed because:
+ * - They test Zod's built-in email/URL/string validation (library behavior)
+ * - Form-level validation is tested in ResumeForm.test.tsx
+ * - These tests added no coverage for business logic
+ */
 describe('resumeMutationSchema', () => {
-  test('extends form schema with workosUserId', () => {
-    const result = resumeMutationSchema.parse({
-      education: [],
-      personalInfo: {
-        email: 'test@example.com',
-        linkedin: '',
-        location: '',
-        name: 'Test User',
-        phone: '',
-      },
-      skills: '',
-      summary: '',
-      workExperience: [],
-      workosUserId: 'user_123',
-    })
+  const baseInput = {
+    education: [],
+    personalInfo: {
+      email: 'test@example.com',
+      linkedin: '',
+      location: '',
+      name: 'Test User',
+      phone: '',
+    },
+    skills: '',
+    summary: '',
+    workExperience: [],
+    workosUserId: 'user_123',
+  }
 
+  test('extends form schema with workosUserId', () => {
+    const result = resumeMutationSchema.parse(baseInput)
     expect(result.workosUserId).toBe('user_123')
   })
 
   test('requires workosUserId to be non-empty', () => {
     expect(() =>
       resumeMutationSchema.parse({
-        education: [],
-        personalInfo: {
-          email: 'test@example.com',
-          linkedin: '',
-          location: '',
-          name: 'Test User',
-          phone: '',
-        },
-        skills: '',
-        summary: '',
-        workExperience: [],
+        ...baseInput,
         workosUserId: '',
       }),
     ).toThrow()

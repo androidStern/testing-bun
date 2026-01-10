@@ -1,76 +1,23 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { render } from 'vitest-browser-react'
-import { mockConvexMutation, resetAllMocks } from '@/test/setup'
-import type { Doc, Id } from '../../../convex/_generated/dataModel'
+import {
+  createJobSubmission,
+  createParsedJob,
+  createSender,
+  mockConvexMutation,
+  renderWithProviders,
+  resetAllMocks,
+  type JobSubmissionWithSender,
+} from '@/test'
 import { JobSubmissionCard } from './JobSubmissionCard'
 
-type JobSubmission = Doc<'jobSubmissions'> & {
-  sender: {
-    _id: Id<'senders'>
-    phone?: string
-    email?: string
-    name?: string
-    company?: string
-    status: string
-  } | null
-}
+// Create base data for override tests
+const baseParsedJob = createParsedJob()
+const baseSender = createSender()
 
-function createTestQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  })
-}
-
-function TestWrapper({ children }: { children: React.ReactNode }) {
-  const queryClient = createTestQueryClient()
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-}
-
-const mockSender = {
-  _id: 'sender_123' as Id<'senders'>,
-  company: 'Acme Corp',
-  email: 'employer@example.com',
-  name: 'John Employer',
-  phone: '+15551234567',
-  status: 'approved',
-}
-
-const baseParsedJob = {
-  company: { name: 'Tech Corp' },
-  contact: {
-    email: 'hr@techcorp.com',
-    method: 'email' as const,
-    name: 'HR Manager',
-    phone: '+15559876543',
-  },
-  description: 'Build great software',
-  employmentType: 'full-time' as const,
-  location: { city: 'Miami', state: 'FL' },
-  requirements: ['3+ years experience', 'CS degree preferred'],
-  salary: { max: 120000, min: 80000, unit: 'year' as const },
-  skills: ['JavaScript', 'TypeScript', 'React'],
-  title: 'Software Engineer',
-  workArrangement: 'remote' as const,
-}
-
-function createMockJob(overrides: Partial<JobSubmission> = {}): JobSubmission {
-  return {
-    _creationTime: Date.now(),
-    _id: 'job_123' as Id<'jobSubmissions'>,
-    channel: 'sms',
-    createdAt: Date.now(),
-    parsedJob: baseParsedJob,
-    rawText: 'Looking for a software engineer...',
-    sender: mockSender,
-    senderId: 'sender_123' as Id<'senders'>,
-    status: 'pending_approval',
-    ...overrides,
-  } as JobSubmission
+function createMockJob(
+  overrides: Partial<JobSubmissionWithSender> = {},
+): JobSubmissionWithSender {
+  return createJobSubmission(overrides)
 }
 
 describe('JobSubmissionCard', () => {
@@ -82,110 +29,70 @@ describe('JobSubmissionCard', () => {
   describe('Display Mode - Parsed Job Info', () => {
     test('renders job title when parsed', async () => {
       const job = createMockJob()
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText('Software Engineer')).toBeVisible()
     })
 
     test('shows parsing status when job is not parsed', async () => {
       const job = createMockJob({ parsedJob: undefined })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText('Parsing...')).toBeVisible()
     })
 
     test('renders company name', async () => {
       const job = createMockJob()
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText('Tech Corp')).toBeVisible()
     })
 
     test('renders location when provided', async () => {
       const job = createMockJob()
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText(/Miami, FL/)).toBeVisible()
     })
 
     test('renders job description when available', async () => {
       const job = createMockJob()
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText('Build great software')).toBeVisible()
     })
 
     test('renders employment type badge', async () => {
       const job = createMockJob()
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText('full-time')).toBeVisible()
     })
 
     test('renders work arrangement badge', async () => {
       const job = createMockJob()
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText('remote')).toBeVisible()
     })
 
     test('renders salary range', async () => {
       const job = createMockJob()
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText(/\$80000 - \$120000/)).toBeVisible()
     })
 
     test('renders skills list', async () => {
       const job = createMockJob()
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText(/JavaScript, TypeScript, React/)).toBeVisible()
     })
 
     test('renders sender information', async () => {
       const job = createMockJob()
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText(/\+15551234567/)).toBeVisible()
     })
@@ -194,11 +101,7 @@ describe('JobSubmissionCard', () => {
   describe('Status Display', () => {
     test('shows pending approval status', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       const container = screen.container
       expect(container.textContent).toContain('pending_approval')
@@ -206,11 +109,7 @@ describe('JobSubmissionCard', () => {
 
     test('shows approved status', async () => {
       const job = createMockJob({ status: 'approved' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText('Approved')).toBeVisible()
     })
@@ -221,11 +120,7 @@ describe('JobSubmissionCard', () => {
         approvedBy: 'admin@example.com',
         status: 'approved',
       })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText(/Approved by admin@example.com/)).toBeVisible()
     })
@@ -235,11 +130,7 @@ describe('JobSubmissionCard', () => {
         denyReason: 'Missing required information',
         status: 'denied',
       })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText(/Missing required information/)).toBeVisible()
     })
@@ -250,11 +141,7 @@ describe('JobSubmissionCard', () => {
       const job = createMockJob({
         circlePostUrl: 'https://circle.so/post/123',
       })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText('View on Circle →')).toBeVisible()
     })
@@ -263,11 +150,7 @@ describe('JobSubmissionCard', () => {
       const job = createMockJob({
         circlePostUrl: 'https://circle.so/post/123',
       })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       const link = screen.container.querySelector('a[href="https://circle.so/post/123"]')
       expect(link).not.toBeNull()
@@ -277,10 +160,8 @@ describe('JobSubmissionCard', () => {
   describe('Action Buttons', () => {
     test('shows Approve and Deny buttons when showActions is true and status is pending_approval', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} showActions={true} />
-        </TestWrapper>,
+      const screen = await renderWithProviders(
+        <JobSubmissionCard job={job} showActions={true} />,
       )
 
       await expect.element(screen.getByText('Approve')).toBeVisible()
@@ -289,10 +170,8 @@ describe('JobSubmissionCard', () => {
 
     test('hides action buttons when showActions is false', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} showActions={false} />
-        </TestWrapper>,
+      const screen = await renderWithProviders(
+        <JobSubmissionCard job={job} showActions={false} />,
       )
 
       const buttons = screen.container.querySelectorAll('button')
@@ -302,10 +181,8 @@ describe('JobSubmissionCard', () => {
 
     test('hides action buttons when status is not pending_approval', async () => {
       const job = createMockJob({ status: 'approved' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} showActions={true} />
-        </TestWrapper>,
+      const screen = await renderWithProviders(
+        <JobSubmissionCard job={job} showActions={true} />,
       )
 
       const buttons = screen.container.querySelectorAll('button')
@@ -315,22 +192,14 @@ describe('JobSubmissionCard', () => {
 
     test('shows Edit button when status is pending_approval', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText('Edit')).toBeVisible()
     })
 
     test('hides Edit button when status is not pending_approval', async () => {
       const job = createMockJob({ status: 'approved' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       const buttons = screen.container.querySelectorAll('button')
       const hasEditButton = Array.from(buttons).some(btn => btn.textContent === 'Edit')
@@ -341,11 +210,7 @@ describe('JobSubmissionCard', () => {
   describe('Edit Mode', () => {
     test('clicking Edit button switches to edit mode', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       const editButton = screen.getByText('Edit')
       await editButton.click()
@@ -355,11 +220,7 @@ describe('JobSubmissionCard', () => {
 
     test('edit mode shows form fields', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await screen.getByText('Edit').click()
 
@@ -370,11 +231,7 @@ describe('JobSubmissionCard', () => {
 
     test('edit mode pre-populates form with existing data', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await screen.getByText('Edit').click()
 
@@ -391,11 +248,7 @@ describe('JobSubmissionCard', () => {
 
     test('edit mode shows Cancel and Save buttons', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await screen.getByText('Edit').click()
 
@@ -405,11 +258,7 @@ describe('JobSubmissionCard', () => {
 
     test('Cancel button exits edit mode', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await screen.getByText('Edit').click()
       await expect.element(screen.getByText('Editing Job')).toBeVisible()
@@ -421,11 +270,7 @@ describe('JobSubmissionCard', () => {
 
     test('edit mode shows all form fields for job editing', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await screen.getByText('Edit').click()
 
@@ -450,11 +295,7 @@ describe('JobSubmissionCard', () => {
 
     test('edit mode shows status badge', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await screen.getByText('Edit').click()
 
@@ -466,11 +307,7 @@ describe('JobSubmissionCard', () => {
   describe('Form Select Fields', () => {
     test('contact method select has phone and email options', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await screen.getByText('Edit').click()
 
@@ -487,11 +324,7 @@ describe('JobSubmissionCard', () => {
 
     test('work arrangement select has correct options', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await screen.getByText('Edit').click()
 
@@ -510,11 +343,7 @@ describe('JobSubmissionCard', () => {
 
     test('employment type select has correct options', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await screen.getByText('Edit').click()
 
@@ -535,11 +364,7 @@ describe('JobSubmissionCard', () => {
 
     test('salary unit select has correct options', async () => {
       const job = createMockJob({ status: 'pending_approval' })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await screen.getByText('Edit').click()
 
@@ -565,11 +390,7 @@ describe('JobSubmissionCard', () => {
       const job = createMockJob({
         parsedJob: { ...baseParsedJob, location: undefined },
       })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText('Tech Corp')).toBeVisible()
       const container = screen.container
@@ -580,11 +401,7 @@ describe('JobSubmissionCard', () => {
       const job = createMockJob({
         parsedJob: { ...baseParsedJob, skills: undefined },
       })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText('Software Engineer')).toBeVisible()
       const container = screen.container
@@ -595,11 +412,7 @@ describe('JobSubmissionCard', () => {
       const job = createMockJob({
         parsedJob: { ...baseParsedJob, salary: undefined },
       })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText('Software Engineer')).toBeVisible()
       const container = screen.container
@@ -609,27 +422,22 @@ describe('JobSubmissionCard', () => {
     test('handles sender with email instead of phone', async () => {
       const job = createMockJob({
         sender: {
-          ...mockSender,
+          _id: baseSender._id,
+          company: baseSender.company,
           email: 'employer@example.com',
+          name: baseSender.name,
           phone: undefined,
+          status: baseSender.status,
         },
       })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText(/employer@example.com/)).toBeVisible()
     })
 
     test('handles null sender', async () => {
       const job = createMockJob({ sender: null })
-      const screen = await render(
-        <TestWrapper>
-          <JobSubmissionCard job={job} />
-        </TestWrapper>,
-      )
+      const screen = await renderWithProviders(<JobSubmissionCard job={job} />)
 
       await expect.element(screen.getByText(/Unknown/)).toBeVisible()
     })
