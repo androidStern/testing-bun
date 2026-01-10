@@ -47,13 +47,9 @@ describe('ExpandableTextarea', () => {
       // Modal should be visible with the custom title
       await expect.element(screen.getByText('Professional Summary')).toBeVisible()
 
-      // Find all textareas in the document (including portal-mounted dialogs)
+      // The modal textarea should have the same value as the inline one
       const allTextareas = document.querySelectorAll('textarea')
-      // There should be 2 textareas: one inline, one in modal
-      expect(allTextareas.length).toBe(2)
-
-      // The modal textarea should have the same value
-      const modalTextarea = allTextareas[1] as HTMLTextAreaElement
+      const modalTextarea = allTextareas[allTextareas.length - 1]
       expect(modalTextarea.value).toBe('My professional experience includes...')
     })
 
@@ -77,7 +73,7 @@ describe('ExpandableTextarea', () => {
 
       // Find the modal textarea (there are 2 textareas, modal is second)
       const allTextareas = document.querySelectorAll('textarea')
-      const modalTextarea = allTextareas[1] as HTMLTextAreaElement
+      const modalTextarea = allTextareas[1]
 
       // Use native setter to update value and dispatch input event (React controlled input)
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(

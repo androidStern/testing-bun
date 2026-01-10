@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { resetAllMocks } from '@/test/setup'
 import { PromptEditor } from './PromptEditor'
+import { resetAllMocks } from '@/test/setup'
 
 function createTestQueryClient() {
   return new QueryClient({
@@ -80,5 +80,6 @@ describe('PromptEditor', () => {
     await textarea.fill('New prompt text')
 
     expect(onChange).toHaveBeenCalled()
+    expect(onChange).toHaveBeenLastCalledWith('New prompt text')
   })
 })

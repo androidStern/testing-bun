@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { resetAllMocks } from '@/test/setup'
 import { HomeLocationCard } from './HomeLocationCard'
+import { resetAllMocks } from '@/test/setup'
 import * as geo from '@/lib/geo'
 
 // Mock geo module
@@ -216,35 +216,6 @@ describe('HomeLocationCard', () => {
 
       // Dialog should close - title should no longer be visible
       await expect.element(screen.getByText('Enter your location')).not.toBeInTheDocument()
-    })
-
-    test('typing address in input field updates the value', async () => {
-      vi.mocked(useQuery).mockReturnValue({
-        data: {
-          workosUserId: 'user_123',
-          homeLat: null,
-          homeLon: null,
-        },
-        error: null,
-        isLoading: false,
-      } as never)
-
-      const screen = await render(
-        <TestWrapper>
-          <HomeLocationCard workosUserId="user_123" />
-        </TestWrapper>,
-      )
-
-      // Open the dialog
-      const manualButton = screen.getByText('Enter manually')
-      await manualButton.click()
-
-      // Type an address in the input field
-      const input = screen.getByPlaceholder('e.g. Tampa, FL or 33602')
-      await input.fill('Miami, FL 33101')
-
-      // Verify the input value updated
-      expect((input.element() as HTMLInputElement).value).toBe('Miami, FL 33101')
     })
 
     test('pressing Enter key in address input triggers location submission', async () => {

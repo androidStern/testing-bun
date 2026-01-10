@@ -17,7 +17,7 @@ describe('HeroVideoDialog', () => {
       await expect.element(thumbnail).toBeVisible()
 
       // YouTube thumbnail URL should be auto-derived
-      const thumbnailSrc = thumbnail.element()?.getAttribute('src')
+      const thumbnailSrc = thumbnail.element().getAttribute('src')
       expect(thumbnailSrc).toContain('youtube.com/vi/dQw4w9WgXcQ')
     })
   })
@@ -33,14 +33,12 @@ describe('HeroVideoDialog', () => {
 
       // Click the group container (parent of thumbnail) to open modal
       const thumbnail = screen.getByRole('img', { name: 'Demo video' })
-      const container = thumbnail.element()?.parentElement
+      const container = thumbnail.element().parentElement
       expect(container).toBeTruthy()
-      container?.click()
+      container!.click()
 
-      // Wait for modal animation
-      await new Promise(resolve => setTimeout(resolve, 100))
-
-      // Modal should contain an iframe with the video
+      // Modal should contain an iframe with the video (wait for it to appear)
+      await expect.element(screen.getByTitle(/video/i)).toBeVisible()
       const iframe = screen.container.querySelector('iframe')
       expect(iframe).toBeTruthy()
       expect(iframe?.src).toContain('youtube.com/embed/dQw4w9WgXcQ')

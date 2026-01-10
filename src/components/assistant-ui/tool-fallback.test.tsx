@@ -36,8 +36,7 @@ describe('ToolFallback', () => {
       )
 
       // Initially args should be hidden (collapsed state)
-      const argsText = screen.getByText('{"location": "NYC"}')
-      expect(argsText.query()).toBeNull()
+      await expect.element(screen.getByText('{"location": "NYC"}')).not.toBeInTheDocument()
 
       // Click expand button to show details
       const expandButton = screen.getByRole('button')

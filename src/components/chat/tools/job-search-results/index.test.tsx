@@ -61,7 +61,7 @@ describe('JobSearchResults', () => {
     await expect.element(screen.getByText('Job Title 4', { exact: true })).toBeVisible()
 
     // Job 5 should not be visible yet
-    expect(screen.getByText('Job Title 5', { exact: true }).query()).toBeNull()
+    await expect.element(screen.getByText('Job Title 5', { exact: true })).not.toBeInTheDocument()
 
     // Show more button should be visible with remaining count
     await expect.element(screen.getByRole('button', { name: /Show 3 more/i })).toBeVisible()
@@ -84,6 +84,6 @@ describe('JobSearchResults', () => {
     await expect.element(screen.getByText('Job Title 7', { exact: true })).toBeVisible()
 
     // Show more button should no longer be visible
-    expect(showMoreButton.query()).toBeNull()
+    await expect.element(screen.getByRole('button', { name: /Show.*more/i })).not.toBeInTheDocument()
   })
 })

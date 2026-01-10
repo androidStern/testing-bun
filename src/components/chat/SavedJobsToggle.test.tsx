@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { resetAllMocks } from '@/test/setup'
 import { SavedJobsToggle } from './SavedJobsToggle'
+import { resetAllMocks } from '@/test/setup'
 
 function createTestQueryClient() {
   return new QueryClient({
@@ -75,8 +75,8 @@ describe('SavedJobsToggle', () => {
 
       // Should show Saved button but no count badge
       await expect.element(screen.getByText('Saved')).toBeVisible()
-      // Check that no number is visible
-      expect(screen.container.textContent).not.toMatch(/\d/)
+      // No count badge should be visible (only "Saved" text)
+      await expect.element(screen.getByText('0')).not.toBeInTheDocument()
     })
   })
 })

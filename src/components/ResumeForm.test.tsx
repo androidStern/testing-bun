@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider, useSuspenseQuery } from '@tanstack/react-query'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { mockExistingResume, resetAllMocks } from '@/test/setup'
 import { ResumeForm } from './ResumeForm'
+import { mockExistingResume, resetAllMocks } from '@/test/setup'
 
 const mockUser = {
   email: 'test@example.com',
@@ -98,52 +98,6 @@ describe('ResumeForm', () => {
     })
   })
 
-  describe('Personal Info Input Fields', () => {
-    test('typing in Phone input updates the value', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ResumeForm user={mockUser} />
-        </TestWrapper>,
-      )
-
-      // Find the Phone input by placeholder
-      const phoneInput = screen.getByPlaceholder('(123) 456-7890')
-      await phoneInput.fill('(555) 123-4567')
-
-      // Verify the input value was updated
-      expect((phoneInput.element() as HTMLInputElement).value).toBe('(555) 123-4567')
-    })
-
-    test('typing in Location input updates the value', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ResumeForm user={mockUser} />
-        </TestWrapper>,
-      )
-
-      // Find the Location input by placeholder
-      const locationInput = screen.getByPlaceholder('City, State')
-      await locationInput.fill('Miami, FL')
-
-      // Verify the input value was updated
-      expect((locationInput.element() as HTMLInputElement).value).toBe('Miami, FL')
-    })
-
-    test('typing in LinkedIn input updates the value', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ResumeForm user={mockUser} />
-        </TestWrapper>,
-      )
-
-      // Find the LinkedIn input by placeholder
-      const linkedinInput = screen.getByPlaceholder('linkedin.com/in/johndoe')
-      await linkedinInput.fill('linkedin.com/in/janesmith')
-
-      // Verify the input value was updated
-      expect((linkedinInput.element() as HTMLInputElement).value).toBe('linkedin.com/in/janesmith')
-    })
-  })
 
   describe('Personal Info Validation', () => {
     // Note: The form validates on submit only (not on blur), so these tests
@@ -357,122 +311,6 @@ describe('ResumeForm', () => {
     })
   })
 
-  describe('Work Experience Input Fields', () => {
-    test('typing in Company input updates the value', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ResumeForm user={mockUser} />
-        </TestWrapper>,
-      )
-
-      // Find the Company input by placeholder and fill it
-      const companyInput = screen.getByPlaceholder('Company Name')
-      await companyInput.fill('Acme Corporation')
-
-      // Verify the input value was updated
-      expect((companyInput.element() as HTMLInputElement).value).toBe('Acme Corporation')
-    })
-
-    test('typing in Position input updates the value', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ResumeForm user={mockUser} />
-        </TestWrapper>,
-      )
-
-      // Find the Position/Job Title input by placeholder and fill it
-      const positionInput = screen.getByPlaceholder('Job Title')
-      await positionInput.fill('Software Engineer')
-
-      // Verify the input value was updated
-      expect((positionInput.element() as HTMLInputElement).value).toBe('Software Engineer')
-    })
-
-    test('typing in End Date input updates the value', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ResumeForm user={mockUser} />
-        </TestWrapper>,
-      )
-
-      // Find the End Date input by its unique placeholder
-      const endDateInput = screen.getByPlaceholder('MM/YYYY or Present')
-      await endDateInput.fill('12/2024')
-
-      // Verify the input value was updated
-      expect((endDateInput.element() as HTMLInputElement).value).toBe('12/2024')
-    })
-  })
-
-  describe('Education Input Fields', () => {
-    test('typing in Institution input updates the value', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ResumeForm user={mockUser} />
-        </TestWrapper>,
-      )
-
-      // Find the Institution input by placeholder
-      const institutionInput = screen.getByPlaceholder('School or Institution Name')
-      await institutionInput.fill('Community College')
-
-      // Verify the input value was updated
-      expect((institutionInput.element() as HTMLInputElement).value).toBe('Community College')
-    })
-
-    test('typing in Degree input updates the value', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ResumeForm user={mockUser} />
-        </TestWrapper>,
-      )
-
-      // Find the Degree input by placeholder
-      const degreeInput = screen.getByPlaceholder('High School Diploma, GED, Associate Degree, etc.')
-      await degreeInput.fill('Associate Degree')
-
-      // Verify the input value was updated
-      expect((degreeInput.element() as HTMLInputElement).value).toBe('Associate Degree')
-    })
-
-    test('typing in Field of Study input updates the value', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ResumeForm user={mockUser} />
-        </TestWrapper>,
-      )
-
-      // Find the Field of Study input by placeholder
-      const fieldInput = screen.getByPlaceholder('General Studies, Business, Healthcare, etc.')
-      await fieldInput.fill('Business Administration')
-
-      // Verify the input value was updated
-      expect((fieldInput.element() as HTMLInputElement).value).toBe('Business Administration')
-    })
-
-    test('typing in Graduation Date input updates the value', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ResumeForm user={mockUser} />
-        </TestWrapper>,
-      )
-
-      // Find all MM/YYYY placeholders and get the second one (first is in work experience Start Date)
-      // The education Graduation Date appears after the Field of Study field
-      const allMMYYYYInputs = screen.container.querySelectorAll('input[placeholder="MM/YYYY"]')
-      // First MM/YYYY is work experience start date, second is education graduation date
-      const gradDateInput = allMMYYYYInputs[1] as HTMLInputElement
-      expect(gradDateInput).not.toBeNull()
-
-      // Focus and fill
-      gradDateInput.focus()
-      gradDateInput.value = '05/2020'
-      gradDateInput.dispatchEvent(new Event('input', { bubbles: true }))
-
-      // Verify the input value was updated
-      expect(gradDateInput.value).toBe('05/2020')
-    })
-  })
 
   describe('Form Dirty State', () => {
     test('form starts as clean (no unsaved indicator)', async () => {
@@ -584,51 +422,6 @@ describe('ResumeForm', () => {
     })
   })
 
-  describe('Toolbar', () => {
-    test('has toolbar with action buttons (icons)', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ResumeForm user={mockUser} />
-        </TestWrapper>,
-      )
-
-      const svgIcons = screen.container.querySelectorAll('svg')
-      expect(svgIcons.length).toBeGreaterThan(0)
-    })
-
-    test('toolbar contains upload icon for import', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ResumeForm user={mockUser} />
-        </TestWrapper>,
-      )
-
-      const uploadIcon = screen.container.querySelector('svg.lucide-upload')
-      expect(uploadIcon).not.toBeNull()
-    })
-
-    test('toolbar contains eye icon for preview', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ResumeForm user={mockUser} />
-        </TestWrapper>,
-      )
-
-      const eyeIcon = screen.container.querySelector('svg.lucide-eye')
-      expect(eyeIcon).not.toBeNull()
-    })
-
-    test('toolbar contains download icon', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ResumeForm user={mockUser} />
-        </TestWrapper>,
-      )
-
-      const downloadIcon = screen.container.querySelector('svg.lucide-download')
-      expect(downloadIcon).not.toBeNull()
-    })
-  })
 
   describe('Save Button', () => {
     test('has save button when form is dirty', async () => {

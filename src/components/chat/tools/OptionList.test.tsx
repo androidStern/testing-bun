@@ -157,8 +157,7 @@ describe('OptionList', () => {
       await expect.element(screen.getByText('Evening')).toBeVisible()
 
       // Unconfirmed option (Afternoon) should NOT be visible in confirmed state
-      const afternoon = screen.getByText('Afternoon')
-      expect(afternoon.query()).toBeNull()
+      await expect.element(screen.getByText('Afternoon')).not.toBeInTheDocument()
     })
   })
 })

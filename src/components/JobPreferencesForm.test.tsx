@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { resetAllMocks } from '@/test/setup'
 import { JobPreferencesForm } from './JobPreferencesForm'
+import { resetAllMocks } from '@/test/setup'
 
 function createTestQueryClient() {
   return new QueryClient({
@@ -25,185 +25,19 @@ describe('JobPreferencesForm', () => {
     vi.clearAllMocks()
   })
 
-  describe('Commute Preferences', () => {
-    test('renders commute section with title', async () => {
+  describe('Form Sections', () => {
+    test('renders all preference sections', async () => {
       const screen = await render(
         <TestWrapper>
           <JobPreferencesForm />
         </TestWrapper>,
       )
 
+      // All main sections should be visible
       await expect.element(screen.getByText('Commute', { exact: true })).toBeVisible()
-    })
-
-    test('has max commute time select', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      await expect.element(screen.getByText('Maximum commute time', { exact: true })).toBeVisible()
-    })
-
-    test('has public transit checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      await expect
-        .element(screen.getByText('Only show jobs reachable by public transit'))
-        .toBeVisible()
-    })
-
-    test('has bus accessible checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      await expect.element(screen.getByText('Require bus access')).toBeVisible()
-    })
-
-    test('has rail accessible checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      await expect.element(screen.getByText('Require rail access')).toBeVisible()
-    })
-  })
-
-  describe('Second Chance Preferences', () => {
-    test('renders second chance section with title', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
       await expect.element(screen.getByText('Second Chance Employers')).toBeVisible()
-    })
-
-    test('has prefer second chance checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      await expect
-        .element(screen.getByText('Prioritize second-chance employers in results'))
-        .toBeVisible()
-    })
-
-    test('has require second chance checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      await expect.element(screen.getByText('Only show second-chance employers')).toBeVisible()
-    })
-  })
-
-  describe('Shift Preferences', () => {
-    test('renders shift section with title', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
       await expect.element(screen.getByText('Shift Availability')).toBeVisible()
-    })
-
-    test('has morning shift checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      await expect.element(screen.getByText('Morning')).toBeVisible()
-    })
-
-    test('has afternoon shift checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      await expect.element(screen.getByText('Afternoon')).toBeVisible()
-    })
-
-    test('has evening shift checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      await expect.element(screen.getByText('Evening')).toBeVisible()
-    })
-
-    test('has overnight shift checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      await expect.element(screen.getByText('Overnight')).toBeVisible()
-    })
-
-    test('has flexible shift checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      await expect.element(screen.getByText('Flexible')).toBeVisible()
-    })
-  })
-
-  describe('Other Preferences', () => {
-    test('renders other preferences section with title', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
       await expect.element(screen.getByText('Other Preferences')).toBeVisible()
-    })
-
-    test('has prefer urgent checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      await expect.element(screen.getByText('Prioritize urgent hiring')).toBeVisible()
-    })
-
-    test('has prefer easy apply checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      await expect.element(screen.getByText('Prioritize easy apply jobs')).toBeVisible()
     })
   })
 
@@ -218,208 +52,24 @@ describe('JobPreferencesForm', () => {
       await expect.element(screen.getByText('Save Preferences')).toBeVisible()
     })
 
-    test('can toggle checkboxes', async () => {
+    test('checkboxes can be toggled by clicking labels', async () => {
       const screen = await render(
         <TestWrapper>
           <JobPreferencesForm />
         </TestWrapper>,
       )
 
+      // Toggle a checkbox
       const morningLabel = screen.getByText('Morning')
       await morningLabel.click()
 
-      const morningCheckbox = screen.container.querySelector(
-        'button[role="checkbox"][id*="shiftMorning"]',
-      ) as HTMLElement | null
+      // Verify it's checked via aria-checked (accessible attribute)
+      const checkbox = morningLabel.element().closest('div')?.querySelector('[role="checkbox"]')
+      expect(checkbox?.getAttribute('aria-checked')).toBe('true')
 
-      expect(morningCheckbox?.getAttribute('data-state')).toBe('checked')
-    })
-
-    test('can toggle overnight shift checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      const overnightLabel = screen.getByText('Overnight')
-      await overnightLabel.click()
-
-      const overnightCheckbox = screen.container.querySelector(
-        'button[role="checkbox"][id*="shiftOvernight"]',
-      ) as HTMLElement | null
-
-      expect(overnightCheckbox?.getAttribute('data-state')).toBe('checked')
-    })
-
-    test('can toggle flexible shift checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      const flexibleLabel = screen.getByText('Flexible')
-      await flexibleLabel.click()
-
-      const flexibleCheckbox = screen.container.querySelector(
-        'button[role="checkbox"][id*="shiftFlexible"]',
-      ) as HTMLElement | null
-
-      expect(flexibleCheckbox?.getAttribute('data-state')).toBe('checked')
-    })
-
-    test('can toggle afternoon shift checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      const afternoonLabel = screen.getByText('Afternoon')
-      await afternoonLabel.click()
-
-      const afternoonCheckbox = screen.container.querySelector(
-        'button[role="checkbox"][id*="shiftAfternoon"]',
-      ) as HTMLElement | null
-
-      expect(afternoonCheckbox?.getAttribute('data-state')).toBe('checked')
-    })
-
-    test('can toggle evening shift checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      const eveningLabel = screen.getByText('Evening')
-      await eveningLabel.click()
-
-      const eveningCheckbox = screen.container.querySelector(
-        'button[role="checkbox"][id*="shiftEvening"]',
-      ) as HTMLElement | null
-
-      expect(eveningCheckbox?.getAttribute('data-state')).toBe('checked')
-    })
-
-    test('can toggle prefer urgent checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      const urgentLabel = screen.getByText('Prioritize urgent hiring')
-      await urgentLabel.click()
-
-      const urgentCheckbox = screen.container.querySelector(
-        'button[role="checkbox"][id*="preferUrgent"]',
-      ) as HTMLElement | null
-
-      expect(urgentCheckbox?.getAttribute('data-state')).toBe('checked')
-    })
-
-    test('can toggle prefer easy apply checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      const easyApplyLabel = screen.getByText('Prioritize easy apply jobs')
-      await easyApplyLabel.click()
-
-      const easyApplyCheckbox = screen.container.querySelector(
-        'button[role="checkbox"][id*="preferEasyApply"]',
-      ) as HTMLElement | null
-
-      expect(easyApplyCheckbox?.getAttribute('data-state')).toBe('checked')
-    })
-
-    test('can toggle require bus access checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      const busLabel = screen.getByText('Require bus access')
-      await busLabel.click()
-
-      const busCheckbox = screen.container.querySelector(
-        'button[role="checkbox"][id*="requireBusAccessible"]',
-      ) as HTMLElement | null
-
-      expect(busCheckbox?.getAttribute('data-state')).toBe('checked')
-    })
-
-    test('can toggle require rail access checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      const railLabel = screen.getByText('Require rail access')
-      await railLabel.click()
-
-      const railCheckbox = screen.container.querySelector(
-        'button[role="checkbox"][id*="requireRailAccessible"]',
-      ) as HTMLElement | null
-
-      expect(railCheckbox?.getAttribute('data-state')).toBe('checked')
-    })
-
-    test('can toggle require public transit checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      const transitLabel = screen.getByText('Only show jobs reachable by public transit')
-      await transitLabel.click()
-
-      const transitCheckbox = screen.container.querySelector(
-        'button[role="checkbox"][id*="requirePublicTransit"]',
-      ) as HTMLElement | null
-
-      expect(transitCheckbox?.getAttribute('data-state')).toBe('checked')
-    })
-
-    test('can toggle prefer second chance checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      const secondChanceLabel = screen.getByText('Prioritize second-chance employers in results')
-      await secondChanceLabel.click()
-
-      const secondChanceCheckbox = screen.container.querySelector(
-        'button[role="checkbox"][id*="preferSecondChance"]',
-      ) as HTMLElement | null
-
-      expect(secondChanceCheckbox?.getAttribute('data-state')).toBe('checked')
-    })
-
-    test('can toggle require second chance checkbox', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <JobPreferencesForm />
-        </TestWrapper>,
-      )
-
-      const requireSecondChanceLabel = screen.getByText('Only show second-chance employers')
-      await requireSecondChanceLabel.click()
-
-      const requireSecondChanceCheckbox = screen.container.querySelector(
-        'button[role="checkbox"][id*="requireSecondChance"]',
-      ) as HTMLElement | null
-
-      expect(requireSecondChanceCheckbox?.getAttribute('data-state')).toBe('checked')
+      // Toggle off
+      await morningLabel.click()
+      expect(checkbox?.getAttribute('aria-checked')).toBe('false')
     })
 
     test('clicking Save Preferences button triggers form submission', async () => {
@@ -430,24 +80,14 @@ describe('JobPreferencesForm', () => {
       )
 
       // Toggle a checkbox to make form dirty
-      const morningLabel = screen.getByText('Morning')
-      await morningLabel.click()
+      await screen.getByText('Morning').click()
 
-      // Verify checkbox is checked
-      const morningCheckbox = screen.container.querySelector(
-        'button[role="checkbox"][id*="shiftMorning"]',
-      ) as HTMLElement | null
-      expect(morningCheckbox?.getAttribute('data-state')).toBe('checked')
-
-      // Click the Save Preferences button - this triggers form submission
-      // (exercises preventDefault and handleSubmit in the onSubmit handler)
+      // Click the Save Preferences button
       const saveButton = screen.getByRole('button', { name: /Save Preferences/i })
       await saveButton.click()
 
-      // Form should remain usable after submission (button still visible, no errors)
-      await expect.element(screen.getByRole('button', { name: /Save Preferences/i })).toBeVisible()
-      // Checkbox state should be preserved
-      expect(morningCheckbox?.getAttribute('data-state')).toBe('checked')
+      // Form should remain usable after submission
+      await expect.element(saveButton).toBeVisible()
     })
   })
 

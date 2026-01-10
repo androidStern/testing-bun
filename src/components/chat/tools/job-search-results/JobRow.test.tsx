@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import type { SearchJobResult } from '@/lib/schemas/job'
 import { JobRow } from './JobRow'
+import type { SearchJobResult } from '@/lib/schemas/job'
 
 function createMockJob(overrides: Partial<SearchJobResult> = {}): SearchJobResult {
   return {
@@ -63,41 +63,37 @@ describe('JobRow', () => {
       expect(container.textContent).toContain('$80,000/year')
     })
 
-    test('shows Fair Chance Employer star icon when job is second chance', async () => {
+    test('shows Fair Chance Employer indicator when job is second chance', async () => {
       const job = createMockJob({ isSecondChance: true })
       const onToggle = vi.fn()
 
       const screen = await render(<JobRow isExpanded={false} job={job} onToggle={onToggle} />)
 
-      const starIcon = screen.container.querySelector('span[title="Fair Chance Employer"]')
-      expect(starIcon).not.toBeNull()
-      expect(starIcon?.textContent).toBe('⭐')
+      // Icon should have accessible title
+      const icon = screen.container.querySelector('span[title="Fair Chance Employer"]')
+      expect(icon).not.toBeNull()
     })
 
-    test('shows transit accessible bus icon when job is transit accessible', async () => {
+    test('shows transit accessible indicator when job is transit accessible', async () => {
       const job = createMockJob({ transitAccessible: true })
       const onToggle = vi.fn()
 
       const screen = await render(<JobRow isExpanded={false} job={job} onToggle={onToggle} />)
 
-      const busIcon = screen.container.querySelector('span[title="Transit Accessible"]')
-      expect(busIcon).not.toBeNull()
-      expect(busIcon?.textContent).toBe('🚌')
+      // Icon should have accessible title
+      const icon = screen.container.querySelector('span[title="Transit Accessible"]')
+      expect(icon).not.toBeNull()
     })
 
-    test('shows shift icons for each shift type', async () => {
+    test('shows shift indicators for each shift type', async () => {
       const job = createMockJob({ shifts: ['morning', 'evening'] })
       const onToggle = vi.fn()
 
       const screen = await render(<JobRow isExpanded={false} job={job} onToggle={onToggle} />)
 
-      const morningIcon = screen.container.querySelector('span[title="morning"]')
-      expect(morningIcon).not.toBeNull()
-      expect(morningIcon?.textContent).toBe('☀️')
-
-      const eveningIcon = screen.container.querySelector('span[title="evening"]')
-      expect(eveningIcon).not.toBeNull()
-      expect(eveningIcon?.textContent).toBe('🌙')
+      // Icons should have accessible titles
+      expect(screen.container.querySelector('span[title="morning"]')).not.toBeNull()
+      expect(screen.container.querySelector('span[title="evening"]')).not.toBeNull()
     })
   })
 

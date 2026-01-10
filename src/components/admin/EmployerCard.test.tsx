@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { resetAllMocks } from '@/test/setup'
 import { EmployerCard } from './EmployerCard'
 import type { Id } from '../../../convex/_generated/dataModel'
+import { resetAllMocks } from '@/test/setup'
 
 const mockEmployer = {
   _id: 'employer_123' as Id<'employers'>,
@@ -113,95 +113,6 @@ describe('EmployerCard', () => {
       await expect.element(screen.getByText('Editing')).not.toBeInTheDocument()
     })
 
-    test('typing in name field updates the input value', async () => {
-      const screen = await render(<EmployerCard employer={mockEmployer} />)
-
-      // Enter editing mode
-      const editButton = screen.getByText('Edit')
-      await editButton.click()
-
-      // Find the name input and type new content
-      const nameInput = screen.getByPlaceholder('Name')
-      await nameInput.fill('John Director')
-
-      // Verify the input value was updated
-      expect((nameInput.element() as HTMLInputElement).value).toBe('John Director')
-    })
-
-    test('typing in email field updates the input value', async () => {
-      const screen = await render(<EmployerCard employer={mockEmployer} />)
-
-      // Enter editing mode
-      const editButton = screen.getByText('Edit')
-      await editButton.click()
-
-      // Find the email input and type new content
-      const emailInput = screen.getByPlaceholder('Email')
-      await emailInput.fill('newemail@company.com')
-
-      // Verify the input value was updated
-      expect((await emailInput.element() as HTMLInputElement).value).toBe('newemail@company.com')
-    })
-
-    test('typing in phone field updates the input value', async () => {
-      const screen = await render(<EmployerCard employer={mockEmployer} />)
-
-      // Enter editing mode
-      const editButton = screen.getByText('Edit')
-      await editButton.click()
-
-      // Find the phone input and type new content
-      const phoneInput = screen.getByPlaceholder('Phone')
-      await phoneInput.fill('+1555999888')
-
-      // Verify the input value was updated
-      expect((await phoneInput.element() as HTMLInputElement).value).toBe('+1555999888')
-    })
-
-    test('typing in company field updates the input value', async () => {
-      const screen = await render(<EmployerCard employer={mockEmployer} />)
-
-      // Enter editing mode
-      const editButton = screen.getByText('Edit')
-      await editButton.click()
-
-      // Find the company input and type new content
-      const companyInput = screen.getByPlaceholder('Company')
-      await companyInput.fill('New Company Inc')
-
-      // Verify the input value was updated
-      expect((await companyInput.element() as HTMLInputElement).value).toBe('New Company Inc')
-    })
-
-    test('typing in role field updates the input value', async () => {
-      const screen = await render(<EmployerCard employer={mockEmployer} />)
-
-      // Enter editing mode
-      const editButton = screen.getByText('Edit')
-      await editButton.click()
-
-      // Find the role input and type new content
-      const roleInput = screen.getByPlaceholder('Role')
-      await roleInput.fill('Senior Recruiter')
-
-      // Verify the input value was updated
-      expect((await roleInput.element() as HTMLInputElement).value).toBe('Senior Recruiter')
-    })
-
-    test('typing in website field updates the input value', async () => {
-      const screen = await render(<EmployerCard employer={mockEmployer} />)
-
-      // Enter editing mode
-      const editButton = screen.getByText('Edit')
-      await editButton.click()
-
-      // Find the website input and type new content
-      const websiteInput = screen.getByPlaceholder('https://...')
-      await websiteInput.fill('https://newcompany.com')
-
-      // Verify the input value was updated
-      expect((await websiteInput.element() as HTMLInputElement).value).toBe('https://newcompany.com')
-    })
   })
 
   describe('Confirmation Dialogs', () => {

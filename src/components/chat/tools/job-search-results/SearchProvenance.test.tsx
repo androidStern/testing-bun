@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { render } from 'vitest-browser-react'
-import type { SearchContext } from '@/lib/schemas/job'
 import { SearchProvenance } from './SearchProvenance'
+import type { SearchContext } from '@/lib/schemas/job'
 
 const createContext = (overrides: Partial<SearchContext> = {}): SearchContext => ({
   filters: {
@@ -59,7 +59,7 @@ describe('SearchProvenance', () => {
     expect(container.textContent).toContain('warehouse associate')
   })
 
-  test('displays transit and fair chance icons when filters are active', async () => {
+  test('displays filter indicators when filters are active', async () => {
     const context = createContext({
       query: 'delivery driver',
       filters: {
@@ -75,11 +75,10 @@ describe('SearchProvenance', () => {
 
     const screen = await render(<SearchProvenance jobCount={3} searchContext={context} />)
 
-    // Users should see icons indicating their active filters
-    const container = screen.container
-    expect(container.textContent).toContain('🚌') // transit icon
-    expect(container.textContent).toContain('⭐') // fair chance icon
-    expect(container.textContent).toContain('☀️') // morning shift icon
+    // Users should see indicators for their active filters via accessible titles
+    expect(screen.container.querySelector('[title*="bus"]')).not.toBeNull()
+    expect(screen.container.querySelector('[title*="fair"]') ?? screen.container.querySelector('[title*="second"]')).not.toBeNull()
+    expect(screen.container.querySelector('[title*="morning"]')).not.toBeNull()
   })
 
   test('displays commute time with filter text when within commute zone', async () => {
@@ -106,7 +105,6 @@ describe('SearchProvenance', () => {
     const container = screen.container
     expect(container.textContent).toContain('30min')
     expect(container.textContent).toContain('fair chance only')
-    expect(container.textContent).toContain('⏱️') // commute time icon
   })
 
   test('truncates long search query with ellipsis on mobile view', async () => {

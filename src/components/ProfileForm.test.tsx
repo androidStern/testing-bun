@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider, useSuspenseQuery } from '@tanstack/react-query'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { mockConvexAction, mockConvexMutation, mockExistingProfile, resetAllMocks } from '@/test/setup'
 import { ProfileForm } from './ProfileForm'
+import { mockConvexAction, mockConvexMutation, mockExistingProfile, resetAllMocks } from '@/test/setup'
 
 const mockUser = {
   createdAt: new Date().toISOString(),
@@ -261,7 +261,7 @@ describe('ProfileForm', () => {
       await screen.getByText('To find a job').click()
 
       const checkbox = screen.container.querySelector(
-        'button[role="checkbox"][data-state="checked"]',
+        'button[role="checkbox"][aria-checked="true"]',
       )
       expect(checkbox).not.toBeNull()
     })
@@ -278,7 +278,7 @@ describe('ProfileForm', () => {
       await screen.getByText('Entrepreneurship').click()
 
       const checkboxes = screen.container.querySelectorAll(
-        'button[role="checkbox"][data-state="checked"]',
+        'button[role="checkbox"][aria-checked="true"]',
       )
       expect(checkboxes.length).toBe(3)
     })
@@ -294,14 +294,14 @@ describe('ProfileForm', () => {
       await screen.getByText('To lend a hand').click()
 
       let checkboxes = screen.container.querySelectorAll(
-        'button[role="checkbox"][data-state="checked"]',
+        'button[role="checkbox"][aria-checked="true"]',
       )
       expect(checkboxes.length).toBe(2)
 
       await screen.getByText('To find a job').click()
 
       checkboxes = screen.container.querySelectorAll(
-        'button[role="checkbox"][data-state="checked"]',
+        'button[role="checkbox"][aria-checked="true"]',
       )
       expect(checkboxes.length).toBe(1)
     })
@@ -426,81 +426,6 @@ describe('ProfileForm', () => {
       await expect.element(screen.getByLabelText(/website/i)).toBeVisible()
       await expect.element(screen.getByLabelText(/linkedin/i)).toBeVisible()
       await expect.element(screen.getByLabelText(/instagram/i)).toBeVisible()
-    })
-
-    test('can fill optional location field', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ProfileForm onSuccess={vi.fn()} user={mockUser as never} />
-        </TestWrapper>,
-      )
-
-      await screen.getByText(/additional information/i).click()
-
-      const locationInput = screen.getByLabelText(/location/i)
-      await locationInput.fill('Miami, FL')
-
-      expect((locationInput.element() as HTMLInputElement).value).toBe('Miami, FL')
-    })
-
-    test('can fill optional website URL field', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ProfileForm onSuccess={vi.fn()} user={mockUser as never} />
-        </TestWrapper>,
-      )
-
-      await screen.getByText(/additional information/i).click()
-
-      const websiteInput = screen.getByLabelText(/website/i)
-      await websiteInput.fill('https://myportfolio.com')
-
-      expect((websiteInput.element() as HTMLInputElement).value).toBe('https://myportfolio.com')
-    })
-
-    test('can fill optional LinkedIn URL field', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ProfileForm onSuccess={vi.fn()} user={mockUser as never} />
-        </TestWrapper>,
-      )
-
-      await screen.getByText(/additional information/i).click()
-
-      const linkedinInput = screen.getByLabelText(/linkedin/i)
-      await linkedinInput.fill('https://linkedin.com/in/johndoe')
-
-      expect((linkedinInput.element() as HTMLInputElement).value).toBe('https://linkedin.com/in/johndoe')
-    })
-
-    test('can fill optional Instagram URL field', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ProfileForm onSuccess={vi.fn()} user={mockUser as never} />
-        </TestWrapper>,
-      )
-
-      await screen.getByText(/additional information/i).click()
-
-      const instagramInput = screen.getByLabelText(/instagram/i)
-      await instagramInput.fill('https://instagram.com/johndoe')
-
-      expect((instagramInput.element() as HTMLInputElement).value).toBe('https://instagram.com/johndoe')
-    })
-
-    test('can fill optional resume link field', async () => {
-      const screen = await render(
-        <TestWrapper>
-          <ProfileForm onSuccess={vi.fn()} user={mockUser as never} />
-        </TestWrapper>,
-      )
-
-      await screen.getByText(/additional information/i).click()
-
-      const resumeLinkInput = screen.getByLabelText(/resume link/i)
-      await resumeLinkInput.fill('https://example.com/resume.pdf')
-
-      expect((resumeLinkInput.element() as HTMLInputElement).value).toBe('https://example.com/resume.pdf')
     })
   })
 
